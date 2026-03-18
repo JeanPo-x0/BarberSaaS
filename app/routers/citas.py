@@ -6,7 +6,10 @@ from typing import List
 from app.database import get_db
 from app.models.cita import Cita
 from app.models.barbero import Barbero
+from app.models.cliente import Cliente
+from app.models.servicio import Servicio
 from app.schemas import CitaCreate, CitaResponse
+from app.services.whatsapp import confirmar_cita, notificar_cancelacion
 
 router = APIRouter(prefix="/citas", tags=["Citas"])
 
@@ -34,6 +37,22 @@ def crear_cita(cita: CitaCreate, db: Session = Depends(get_db)):
     db.add(nueva)
     db.commit()
     db.refresh(nueva)
+
+    # Enviar confirmacion por WhatsApp
+    try:
+        cliente = db.query(Cliente).filter(Cliente.id == nueva.cliente_id).first()
+        servicio = db.query(Servicio).filter(Servicio.id == nueva.servicio_id).first()
+        if cliente and cliente.telefono:
+            confirmar_cita(
+                telefono=cliente.telefono,
+                nombre=cliente.nombre,
+                fecha_hora=nueva.fecha_hora.strftime("%d/%m/%Y a las %H:%M"),
+                servicio=servicio.nombre if servicio else "Servicio",
+                barbero=barbero.nombre
+            )
+    except Exception:
+        pass  # Si falla WhatsApp, la cita igual se guarda
+
     return nueva
 
 @router.get("/disponibilidad/{barbero_id}")
@@ -48,8 +67,8 @@ def ver_disponibilidad(barbero_id: int, fecha: str, db: Session = Depends(get_db
         raise HTTPException(status_code=400, detail="Formato de fecha invalido. Usa YYYY-MM-DD")
 
     slots = []
-    hora_actual = dia.replace(hour=9, minute=0)
-    hora_fin = dia.replace(hour=18, minute=0)
+    hora_actual = dia.replace(hour=5, minute=0)
+    hora_fin = dia.replace(hour=23, minute=30)
 
     citas_del_dia = db.query(Cita).filter(
         and_(
@@ -96,4 +115,13 @@ def cancelar_cita(cita_id: int, db: Session = Depends(get_db)):
     cita.estado = "cancelada"
     db.commit()
     db.refresh(cita)
+
+    # Notificar cancelacion por WhatsApp
+    try:
+        cliente = db.query(Cliente).filter(Cliente.id == cita.cliente_id).first()
+        if cliente and cliente.telefono:
+            notificar_cancelacion(cliente.telefono, cliente.nombre)
+    except Exception:
+        pass
+
     return cita

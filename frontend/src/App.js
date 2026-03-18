@@ -5,6 +5,7 @@ import Barberias from './pages/Barberias';
 import Agenda from './pages/Agenda';
 import AgendarCita from './pages/AgendarCita';
 import PanelDueno from './pages/PanelDueno';
+import Historial from './pages/Historial';
 import './App.css';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/agendar" element={<AgendarCita />} />
           <Route path="/panel" element={<PanelDueno />} />
+          <Route path="/historial" element={<Historial />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
