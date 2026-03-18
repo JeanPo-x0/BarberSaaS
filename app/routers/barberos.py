@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.barbero import Barbero
+from app.models.usuario import Usuario
 from app.schemas import BarberoCreate, BarberoResponse
+from app.core.deps import get_usuario_actual
 from typing import List
 
 router = APIRouter(prefix="/barberos", tags=["Barberos"])
@@ -14,6 +16,12 @@ def crear_barbero(barbero: BarberoCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nuevo)
     return nuevo
+
+@router.get("/mios", response_model=List[BarberoResponse])
+def mis_barberos(usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
+    if not usuario.barberia_id:
+        return []
+    return db.query(Barbero).filter(Barbero.barberia_id == usuario.barberia_id).all()
 
 @router.get("/", response_model=List[BarberoResponse])
 def listar_barberos(db: Session = Depends(get_db)):

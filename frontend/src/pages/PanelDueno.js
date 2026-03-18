@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import LogoLink from '../components/LogoLink';
 import {
-  getBarberos, crearBarbero,
-  getServicios, crearServicio,
+  getMisBarberos, crearBarbero,
+  getMisServicios, crearServicio,
   getMiBarberia, crearBarberia
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -29,8 +29,8 @@ function PanelDueno() {
 
   useEffect(() => {
     if (!localStorage.getItem('token')) { navigate('/login'); return; }
-    getBarberos().then(r => setBarberos(r.data));
-    getServicios().then(r => setServicios(r.data));
+    getMisBarberos().then(r => setBarberos(r.data));
+    getMisServicios().then(r => setServicios(r.data));
     getMiBarberia().then(r => setBarberias(r.data));
   }, [navigate]);
 

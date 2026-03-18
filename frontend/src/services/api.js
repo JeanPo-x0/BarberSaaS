@@ -21,10 +21,12 @@ export const getMe = () => API.get('/auth/me');
 
 // Barberos
 export const getBarberos = () => API.get('/barberos/');
+export const getMisBarberos = () => API.get('/barberos/mios');
 export const crearBarbero = (data) => API.post('/barberos/', data);
 
 // Servicios
 export const getServicios = () => API.get('/servicios/');
+export const getMisServicios = () => API.get('/servicios/mios');
 export const crearServicio = (data) => API.post('/servicios/', data);
 
 // Clientes
