@@ -84,21 +84,36 @@ def enviar_recordatorios_1h():
         db.close()
 
 def auto_cancelar_citas_sin_atender():
-    """Cancela citas pendientes cuya fecha ya paso hace mas de 2 horas."""
+    """
+    +30 min: cancela la cita (estado = cancelada).
+    +1h:     elimina el registro completamente de la BD.
+    """
     db = SessionLocal()
     try:
-        limite = datetime.utcnow() - timedelta(hours=2)
-        citas = db.query(Cita).filter(
+        ahora = datetime.utcnow()
+        hace_30min = ahora - timedelta(minutes=30)
+        hace_1h = ahora - timedelta(hours=1)
+
+        # Primero eliminar las que ya llevan 1h sin atender
+        db.query(Cita).filter(
+            and_(
+                Cita.estado == "cancelada",
+                Cita.fecha_hora < hace_1h
+            )
+        ).delete(synchronize_session=False)
+
+        # Luego cancelar las que llevan 30 min sin atender
+        citas_a_cancelar = db.query(Cita).filter(
             and_(
                 Cita.estado == "pendiente",
-                Cita.fecha_hora < limite
+                Cita.fecha_hora < hace_30min
             )
         ).all()
-        for cita in citas:
+        for cita in citas_a_cancelar:
             cita.estado = "cancelada"
-        if citas:
-            db.commit()
-        print(f"[auto_cancelar] {len(citas)} citas canceladas automaticamente.")
+
+        db.commit()
+        print(f"[auto_cancelar] {len(citas_a_cancelar)} canceladas, eliminacion de vencidas ejecutada.")
     except Exception as e:
         print(f"[auto_cancelar] Error: {e}")
     finally:
