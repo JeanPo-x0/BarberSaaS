@@ -4,6 +4,7 @@ from app.database import get_db
 from app.models.usuario import Usuario
 from app.schemas import UsuarioCreate, UsuarioResponse, LoginRequest, TokenResponse
 from app.core.security import hash_password, verify_password, crear_token
+from app.core.deps import get_usuario_actual
 
 router = APIRouter(prefix="/auth", tags=["Autenticacion"])
 
@@ -30,3 +31,7 @@ def login(datos: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email o contrasena incorrectos")
     token = crear_token({"sub": usuario.email, "rol": usuario.rol, "barberia_id": usuario.barberia_id})
     return {"access_token": token, "token_type": "bearer"}
+
+@router.get("/me", response_model=UsuarioResponse)
+def me(usuario: Usuario = Depends(get_usuario_actual)):
+    return usuario

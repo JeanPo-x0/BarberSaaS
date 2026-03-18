@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.barberia import Barberia
 from app.schemas import BarberiaCreate, BarberiaResponse
+from app.core.deps import get_usuario_actual
+from app.models.usuario import Usuario
 from typing import List
 
 router = APIRouter(prefix="/barberias", tags=["Barberias"])
@@ -14,6 +16,13 @@ def crear_barberia(barberia: BarberiaCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nueva)
     return nueva
+
+@router.get("/mia", response_model=List[BarberiaResponse])
+def mi_barberia(usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
+    if not usuario.barberia_id:
+        return []
+    barberia = db.query(Barberia).filter(Barberia.id == usuario.barberia_id).first()
+    return [barberia] if barberia else []
 
 @router.get("/", response_model=List[BarberiaResponse])
 def listar_barberias(db: Session = Depends(get_db)):

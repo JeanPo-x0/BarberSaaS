@@ -4,7 +4,7 @@ import LogoLink from '../components/LogoLink';
 import {
   getBarberos, crearBarbero,
   getServicios, crearServicio,
-  getBarberias, crearBarberia
+  getMiBarberia, crearBarberia
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -31,7 +31,7 @@ function PanelDueno() {
     if (!localStorage.getItem('token')) { navigate('/login'); return; }
     getBarberos().then(r => setBarberos(r.data));
     getServicios().then(r => setServicios(r.data));
-    getBarberias().then(r => setBarberias(r.data));
+    getMiBarberia().then(r => setBarberias(r.data));
   }, [navigate]);
 
   const handleCrearBarbero = async (e) => {

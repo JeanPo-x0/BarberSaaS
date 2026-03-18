@@ -12,8 +12,12 @@ API.interceptors.request.use((config) => {
 
 // Barberias
 export const getBarberias = () => API.get('/barberias/');
+export const getMiBarberia = () => API.get('/barberias/mia');
 export const crearBarberia = (data) => API.post('/barberias/', data);
 export const getBarberia = (id) => API.get(`/barberias/${id}`);
+
+// Auth
+export const getMe = () => API.get('/auth/me');
 
 // Barberos
 export const getBarberos = () => API.get('/barberos/');
