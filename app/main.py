@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.core.config import settings
-from app.routers import barberias, barberos, clientes, servicios, citas, auth
+from app.routers import barberias, barberos, clientes, servicios, citas, auth, webhook
 from app.database import SessionLocal
 from app.models.cita import Cita
 from app.models.barbero import Barbero
@@ -104,6 +104,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(webhook.router)
 app.include_router(barberias.router)
 app.include_router(barberos.router)
 app.include_router(clientes.router)
