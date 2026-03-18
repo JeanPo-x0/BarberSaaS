@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getCitas } from '../services/api';
 import { useNavigate, Link } from 'react-router-dom';
+import LogoLink from '../components/LogoLink';
 
 function Historial() {
   const [citas, setCitas] = useState([]);
@@ -22,7 +23,7 @@ function Historial() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <nav className="bg-gray-800 px-6 py-4 flex justify-between items-center">
-        <Link to="/" className="text-xl font-bold text-yellow-400">BarberSaaS</Link>
+        <LogoLink className="text-xl font-bold text-yellow-400">BarberSaaS</LogoLink>
         <div className="flex gap-4">
           <Link to="/agenda" className="text-gray-300 hover:text-white px-4 py-2">Agenda</Link>
           <Link to="/panel" className="text-gray-300 hover:text-white px-4 py-2">Panel</Link>

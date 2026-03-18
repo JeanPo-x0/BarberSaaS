@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import LogoLink from '../components/LogoLink';
 import {
   getBarberos, crearBarbero,
   getServicios, crearServicio,
@@ -52,7 +53,7 @@ function PanelDueno() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <nav className="bg-gray-800 px-6 py-4 flex justify-between items-center">
-        <Link to="/" className="text-xl font-bold text-yellow-400">BarberSaaS — Panel</Link>
+        <LogoLink className="text-xl font-bold text-yellow-400">BarberSaaS — Panel</LogoLink>
         <div className="flex gap-4">
           <Link to="/agenda" className="text-gray-300 hover:text-white">Agenda</Link>
           <button onClick={cerrarSesion} className="text-gray-400 hover:text-red-400">Salir</button>
