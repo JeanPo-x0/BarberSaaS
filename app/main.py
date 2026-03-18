@@ -83,10 +83,32 @@ def enviar_recordatorios_1h():
     finally:
         db.close()
 
+def auto_cancelar_citas_sin_atender():
+    """Cancela citas pendientes cuya fecha ya paso hace mas de 2 horas."""
+    db = SessionLocal()
+    try:
+        limite = datetime.utcnow() - timedelta(hours=2)
+        citas = db.query(Cita).filter(
+            and_(
+                Cita.estado == "pendiente",
+                Cita.fecha_hora < limite
+            )
+        ).all()
+        for cita in citas:
+            cita.estado = "cancelada"
+        if citas:
+            db.commit()
+        print(f"[auto_cancelar] {len(citas)} citas canceladas automaticamente.")
+    except Exception as e:
+        print(f"[auto_cancelar] Error: {e}")
+    finally:
+        db.close()
+
 scheduler = BackgroundScheduler()
 scheduler.add_job(limpiar_citas_antiguas, "interval", hours=24)
 scheduler.add_job(enviar_recordatorios_24h, "interval", minutes=30)
 scheduler.add_job(enviar_recordatorios_1h, "interval", minutes=30)
+scheduler.add_job(auto_cancelar_citas_sin_atender, "interval", hours=1)
 
 @asynccontextmanager
 async def lifespan(app):

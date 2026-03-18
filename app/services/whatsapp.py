@@ -44,3 +44,21 @@ def recordatorio_1h(telefono: str, nombre: str, fecha_hora: str):
 def notificar_cancelacion(telefono: str, nombre: str):
     mensaje = f"Hola {nombre}, tu cita ha sido cancelada. Puedes agendar una nueva cuando quieras."
     enviar_mensaje(telefono, mensaje)
+
+def notificar_barbero_nueva_cita(telefono: str, nombre_barbero: str, cliente: str, servicio: str, fecha_hora: str):
+    mensaje = (
+        f"Nueva reserva, {nombre_barbero}!\n\n"
+        f"Cliente: {cliente}\n"
+        f"Servicio: {servicio}\n"
+        f"Fecha y hora: {fecha_hora}"
+    )
+    enviar_mensaje(telefono, mensaje)
+
+def notificar_barbero_cancelacion(telefono: str, nombre_barbero: str, cliente: str, fecha_hora: str):
+    mensaje = (
+        f"Cita cancelada, {nombre_barbero}.\n\n"
+        f"Cliente: {cliente}\n"
+        f"Fecha y hora: {fecha_hora}\n\n"
+        f"Ese horario quedo libre."
+    )
+    enviar_mensaje(telefono, mensaje)

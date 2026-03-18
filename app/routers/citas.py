@@ -8,8 +8,13 @@ from app.models.cita import Cita
 from app.models.barbero import Barbero
 from app.models.cliente import Cliente
 from app.models.servicio import Servicio
+from app.models.usuario import Usuario
 from app.schemas import CitaCreate, CitaResponse
-from app.services.whatsapp import confirmar_cita, notificar_cancelacion
+from app.services.whatsapp import (
+    confirmar_cita, notificar_cancelacion,
+    notificar_barbero_nueva_cita, notificar_barbero_cancelacion
+)
+from app.core.deps import get_usuario_actual
 
 router = APIRouter(prefix="/citas", tags=["Citas"])
 
@@ -42,13 +47,22 @@ def crear_cita(cita: CitaCreate, db: Session = Depends(get_db)):
     try:
         cliente = db.query(Cliente).filter(Cliente.id == nueva.cliente_id).first()
         servicio = db.query(Servicio).filter(Servicio.id == nueva.servicio_id).first()
+        fecha_hora_str = nueva.fecha_hora.strftime("%d/%m/%Y a las %H:%M")
         if cliente and cliente.telefono:
             confirmar_cita(
                 telefono=cliente.telefono,
                 nombre=cliente.nombre,
-                fecha_hora=nueva.fecha_hora.strftime("%d/%m/%Y a las %H:%M"),
+                fecha_hora=fecha_hora_str,
                 servicio=servicio.nombre if servicio else "Servicio",
                 barbero=barbero.nombre
+            )
+        if barbero.telefono:
+            notificar_barbero_nueva_cita(
+                telefono=barbero.telefono,
+                nombre_barbero=barbero.nombre,
+                cliente=cliente.nombre if cliente else "Cliente",
+                servicio=servicio.nombre if servicio else "Servicio",
+                fecha_hora=fecha_hora_str
             )
     except Exception:
         pass  # Si falla WhatsApp, la cita igual se guarda
@@ -94,6 +108,12 @@ def ver_disponibilidad(barbero_id: int, fecha: str, db: Session = Depends(get_db
 
     return {"barbero_id": barbero_id, "fecha": fecha, "slots": slots}
 
+@router.get("/mias", response_model=List[CitaResponse])
+def listar_mis_citas(usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
+    return db.query(Cita).join(Barbero, Cita.barbero_id == Barbero.id).filter(
+        Barbero.barberia_id == usuario.barberia_id
+    ).all()
+
 @router.get("/", response_model=List[CitaResponse])
 def listar_citas(db: Session = Depends(get_db)):
     return db.query(Cita).all()
@@ -116,11 +136,20 @@ def cancelar_cita(cita_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(cita)
 
-    # Notificar cancelacion por WhatsApp
+    # Notificar cancelacion por WhatsApp al cliente y al barbero
     try:
         cliente = db.query(Cliente).filter(Cliente.id == cita.cliente_id).first()
+        barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
+        fecha_hora_str = cita.fecha_hora.strftime("%d/%m/%Y a las %H:%M")
         if cliente and cliente.telefono:
             notificar_cancelacion(cliente.telefono, cliente.nombre)
+        if barbero and barbero.telefono:
+            notificar_barbero_cancelacion(
+                telefono=barbero.telefono,
+                nombre_barbero=barbero.nombre,
+                cliente=cliente.nombre if cliente else "Cliente",
+                fecha_hora=fecha_hora_str
+            )
     except Exception:
         pass
 
