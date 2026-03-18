@@ -22,7 +22,7 @@ function Barberias() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <nav className="bg-gray-800 px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-yellow-400">BarberSaaS</h1>
+        <Link to="/" className="text-xl font-bold text-yellow-400">BarberSaaS</Link>
         <div className="flex gap-4">
           <Link to="/agenda" className="text-gray-300 hover:text-white">Agenda</Link>
           <Link to="/panel" className="text-gray-300 hover:text-white">Panel</Link>

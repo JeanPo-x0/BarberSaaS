@@ -23,7 +23,7 @@ function Agenda() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <nav className="bg-gray-800 px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-yellow-400">BarberSaaS</h1>
+        <Link to="/" className="text-xl font-bold text-yellow-400">BarberSaaS</Link>
         <div className="flex gap-4">
           <Link to="/agendar" className="bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg font-semibold hover:bg-yellow-300 transition">
             + Nueva cita

@@ -52,7 +52,7 @@ function PanelDueno() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <nav className="bg-gray-800 px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-yellow-400">BarberSaaS — Panel</h1>
+        <Link to="/" className="text-xl font-bold text-yellow-400">BarberSaaS — Panel</Link>
         <div className="flex gap-4">
           <Link to="/agenda" className="text-gray-300 hover:text-white">Agenda</Link>
           <button onClick={cerrarSesion} className="text-gray-400 hover:text-red-400">Salir</button>
@@ -144,9 +144,20 @@ function PanelDueno() {
         {tab === 'barberias' && (
           <div className="space-y-3">
             {barberias.map(b => (
-              <div key={b.id} className="bg-gray-800 rounded-xl p-4">
+              <div key={b.id} className="bg-gray-800 rounded-xl p-4 space-y-2">
                 <p className="font-semibold">{b.nombre}</p>
                 <p className="text-gray-400 text-sm">{b.direccion} — Plan: {b.plan}</p>
+                <div className="bg-gray-700 rounded-lg px-3 py-2 flex justify-between items-center">
+                  <span className="text-yellow-400 text-sm truncate">
+                    {window.location.origin}/agendar/{b.id}
+                  </span>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(`${window.location.origin}/agendar/${b.id}`)}
+                    className="text-xs bg-yellow-400 text-gray-900 px-3 py-1 rounded-lg ml-2 font-semibold hover:bg-yellow-300 transition whitespace-nowrap"
+                  >
+                    Copiar link
+                  </button>
+                </div>
               </div>
             ))}
           </div>

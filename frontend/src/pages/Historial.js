@@ -22,7 +22,7 @@ function Historial() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <nav className="bg-gray-800 px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-yellow-400">BarberSaaS</h1>
+        <Link to="/" className="text-xl font-bold text-yellow-400">BarberSaaS</Link>
         <div className="flex gap-4">
           <Link to="/agenda" className="text-gray-300 hover:text-white px-4 py-2">Agenda</Link>
           <Link to="/panel" className="text-gray-300 hover:text-white px-4 py-2">Panel</Link>
@@ -31,7 +31,10 @@ function Historial() {
 
       <div className="max-w-4xl mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Historial</h2>
+          <div className="flex items-center gap-4">
+            <Link to="/agenda" className="text-gray-400 hover:text-white transition">← Volver</Link>
+            <h2 className="text-2xl font-bold">Historial</h2>
+          </div>
           <p className="text-gray-500 text-sm">Ultimos 30 dias</p>
         </div>
 
