@@ -33,6 +33,14 @@ def recordatorio_cita(telefono: str, nombre: str, fecha_hora: str):
     )
     enviar_mensaje(telefono, mensaje)
 
+def recordatorio_1h(telefono: str, nombre: str, fecha_hora: str):
+    mensaje = (
+        f"Hola {nombre}! En 1 hora tienes tu cita.\n"
+        f"Hora: {fecha_hora}\n\n"
+        f"Te esperamos. Si necesitas cancelar responde CANCELAR."
+    )
+    enviar_mensaje(telefono, mensaje)
+
 def notificar_cancelacion(telefono: str, nombre: str):
     mensaje = f"Hola {nombre}, tu cita ha sido cancelada. Puedes agendar una nueva cuando quieras."
     enviar_mensaje(telefono, mensaje)
