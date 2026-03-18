@@ -11,6 +11,8 @@ class Barberia(Base):
     telefono = Column(String)
     email = Column(String, unique=True)
     activa = Column(Boolean, default=True)
+    logo = Column(String)
+    plan = Column(String, default="basico")
 
     barberos = relationship("Barbero", back_populates="barberia")
     servicios = relationship("Servicio", back_populates="barberia")

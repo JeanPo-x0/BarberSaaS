@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.routers import barberias, barberos, clientes, servicios, citas
+from app.routers import barberias, barberos, clientes, servicios, citas, auth
 
 app = FastAPI(title=settings.APP_NAME)
 
@@ -12,6 +12,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
 app.include_router(barberias.router)
 app.include_router(barberos.router)
 app.include_router(clientes.router)

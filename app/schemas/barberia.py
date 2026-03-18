@@ -6,6 +6,8 @@ class BarberiaBase(BaseModel):
     direccion: Optional[str] = None
     telefono: Optional[str] = None
     email: Optional[str] = None
+    logo: Optional[str] = None
+    plan: Optional[str] = "basico"
 
 class BarberiaCreate(BarberiaBase):
     pass

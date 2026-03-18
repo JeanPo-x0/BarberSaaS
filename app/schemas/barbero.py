@@ -5,6 +5,7 @@ class BarberoBase(BaseModel):
     nombre: str
     telefono: Optional[str] = None
     especialidad: Optional[str] = None
+    foto: Optional[str] = None
     barberia_id: int
 
 class BarberoCreate(BarberoBase):

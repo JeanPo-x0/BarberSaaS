@@ -9,6 +9,7 @@ class Barbero(Base):
     nombre = Column(String, nullable=False)
     telefono = Column(String)
     especialidad = Column(String)
+    foto = Column(String)
     activo = Column(Boolean, default=True)
     barberia_id = Column(Integer, ForeignKey("barberias.id"))
 
