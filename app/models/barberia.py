@@ -12,6 +12,7 @@ class Barberia(Base):
     email = Column(String, unique=True)
     activa = Column(Boolean, default=True)
     logo = Column(String)
+    twilio_numero = Column(String, nullable=True)
     plan = Column(String, default="basico")
 
     barberos = relationship("Barbero", back_populates="barberia")
