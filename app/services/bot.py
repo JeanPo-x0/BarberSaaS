@@ -7,7 +7,7 @@ from app.models.barbero import Barbero
 from app.models.servicio import Servicio
 from app.models.cliente import Cliente
 from app.models.cita import Cita
-from app.services.whatsapp import confirmar_cita
+from app.services.whatsapp import confirmar_cita, notificar_barbero_nueva_cita
 
 HORARIO_INICIO = 9   # 9:00 am
 HORARIO_FIN = 19     # 7:00 pm
@@ -300,8 +300,16 @@ def _paso_confirmacion(db: Session, conv: ConversacionBot, telefono: str, mensaj
             servicio=servicio.nombre,
             barbero=barbero.nombre
         )
+        if barbero and barbero.telefono:
+            notificar_barbero_nueva_cita(
+                telefono=barbero.telefono,
+                nombre_barbero=barbero.nombre,
+                cliente=cliente.nombre,
+                servicio=servicio.nombre,
+                fecha_hora=conv.fecha
+            )
     except Exception:
-        pass  # la cita se crea aunque falle el mensaje de confirmacion
+        pass  # la cita se crea aunque fallen los mensajes
 
     _resetear(db, conv)
     return f"Tu cita esta confirmada! Te hemos enviado los detalles. Hasta pronto, {cliente.nombre}!"
