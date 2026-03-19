@@ -9,8 +9,8 @@ from app.models.cliente import Cliente
 from app.models.cita import Cita
 from app.services.whatsapp import confirmar_cita, notificar_barbero_nueva_cita
 
-HORARIO_INICIO = 9   # 9:00 am
-HORARIO_FIN = 19     # 7:00 pm
+HORARIO_INICIO = 5   # 5:00 am
+HORARIO_FIN = 12     # 12:00 pm
 
 DIAS_ES = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"]
 
@@ -75,17 +75,16 @@ def _slots_disponibles(db: Session, barbero_id: int, fecha_str: str, duracion_mi
         for i in range(0, dur, 30):
             ocupados.add((cita.fecha_hora + timedelta(minutes=i)).strftime("%H:%M"))
 
+    # Devuelve lista de tuplas (hora_str, disponible)
     slots = []
     t = inicio_dia
     while t + timedelta(minutes=duracion_min) <= fin_dia:
         hora_str = t.strftime("%H:%M")
-        # Verificar que todos los bloques necesarios esten libres
-        bloques_ok = all(
+        disponible = all(
             (t + timedelta(minutes=i)).strftime("%H:%M") not in ocupados
             for i in range(0, duracion_min, 30)
         )
-        if bloques_ok:
-            slots.append(hora_str)
+        slots.append((hora_str, disponible))
         t += timedelta(minutes=30)
 
     return slots
@@ -196,7 +195,7 @@ def _paso_fecha(db: Session, conv: ConversacionBot, mensaje: str) -> str:
     barbero_asignado = None
     for bid in candidatos:
         s = _slots_disponibles(db, bid, fecha_str, servicio.duracion_minutos)
-        if s:
+        if any(disp for _, disp in s):  # al menos un slot disponible
             slots = s
             barbero_asignado = bid
             break
@@ -211,8 +210,11 @@ def _paso_fecha(db: Session, conv: ConversacionBot, mensaje: str) -> str:
     conv.paso = "esperando_hora"
     db.commit()
 
-    lista = "\n".join([f"{i+1}. {h}" for i, h in enumerate(slots[:10])])
-    return f"Horarios disponibles el {_fmt_dia(fecha)}:\n\n{lista}\n\nResponde con el numero."
+    lista = "\n".join([
+        f"{i+1}. ~{h}~" if not disp else f"{i+1}. {h}"
+        for i, (h, disp) in enumerate(slots)
+    ])
+    return f"Horarios el {_fmt_dia(fecha)}:\n\n{lista}\n\nElige un numero disponible."
 
 
 def _paso_hora(db: Session, conv: ConversacionBot, mensaje: str) -> str:
@@ -221,13 +223,23 @@ def _paso_hora(db: Session, conv: ConversacionBot, mensaje: str) -> str:
 
     try:
         idx = int(mensaje) - 1
-        if idx < 0 or idx >= len(slots[:10]):
+        if idx < 0 or idx >= len(slots):
             raise ValueError
+        hora_str, disponible = slots[idx]
+        if not disponible:
+            lista = "\n".join([
+                f"{i+1}. ~{h}~" if not d else f"{i+1}. {h}"
+                for i, (h, d) in enumerate(slots)
+            ])
+            return f"Ese horario no esta disponible. Elige otro:\n\n{lista}"
     except ValueError:
-        lista = "\n".join([f"{i+1}. {h}" for i, h in enumerate(slots[:10])])
+        lista = "\n".join([
+            f"{i+1}. ~{h}~" if not d else f"{i+1}. {h}"
+            for i, (h, d) in enumerate(slots)
+        ])
         return f"Opcion no valida. Elige:\n\n{lista}"
 
-    conv.fecha = f"{conv.fecha} {slots[idx]}"
+    conv.fecha = f"{conv.fecha} {hora_str}"
     conv.paso = "esperando_nombre"
     db.commit()
     return "Cual es tu nombre completo?"
