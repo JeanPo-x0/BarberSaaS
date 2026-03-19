@@ -294,6 +294,36 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
         conv = db.query(ConversacionBot).filter(ConversacionBot.telefono == telefono).first()
         if conv:
             _resetear(db, conv)
+
+        # Buscar cita pendiente proxima del cliente y cancelarla en la BD
+        cliente = db.query(Cliente).filter(Cliente.telefono == telefono).first()
+        if cliente:
+            cita = db.query(Cita).filter(
+                and_(
+                    Cita.cliente_id == cliente.id,
+                    Cita.estado == "pendiente",
+                    Cita.fecha_hora >= datetime.utcnow()
+                )
+            ).order_by(Cita.fecha_hora).first()
+
+            if cita:
+                cita.estado = "cancelada"
+                db.commit()
+                db.refresh(cita)
+
+                barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
+                fecha_str = cita.fecha_hora.strftime("%d/%m/%Y a las %H:%M")
+
+                try:
+                    from app.services.whatsapp import notificar_cancelacion, notificar_barbero_cancelacion
+                    notificar_cancelacion(telefono, cliente.nombre)
+                    if barbero and barbero.telefono:
+                        notificar_barbero_cancelacion(barbero.telefono, barbero.nombre, cliente.nombre, fecha_str)
+                except Exception:
+                    pass
+
+                return f"Tu cita del {fecha_str} ha sido cancelada. Escribe 'Hola' cuando quieras agendar una nueva."
+
         return "Tu proceso ha sido cancelado. Escribe 'Hola' cuando quieras agendar una nueva cita."
 
     # Identificar la barberia por el numero Twilio al que escribio el cliente
