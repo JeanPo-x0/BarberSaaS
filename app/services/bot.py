@@ -314,16 +314,18 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
                 barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
                 fecha_str = cita.fecha_hora.strftime("%d/%m/%Y a las %H:%M")
 
-                try:
-                    from app.services.whatsapp import notificar_barbero_cancelacion
-                    if barbero and barbero.telefono:
-                        notificar_barbero_cancelacion(barbero.telefono, barbero.nombre, cliente.nombre, fecha_str)
-                except Exception:
-                    pass
+                # Notificar al barbero en background para no retrasar la respuesta al cliente
+                def notificar_barbero():
+                    try:
+                        from app.services.whatsapp import notificar_barbero_cancelacion
+                        if barbero and barbero.telefono:
+                            notificar_barbero_cancelacion(barbero.telefono, barbero.nombre, cliente.nombre, fecha_str)
+                    except Exception:
+                        pass
 
-                return f"Tu cita del {fecha_str} ha sido cancelada. Escribe 'Hola' cuando quieras agendar una nueva."
+                return f"Tu cita del {fecha_str} ha sido cancelada. Escribe 'Hola' cuando quieras agendar una nueva.", notificar_barbero
 
-        return "Tu proceso ha sido cancelado. Escribe 'Hola' cuando quieras agendar una nueva cita."
+        return "Tu proceso ha sido cancelado. Escribe 'Hola' cuando quieras agendar una nueva cita.", None
 
     # Identificar la barberia por el numero Twilio al que escribio el cliente
     barberia = db.query(Barberia).filter(
@@ -331,25 +333,25 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
     ).first()
 
     if not barberia:
-        return "Este numero no esta configurado. Contacta a la barberia directamente."
+        return "Este numero no esta configurado. Contacta a la barberia directamente.", None
 
     conv = _obtener_o_crear_conv(db, telefono)
 
     # Enrutar segun el paso actual
     if conv.paso == "inicio":
-        return _paso_inicio(db, conv, barberia)
+        return _paso_inicio(db, conv, barberia), None
     elif conv.paso == "esperando_servicio":
-        return _paso_servicio(db, conv, mensaje)
+        return _paso_servicio(db, conv, mensaje), None
     elif conv.paso == "esperando_barbero":
-        return _paso_barbero(db, conv, mensaje)
+        return _paso_barbero(db, conv, mensaje), None
     elif conv.paso == "esperando_fecha":
-        return _paso_fecha(db, conv, mensaje)
+        return _paso_fecha(db, conv, mensaje), None
     elif conv.paso == "esperando_hora":
-        return _paso_hora(db, conv, mensaje)
+        return _paso_hora(db, conv, mensaje), None
     elif conv.paso == "esperando_nombre":
-        return _paso_nombre(db, conv, mensaje)
+        return _paso_nombre(db, conv, mensaje), None
     elif conv.paso == "confirmando":
-        return _paso_confirmacion(db, conv, telefono, mensaje)
+        return _paso_confirmacion(db, conv, telefono, mensaje), None
     else:
         _resetear(db, conv)
-        return _paso_inicio(db, conv, barberia)
+        return _paso_inicio(db, conv, barberia), None
