@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getCitas, cancelarCita } from '../services/api';
+import { getMisCitas, cancelarCita } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import LogoLink from '../components/LogoLink';
@@ -11,12 +11,12 @@ function Agenda() {
 
   useEffect(() => {
     if (!localStorage.getItem('token')) { navigate('/login'); return; }
-    getCitas().then(res => setCitas(res.data));
+    getMisCitas().then(res => setCitas(res.data));
   }, [navigate]);
 
   const handleCancelar = async (id) => {
     await cancelarCita(id);
-    getCitas().then(res => setCitas(res.data));
+    getMisCitas().then(res => setCitas(res.data));
   };
 
   const citasActivas = citas.filter(c => c.estado !== 'cancelada' && c.estado !== 'completada');
@@ -51,7 +51,7 @@ function Agenda() {
               <div key={cita.id} className="bg-gray-800 rounded-2xl p-5 flex justify-between items-center">
                 <div>
                   <p className="font-semibold text-lg">Cita #{cita.id}</p>
-                  <p className="text-gray-400 text-sm">{new Date(cita.fecha_hora).toLocaleString('es-CO')}</p>
+                  <p className="text-gray-400 text-sm">{new Date(cita.fecha_hora).toLocaleString('es-CR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' })}</p>
                   <span className={`text-xs px-2 py-1 rounded-full mt-1 inline-block ${
                     cita.estado === 'pendiente' ? 'bg-yellow-400 text-gray-900' : 'bg-green-500 text-white'
                   }`}>

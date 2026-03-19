@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getCitas } from '../services/api';
+import { getMisCitas } from '../services/api';
 import { useNavigate, Link } from 'react-router-dom';
 import LogoLink from '../components/LogoLink';
 
@@ -9,7 +9,7 @@ function Historial() {
 
   useEffect(() => {
     if (!localStorage.getItem('token')) { navigate('/login'); return; }
-    getCitas().then(res => {
+    getMisCitas().then(res => {
       const hace30dias = new Date();
       hace30dias.setDate(hace30dias.getDate() - 30);
       const historial = res.data.filter(c =>
@@ -49,7 +49,7 @@ function Historial() {
               <div key={cita.id} className="bg-gray-800 rounded-xl p-4 flex justify-between items-center opacity-70">
                 <div>
                   <p className="font-semibold">Cita #{cita.id}</p>
-                  <p className="text-gray-400 text-sm">{new Date(cita.fecha_hora).toLocaleString('es-CO')}</p>
+                  <p className="text-gray-400 text-sm">{new Date(cita.fecha_hora).toLocaleString('es-CR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' })}</p>
                 </div>
                 <span className={`text-xs px-3 py-1 rounded-full ${
                   cita.estado === 'cancelada' ? 'bg-red-500' : 'bg-blue-500'

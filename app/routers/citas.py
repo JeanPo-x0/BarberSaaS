@@ -47,7 +47,7 @@ def crear_cita(cita: CitaCreate, db: Session = Depends(get_db)):
     try:
         cliente = db.query(Cliente).filter(Cliente.id == nueva.cliente_id).first()
         servicio = db.query(Servicio).filter(Servicio.id == nueva.servicio_id).first()
-        fecha_hora_str = nueva.fecha_hora.strftime("%d/%m/%Y a las %H:%M")
+        fecha_hora_str = nueva.fecha_hora.strftime("%d/%m/%y a las %H:%M")
         if cliente and cliente.telefono:
             confirmar_cita(
                 telefono=cliente.telefono,
@@ -140,7 +140,7 @@ def cancelar_cita(cita_id: int, db: Session = Depends(get_db)):
     try:
         cliente = db.query(Cliente).filter(Cliente.id == cita.cliente_id).first()
         barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
-        fecha_hora_str = cita.fecha_hora.strftime("%d/%m/%Y a las %H:%M")
+        fecha_hora_str = cita.fecha_hora.strftime("%d/%m/%y a las %H:%M")
         if cliente and cliente.telefono:
             notificar_cancelacion(cliente.telefono, cliente.nombre)
         if barbero and barbero.telefono:

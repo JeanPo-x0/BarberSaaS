@@ -47,7 +47,7 @@ def enviar_recordatorios_24h():
             recordatorio_cita(
                 telefono=cita.cliente.telefono,
                 nombre=cita.cliente.nombre,
-                fecha_hora=cita.fecha_hora.strftime("%d/%m/%Y %H:%M")
+                fecha_hora=cita.fecha_hora.strftime("%d/%m/%y %H:%M")
             )
     except Exception as e:
         print(f"[recordatorios_24h] Error: {e}")

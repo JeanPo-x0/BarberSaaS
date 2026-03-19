@@ -12,6 +12,20 @@ from app.services.whatsapp import confirmar_cita
 HORARIO_INICIO = 9   # 9:00 am
 HORARIO_FIN = 19     # 7:00 pm
 
+DIAS_ES = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"]
+
+def _proximos_dias(n=7):
+    hoy = datetime.utcnow().date()
+    return [hoy + timedelta(days=i) for i in range(1, n + 1)]
+
+def _fmt_dia(fecha):
+    """Vie 20/03/26"""
+    return f"{DIAS_ES[fecha.weekday()]} {fecha.day:02d}/{fecha.month:02d}/{str(fecha.year)[2:]}"
+
+def _fmt_fecha_hora(dt):
+    """20/03/26 a las 09:00"""
+    return dt.strftime("%d/%m/%y a las %H:%M")
+
 
 # ---------- helpers ----------
 
@@ -147,20 +161,28 @@ def _paso_barbero(db: Session, conv: ConversacionBot, mensaje: str) -> str:
 
     conv.paso = "esperando_fecha"
     db.commit()
-    return "Que fecha prefieres?\n\nFormato: DD/MM/AAAA\nEjemplo: 25/03/2026"
+
+    dias = _proximos_dias()
+    lista = "\n".join([f"{i+1}. {_fmt_dia(d)}" for i, d in enumerate(dias)])
+    return f"Que dia prefieres?\n\n{lista}\n\nResponde con el numero."
 
 
 def _paso_fecha(db: Session, conv: ConversacionBot, mensaje: str) -> str:
+    dias = _proximos_dias()
+
     try:
-        fecha = datetime.strptime(mensaje.strip(), "%d/%m/%Y")
-        if fecha.date() < datetime.utcnow().date():
-            return "Esa fecha ya paso. Elige una fecha futura en formato DD/MM/AAAA."
+        idx = int(mensaje.strip()) - 1
+        if idx < 0 or idx >= len(dias):
+            raise ValueError
     except ValueError:
-        return "Formato invalido. Escribe la fecha asi: DD/MM/AAAA\nEjemplo: 25/03/2026"
+        lista = "\n".join([f"{i+1}. {_fmt_dia(d)}" for i, d in enumerate(dias)])
+        return f"Opcion no valida. Elige:\n\n{lista}\n\nResponde con el numero."
+
+    fecha = dias[idx]
+    fecha_str = fecha.strftime("%d/%m/%Y")  # formato interno
 
     servicio = db.query(Servicio).filter(Servicio.id == conv.servicio_id).first()
 
-    # Si eligio "cualquiera", buscar el primer barbero con slots libres
     if conv.barbero_id:
         candidatos = [conv.barbero_id]
     else:
@@ -173,23 +195,24 @@ def _paso_fecha(db: Session, conv: ConversacionBot, mensaje: str) -> str:
     slots = []
     barbero_asignado = None
     for bid in candidatos:
-        s = _slots_disponibles(db, bid, mensaje.strip(), servicio.duracion_minutos)
+        s = _slots_disponibles(db, bid, fecha_str, servicio.duracion_minutos)
         if s:
             slots = s
             barbero_asignado = bid
             break
 
     if not slots:
-        return "No hay horarios disponibles para esa fecha. Prueba con otra fecha (DD/MM/AAAA)."
+        lista = "\n".join([f"{i+1}. {_fmt_dia(d)}" for i, d in enumerate(dias)])
+        return f"No hay horarios disponibles ese dia. Elige otro:\n\n{lista}"
 
-    conv.fecha = mensaje.strip()
+    conv.fecha = fecha_str
     if not conv.barbero_id:
         conv.barbero_id = barbero_asignado
     conv.paso = "esperando_hora"
     db.commit()
 
     lista = "\n".join([f"{i+1}. {h}" for i, h in enumerate(slots[:10])])
-    return f"Horarios disponibles para el {mensaje.strip()}:\n\n{lista}\n\nResponde con el numero."
+    return f"Horarios disponibles el {_fmt_dia(fecha)}:\n\n{lista}\n\nResponde con el numero."
 
 
 def _paso_hora(db: Session, conv: ConversacionBot, mensaje: str) -> str:
@@ -312,7 +335,7 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
                 db.refresh(cita)
 
                 barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
-                fecha_str = cita.fecha_hora.strftime("%d/%m/%Y a las %H:%M")
+                fecha_str = cita.fecha_hora.strftime("%d/%m/%y a las %H:%M")
 
                 # Notificar al barbero en background para no retrasar la respuesta al cliente
                 def notificar_barbero():
