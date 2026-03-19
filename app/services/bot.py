@@ -315,8 +315,7 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
                 fecha_str = cita.fecha_hora.strftime("%d/%m/%Y a las %H:%M")
 
                 try:
-                    from app.services.whatsapp import notificar_cancelacion, notificar_barbero_cancelacion
-                    notificar_cancelacion(telefono, cliente.nombre)
+                    from app.services.whatsapp import notificar_barbero_cancelacion
                     if barbero and barbero.telefono:
                         notificar_barbero_cancelacion(barbero.telefono, barbero.nombre, cliente.nombre, fecha_str)
                 except Exception:
