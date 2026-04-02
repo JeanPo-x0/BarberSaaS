@@ -7,6 +7,17 @@ from typing import List
 
 router = APIRouter(prefix="/clientes", tags=["Clientes"])
 
+@router.post("/buscar-o-crear", response_model=ClienteResponse)
+def buscar_o_crear_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
+    existente = db.query(Cliente).filter(Cliente.telefono == cliente.telefono).first()
+    if existente:
+        return existente
+    nuevo = Cliente(**cliente.model_dump())
+    db.add(nuevo)
+    db.commit()
+    db.refresh(nuevo)
+    return nuevo
+
 @router.post("/", response_model=ClienteResponse)
 def crear_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
     nuevo = Cliente(**cliente.model_dump())

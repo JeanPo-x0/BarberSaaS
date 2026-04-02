@@ -6,3 +6,5 @@ from app.models.cita import Cita
 from app.models.usuario import Usuario
 from app.models.password_reset import PasswordResetToken
 from app.models.conversacion_bot import ConversacionBot
+from app.models.suscripcion import Suscripcion
+from app.models.lista_espera import ListaEspera

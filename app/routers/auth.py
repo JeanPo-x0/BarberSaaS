@@ -1,12 +1,29 @@
+import os
+import secrets
+import hashlib
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.usuario import Usuario
-from app.schemas import UsuarioCreate, UsuarioResponse, LoginRequest, TokenResponse
+from app.models.barberia import Barberia
+from app.models.suscripcion import Suscripcion
+from app.models.password_reset import PasswordResetToken
+from app.schemas import UsuarioCreate, UsuarioResponse, LoginRequest, TokenResponse, OnboardingCreate
 from app.core.security import hash_password, verify_password, crear_token
+from app.core.config import settings
 from app.core.deps import get_usuario_actual
+from app.services.email import enviar_reset_password, enviar_bienvenida
 
 router = APIRouter(prefix="/auth", tags=["Autenticacion"])
+
+class EmailRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    nueva_password: str
 
 @router.post("/registro", response_model=UsuarioResponse)
 def registrar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
@@ -35,3 +52,113 @@ def login(datos: LoginRequest, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UsuarioResponse)
 def me(usuario: Usuario = Depends(get_usuario_actual)):
     return usuario
+
+@router.post("/onboarding", response_model=UsuarioResponse)
+def onboarding(datos: OnboardingCreate, db: Session = Depends(get_db)):
+    """Registro completo: crea usuario dueño + barbería + suscripción trial."""
+    existente = db.query(Usuario).filter(Usuario.email == datos.email).first()
+    if existente:
+        raise HTTPException(status_code=400, detail="El email ya esta registrado")
+
+    # Crear barbería
+    barberia = Barberia(
+        nombre=datos.nombre_barberia,
+        direccion=datos.direccion,
+        telefono=datos.telefono,
+        email=datos.email,
+        plan=datos.plan,
+        activa=True,
+    )
+    db.add(barberia)
+    db.flush()  # obtener barberia.id sin commit
+
+    # Crear suscripción trial 14 días
+    suscripcion = Suscripcion(
+        barberia_id=barberia.id,
+        plan=datos.plan,
+        estado="trial",
+        fecha_inicio=datetime.utcnow(),
+        fecha_trial_fin=datetime.utcnow() + timedelta(days=14),
+    )
+    db.add(suscripcion)
+
+    # Crear usuario dueño
+    usuario = Usuario(
+        email=datos.email,
+        password_hash=hash_password(datos.password),
+        rol="dueno",
+        barberia_id=barberia.id,
+    )
+    db.add(usuario)
+    db.flush()  # get usuario.id
+
+    # Link the barbershop to its owner
+    barberia.dueno_id = usuario.id
+    db.commit()
+    db.refresh(usuario)
+
+    # Email de bienvenida
+    link_agendamiento = f"{settings.FRONTEND_URL}/agendar/{barberia.id}"
+    try:
+        enviar_bienvenida(datos.email, datos.nombre_barberia, link_agendamiento)
+    except Exception:
+        pass  # No bloquear el registro si el email falla
+
+    return usuario
+
+
+@router.post("/recuperar-password")
+def recuperar_password(datos: EmailRequest, db: Session = Depends(get_db)):
+    usuario = db.query(Usuario).filter(Usuario.email == datos.email).first()
+    # Siempre responder igual para no revelar si el email existe
+    if not usuario:
+        return {"mensaje": "Si el email existe, recibiras un correo con instrucciones"}
+
+    # Generar token seguro y guardarlo hasheado
+    token_plano = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(token_plano.encode()).hexdigest()
+    expira = datetime.utcnow() + timedelta(minutes=15)
+
+    # Invalidar tokens anteriores del mismo email
+    db.query(PasswordResetToken).filter(
+        PasswordResetToken.email == datos.email,
+        PasswordResetToken.usado == False
+    ).update({"usado": True})
+
+    nuevo_token = PasswordResetToken(
+        email=datos.email,
+        token_hash=token_hash,
+        expires_at=expira
+    )
+    db.add(nuevo_token)
+    db.commit()
+
+    try:
+        enviar_reset_password(datos.email, token_plano, settings.FRONTEND_URL)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error enviando el correo. Verifica la configuracion de email.")
+
+    return {"mensaje": "Si el email existe, recibiras un correo con instrucciones"}
+
+@router.post("/reset-password")
+def reset_password(datos: ResetPasswordRequest, db: Session = Depends(get_db)):
+    token_hash = hashlib.sha256(datos.token.encode()).hexdigest()
+
+    registro = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token_hash == token_hash,
+        PasswordResetToken.usado == False,
+        PasswordResetToken.expires_at > datetime.utcnow()
+    ).first()
+
+    if not registro:
+        raise HTTPException(status_code=400, detail="Token invalido o expirado")
+
+    usuario = db.query(Usuario).filter(Usuario.email == registro.email).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    usuario.password_hash = hash_password(datos.nueva_password)
+    registro.usado = True
+    db.commit()
+
+    return {"mensaje": "Contrasena actualizada correctamente"}

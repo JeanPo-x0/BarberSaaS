@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -9,6 +9,7 @@ class Servicio(Base):
     nombre = Column(String, nullable=False)
     duracion_minutos = Column(Integer, nullable=False)
     precio = Column(Float, nullable=False)
+    disponible = Column(Boolean, default=True)
     barberia_id = Column(Integer, ForeignKey("barberias.id"))
 
     barberia = relationship("Barberia", back_populates="servicios")

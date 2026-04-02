@@ -15,6 +15,7 @@ class BarberiaCreate(BarberiaBase):
 class BarberiaResponse(BarberiaBase):
     id: int
     activa: bool
+    subdominio: Optional[str] = None
 
     class Config:
         from_attributes = True

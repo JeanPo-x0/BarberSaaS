@@ -1,166 +1,455 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import LogoLink from '../components/LogoLink';
+import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 import {
-  getMisBarberos, crearBarbero,
-  getMisServicios, crearServicio,
-  getMiBarberia, crearBarberia
+  getMisBarberos, crearBarbero, toggleBarbero, eliminarBarbero,
+  getMisServicios, crearServicio, toggleServicio, eliminarServicio,
+  getMiBarberia, toggleBarberia, crearBarberiaAdicional,
+  getEstadoSuscripcion, actualizarSubdominio,
 } from '../services/api';
-import { useAuth } from '../context/AuthContext';
 
+/* ── Helpers ─────────────────────────────────────────── */
+const tabStyle = (activo) => ({
+  padding: '8px 18px', borderRadius: 8,
+  fontFamily: "'DM Sans'", fontSize: 13, fontWeight: 600,
+  cursor: 'pointer', border: 'none',
+  background: activo ? '#C9A84C' : 'var(--bg-card)',
+  color: activo ? '#0A0A0A' : 'var(--text-muted)',
+  transition: 'all 0.2s',
+});
+
+const inputStyle = {
+  width: '100%', background: 'var(--bg-secondary)',
+  border: '1px solid var(--border)', borderRadius: 10,
+  padding: '10px 14px', color: 'var(--text-primary)',
+  fontFamily: "'DM Sans'", fontSize: 13, outline: 'none',
+};
+
+const toggleBtn = (activo) => ({
+  padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700,
+  cursor: 'pointer', border: 'none', fontFamily: "'DM Sans'",
+  background: activo ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.06)',
+  color: activo ? '#4ade80' : 'var(--text-muted)',
+  transition: 'all 0.2s',
+});
+
+const deleteBtn = {
+  padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700,
+  cursor: 'pointer', fontFamily: "'DM Sans'",
+  background: 'rgba(230,57,70,0.08)',
+  border: '1px solid rgba(230,57,70,0.2)',
+  color: '#E63946', transition: 'background 0.2s',
+};
+
+/* ── Component ───────────────────────────────────────── */
 function PanelDueno() {
   const [barberos, setBarberos] = useState([]);
   const [servicios, setServicios] = useState([]);
   const [barberias, setBarberias] = useState([]);
+  const [suscripcion, setSuscripcion] = useState(null);
   const [tab, setTab] = useState('barberos');
-  const { cerrarSesion } = useAuth();
   const navigate = useNavigate();
 
-  // Formularios
+  // Barbero form
   const [nomBarbero, setNomBarbero] = useState('');
   const [telBarbero, setTelBarbero] = useState('');
   const [espBarbero, setEspBarbero] = useState('');
   const [barberiaBarbero, setBarberiaBarbero] = useState('');
 
+  // Servicio form
   const [nomServicio, setNomServicio] = useState('');
   const [durServicio, setDurServicio] = useState('');
   const [precioServicio, setPrecioServicio] = useState('');
   const [barberias_servicio, setBarberiasServicio] = useState('');
 
+  // Barberia form
+  const [mostrarFormBarberia, setMostrarFormBarberia] = useState(false);
+  const [nuevaBarberiaForm, setNuevaBarberiaForm] = useState({ nombre: '', direccion: '', telefono: '' });
+  const [barberiaError, setBarberiaError] = useState('');
+  const [barberiaCargando, setBarberiaCargando] = useState(false);
+
+  // Slug
+  const [editandoSlug, setEditandoSlug] = useState(null);
+  const [slugInput, setSlugInput] = useState('');
+  const [slugError, setSlugError] = useState('');
+  const [slugCargando, setSlugCargando] = useState(false);
+
+  const cargarDatos = () => {
+    getMisBarberos().then(r => setBarberos(r.data)).catch(() => {});
+    getMisServicios().then(r => setServicios(r.data)).catch(() => {});
+    getMiBarberia().then(r => setBarberias(r.data)).catch(() => {});
+    getEstadoSuscripcion().then(r => setSuscripcion(r.data)).catch(() => {});
+  };
+
   useEffect(() => {
     if (!localStorage.getItem('token')) { navigate('/login'); return; }
-    getMisBarberos().then(r => setBarberos(r.data));
-    getMisServicios().then(r => setServicios(r.data));
-    getMiBarberia().then(r => setBarberias(r.data));
+    cargarDatos();
   }, [navigate]);
 
   const handleCrearBarbero = async (e) => {
     e.preventDefault();
     await crearBarbero({ nombre: nomBarbero, telefono: telBarbero, especialidad: espBarbero, barberia_id: parseInt(barberiaBarbero) });
-    getBarberos().then(r => setBarberos(r.data));
+    getMisBarberos().then(r => setBarberos(r.data));
     setNomBarbero(''); setTelBarbero(''); setEspBarbero(''); setBarberiaBarbero('');
   };
 
   const handleCrearServicio = async (e) => {
     e.preventDefault();
     await crearServicio({ nombre: nomServicio, duracion_minutos: parseInt(durServicio), precio: parseFloat(precioServicio), barberia_id: parseInt(barberias_servicio) });
-    getServicios().then(r => setServicios(r.data));
+    getMisServicios().then(r => setServicios(r.data));
     setNomServicio(''); setDurServicio(''); setPrecioServicio(''); setBarberiasServicio('');
   };
 
-  const tabClass = (t) => `px-4 py-2 rounded-lg font-medium transition ${tab === t ? 'bg-yellow-400 text-gray-900' : 'text-gray-400 hover:text-white'}`;
+  const handleCrearBarberia = async (e) => {
+    e.preventDefault();
+    setBarberiaError(''); setBarberiaCargando(true);
+    try {
+      await crearBarberiaAdicional(nuevaBarberiaForm);
+      getMiBarberia().then(r => setBarberias(r.data));
+      setNuevaBarberiaForm({ nombre: '', direccion: '', telefono: '' });
+      setMostrarFormBarberia(false);
+    } catch (err) {
+      setBarberiaError(err.response?.data?.detail || 'Error al crear la barberia');
+    } finally {
+      setBarberiaCargando(false);
+    }
+  };
+
+  const handleGuardarSlug = async (barberiaId) => {
+    setSlugError(''); setSlugCargando(true);
+    try {
+      await actualizarSubdominio(barberiaId, slugInput);
+      getMiBarberia().then(r => setBarberias(r.data));
+      setEditandoSlug(null); setSlugInput('');
+    } catch (err) {
+      setSlugError(err.response?.data?.detail || 'Error al guardar');
+    } finally {
+      setSlugCargando(false);
+    }
+  };
+
+  const LIMITE_PLAN = { basico: 1, pro: 3, premium: null };
+  const plan = suscripcion?.plan || 'basico';
+  const limiteBarberias = LIMITE_PLAN[plan];
+  const puedeAgregarBarberia = limiteBarberias === null || barberias.length < limiteBarberias;
+
+  const sectionCard = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '24px' };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <nav className="bg-gray-800 px-6 py-4 flex justify-between items-center">
-        <LogoLink className="text-xl font-bold text-yellow-400">BarberSaaS — Panel</LogoLink>
-        <div className="flex gap-4">
-          <Link to="/agenda" className="text-gray-300 hover:text-white">Agenda</Link>
-          <button onClick={cerrarSesion} className="text-gray-400 hover:text-red-400">Salir</button>
-        </div>
-      </nav>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+      <Navbar links={[
+        { label: 'Agenda', to: '/agenda' },
+        { label: 'Ingresos', to: '/ingresos' },
+      ]} />
 
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="flex gap-2 mb-6">
-          <button className={tabClass('barberos')} onClick={() => setTab('barberos')}>Barberos</button>
-          <button className={tabClass('servicios')} onClick={() => setTab('servicios')}>Servicios</button>
-          <button className={tabClass('barberias')} onClick={() => setTab('barberias')}>Barberias</button>
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+          <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.08em', margin: 0 }}>
+            Panel
+          </h1>
+          {suscripcion && (
+            <span style={{
+              background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)',
+              borderRadius: 100, padding: '4px 14px',
+              fontSize: 12, fontWeight: 700, color: '#C9A84C', textTransform: 'capitalize',
+            }}>
+              Plan {suscripcion.plan}
+            </span>
+          )}
         </div>
 
-        {/* Tab Barberos */}
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+          {['barberos', 'servicios', 'barberias'].map(t => (
+            <button key={t} style={tabStyle(tab === t)} onClick={() => setTab(t)}>
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Tab Barberos ── */}
         {tab === 'barberos' && (
-          <div className="space-y-6">
-            <div className="bg-gray-800 rounded-2xl p-6">
-              <h2 className="text-lg font-semibold mb-4">Agregar barbero</h2>
-              <form onSubmit={handleCrearBarbero} className="grid grid-cols-2 gap-4">
-                <input value={nomBarbero} onChange={e => setNomBarbero(e.target.value)} placeholder="Nombre" required
-                  className="bg-gray-700 rounded-lg px-4 py-2 col-span-2" />
-                <input value={telBarbero} onChange={e => setTelBarbero(e.target.value)} placeholder="Telefono"
-                  className="bg-gray-700 rounded-lg px-4 py-2" />
-                <input value={espBarbero} onChange={e => setEspBarbero(e.target.value)} placeholder="Especialidad"
-                  className="bg-gray-700 rounded-lg px-4 py-2" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={sectionCard}>
+              <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.06em', margin: '0 0 16px 0' }}>
+                Agregar barbero
+              </h2>
+              <form onSubmit={handleCrearBarbero} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <input value={nomBarbero} onChange={e => setNomBarbero(e.target.value)} placeholder="Nombre *" required
+                  className="input-dark" style={{ gridColumn: '1 / -1' }} />
+                <input value={telBarbero} onChange={e => setTelBarbero(e.target.value)} placeholder="Telefono" className="input-dark" />
+                <input value={espBarbero} onChange={e => setEspBarbero(e.target.value)} placeholder="Especialidad" className="input-dark" />
                 <select value={barberiaBarbero} onChange={e => setBarberiaBarbero(e.target.value)} required
-                  className="bg-gray-700 rounded-lg px-4 py-2 col-span-2">
-                  <option value="">Selecciona barberia</option>
+                  className="input-dark" style={{ gridColumn: '1 / -1', background: 'var(--bg-secondary)' }}>
+                  <option value="">Selecciona barberia *</option>
                   {barberias.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
                 </select>
-                <button type="submit" className="col-span-2 bg-yellow-400 text-gray-900 font-bold py-2 rounded-lg hover:bg-yellow-300">
-                  Agregar
+                <button type="submit" className="btn-gold" style={{ gridColumn: '1 / -1' }}>
+                  Agregar barbero
                 </button>
               </form>
             </div>
-            <div className="space-y-3">
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {barberos.map(b => (
-                <div key={b.id} className="bg-gray-800 rounded-xl p-4 flex justify-between items-center">
+                <div key={b.id} style={{
+                  background: 'var(--bg-card)', border: '1px solid var(--border)',
+                  borderRadius: 12, padding: '14px 18px',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                }}>
                   <div>
-                    <p className="font-semibold">{b.nombre}</p>
-                    <p className="text-gray-400 text-sm">{b.especialidad} — {b.telefono}</p>
+                    <p style={{ fontWeight: 600, fontSize: 14, margin: '0 0 2px 0' }}>{b.nombre}</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>
+                      {[b.especialidad, b.telefono].filter(Boolean).join(' — ')}
+                    </p>
                   </div>
-                  <span className={`text-xs px-3 py-1 rounded-full ${b.activo ? 'bg-green-500' : 'bg-red-500'}`}>
-                    {b.activo ? 'Activo' : 'Inactivo'}
-                  </span>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => toggleBarbero(b.id).then(() => getMisBarberos().then(r => setBarberos(r.data)))}
+                      style={toggleBtn(b.activo)}>
+                      {b.activo ? 'Activo' : 'Inactivo'}
+                    </button>
+                    <button
+                      onClick={() => { if (window.confirm(`Eliminar a ${b.nombre}?`)) eliminarBarbero(b.id).then(() => getMisBarberos().then(r => setBarberos(r.data))).catch(err => alert(err.response?.data?.detail || 'Error')); }}
+                      style={deleteBtn}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,57,70,0.18)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(230,57,70,0.08)'}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </div>
               ))}
+              {barberos.length === 0 && (
+                <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>No hay barberos registrados.</p>
+              )}
             </div>
           </div>
         )}
 
-        {/* Tab Servicios */}
+        {/* ── Tab Servicios ── */}
         {tab === 'servicios' && (
-          <div className="space-y-6">
-            <div className="bg-gray-800 rounded-2xl p-6">
-              <h2 className="text-lg font-semibold mb-4">Agregar servicio</h2>
-              <form onSubmit={handleCrearServicio} className="grid grid-cols-2 gap-4">
-                <input value={nomServicio} onChange={e => setNomServicio(e.target.value)} placeholder="Nombre del servicio" required
-                  className="bg-gray-700 rounded-lg px-4 py-2 col-span-2" />
-                <input value={durServicio} onChange={e => setDurServicio(e.target.value)} placeholder="Duracion (min)" type="number" required
-                  className="bg-gray-700 rounded-lg px-4 py-2" />
-                <input value={precioServicio} onChange={e => setPrecioServicio(e.target.value)} placeholder="Precio" type="number" required
-                  className="bg-gray-700 rounded-lg px-4 py-2" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={sectionCard}>
+              <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.06em', margin: '0 0 16px 0' }}>
+                Agregar servicio
+              </h2>
+              <form onSubmit={handleCrearServicio} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <input value={nomServicio} onChange={e => setNomServicio(e.target.value)} placeholder="Nombre del servicio *" required
+                  className="input-dark" style={{ gridColumn: '1 / -1' }} />
+                <input value={durServicio} onChange={e => setDurServicio(e.target.value)} placeholder="Duracion (min) *" type="number" required className="input-dark" />
+                <input value={precioServicio} onChange={e => setPrecioServicio(e.target.value)} placeholder="Precio *" type="number" required className="input-dark" />
                 <select value={barberias_servicio} onChange={e => setBarberiasServicio(e.target.value)} required
-                  className="bg-gray-700 rounded-lg px-4 py-2 col-span-2">
-                  <option value="">Selecciona barberia</option>
+                  className="input-dark" style={{ gridColumn: '1 / -1', background: 'var(--bg-secondary)' }}>
+                  <option value="">Selecciona barberia *</option>
                   {barberias.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
                 </select>
-                <button type="submit" className="col-span-2 bg-yellow-400 text-gray-900 font-bold py-2 rounded-lg hover:bg-yellow-300">
-                  Agregar
+                <button type="submit" className="btn-gold" style={{ gridColumn: '1 / -1' }}>
+                  Agregar servicio
                 </button>
               </form>
             </div>
-            <div className="space-y-3">
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {servicios.map(s => (
-                <div key={s.id} className="bg-gray-800 rounded-xl p-4 flex justify-between items-center">
-                  <p className="font-semibold">{s.nombre}</p>
-                  <div className="text-right">
-                    <p className="text-yellow-400 font-bold">${s.precio}</p>
-                    <p className="text-gray-400 text-sm">{s.duracion_minutos} min</p>
+                <div key={s.id} style={{
+                  background: 'var(--bg-card)', border: '1px solid var(--border)',
+                  borderRadius: 12, padding: '14px 18px',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                }}>
+                  <div>
+                    <p style={{ fontWeight: 600, fontSize: 14, margin: '0 0 2px 0' }}>{s.nombre}</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>{s.duracion_minutos} min</p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontFamily: "'Bebas Neue'", fontSize: 16, color: '#C9A84C', letterSpacing: '0.05em' }}>
+                      ₡{s.precio}
+                    </span>
+                    <button onClick={() => toggleServicio(s.id).then(() => getMisServicios().then(r => setServicios(r.data)))}
+                      style={toggleBtn(s.disponible)}>
+                      {s.disponible ? 'Disponible' : 'Inactivo'}
+                    </button>
+                    <button
+                      onClick={() => { if (window.confirm(`Eliminar "${s.nombre}"?`)) eliminarServicio(s.id).then(() => getMisServicios().then(r => setServicios(r.data))).catch(err => alert(err.response?.data?.detail || 'Error')); }}
+                      style={deleteBtn}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,57,70,0.18)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(230,57,70,0.08)'}
+                    >
+                      Eliminar
+                    </button>
                   </div>
                 </div>
               ))}
+              {servicios.length === 0 && (
+                <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>No hay servicios registrados.</p>
+              )}
             </div>
           </div>
         )}
 
-        {/* Tab Barberias */}
+        {/* ── Tab Barberias ── */}
         {tab === 'barberias' && (
-          <div className="space-y-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {barberias.map(b => (
-              <div key={b.id} className="bg-gray-800 rounded-xl p-4 space-y-2">
-                <p className="font-semibold">{b.nombre}</p>
-                <p className="text-gray-400 text-sm">{b.direccion} — Plan: {b.plan}</p>
-                <div className="bg-gray-700 rounded-lg px-3 py-2 flex justify-between items-center">
-                  <span className="text-yellow-400 text-sm truncate">
+              <div key={b.id} style={{
+                background: 'var(--bg-card)', border: '1px solid var(--border)',
+                borderRadius: 14, padding: '20px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+                  <div>
+                    <p style={{ fontWeight: 700, fontSize: 15, margin: '0 0 2px 0' }}>{b.nombre}</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>
+                      {b.direccion || 'Sin direccion'} &mdash; Plan {b.plan}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => toggleBarberia(b.id).then(() => getMiBarberia().then(r => setBarberias(r.data)))}
+                    style={toggleBtn(b.activa)}
+                  >
+                    {b.activa ? 'Abierta' : 'Cerrada'}
+                  </button>
+                </div>
+
+                {/* Link por ID */}
+                <div style={{
+                  background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                  borderRadius: 8, padding: '8px 12px',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  marginBottom: 8,
+                }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {window.location.origin}/agendar/{b.id}
                   </span>
                   <button
                     onClick={() => navigator.clipboard.writeText(`${window.location.origin}/agendar/${b.id}`)}
-                    className="text-xs bg-yellow-400 text-gray-900 px-3 py-1 rounded-lg ml-2 font-semibold hover:bg-yellow-300 transition whitespace-nowrap"
+                    style={{ ...deleteBtn, color: 'var(--text-muted)', background: 'none', border: '1px solid var(--border)', flexShrink: 0 }}
                   >
-                    Copiar link
+                    Copiar
                   </button>
                 </div>
+
+                {/* Link slug */}
+                {b.subdominio ? (
+                  <div style={{
+                    background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.2)',
+                    borderRadius: 8, padding: '8px 12px',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    marginBottom: 8,
+                  }}>
+                    <span style={{ color: '#C9A84C', fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {window.location.origin}/b/{b.subdominio}
+                    </span>
+                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                      <button onClick={() => navigator.clipboard.writeText(`${window.location.origin}/b/${b.subdominio}`)}
+                        style={{ padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: "'DM Sans'", background: '#C9A84C', color: '#0A0A0A', border: 'none' }}>
+                        Copiar
+                      </button>
+                      <button onClick={() => { setEditandoSlug(b.id); setSlugInput(b.subdominio); setSlugError(''); }}
+                        style={{ ...deleteBtn, color: 'var(--text-muted)', background: 'none', border: '1px solid var(--border)' }}>
+                        Editar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { setEditandoSlug(b.id); setSlugInput(''); setSlugError(''); }}
+                    style={{
+                      width: '100%', background: 'none', cursor: 'pointer',
+                      border: '1px dashed rgba(255,255,255,0.1)',
+                      borderRadius: 8, padding: '8px', marginBottom: 8,
+                      fontSize: 12, color: 'var(--text-muted)', fontFamily: "'DM Sans'",
+                      transition: 'border-color 0.2s, color 0.2s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#C9A84C'; e.currentTarget.style.color = '#C9A84C'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                  >
+                    + Configurar link personalizado
+                  </button>
+                )}
+
+                {/* Editor slug */}
+                {editandoSlug === b.id && (
+                  <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px' }}>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+                      {window.location.origin}/b/<span style={{ color: '#F5F5F5' }}>{slugInput || 'tu-barberia'}</span>
+                    </p>
+                    <input
+                      value={slugInput}
+                      onChange={e => setSlugInput(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                      placeholder="mi-barberia"
+                      className="input-dark"
+                      style={{ marginBottom: 8 }}
+                      autoFocus
+                    />
+                    {slugError && <p style={{ color: '#E63946', fontSize: 12, margin: '0 0 8px 0' }}>{slugError}</p>}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => { setEditandoSlug(null); setSlugError(''); }} className="btn-outline" style={{ flex: 1, padding: '8px', fontSize: 13 }}>
+                        Cancelar
+                      </button>
+                      <button onClick={() => handleGuardarSlug(b.id)} disabled={slugCargando || slugInput.length < 3} className="btn-gold" style={{ flex: 1, padding: '8px', fontSize: 13 }}>
+                        {slugCargando ? 'Guardando...' : 'Guardar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
+
+            {puedeAgregarBarberia ? (
+              !mostrarFormBarberia ? (
+                <button
+                  onClick={() => setMostrarFormBarberia(true)}
+                  style={{
+                    width: '100%', background: 'none', cursor: 'pointer',
+                    border: '1px dashed rgba(255,255,255,0.1)',
+                    borderRadius: 14, padding: '18px',
+                    fontSize: 14, fontWeight: 600, color: 'var(--text-muted)', fontFamily: "'DM Sans'",
+                    transition: 'border-color 0.2s, color 0.2s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#C9A84C'; e.currentTarget.style.color = '#C9A84C'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                >
+                  + Agregar nueva barberia
+                </button>
+              ) : (
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '24px' }}>
+                  <h3 style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.06em', margin: '0 0 16px 0' }}>
+                    Nueva barberia
+                  </h3>
+                  <form onSubmit={handleCrearBarberia} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <input value={nuevaBarberiaForm.nombre} onChange={e => setNuevaBarberiaForm({ ...nuevaBarberiaForm, nombre: e.target.value })}
+                      placeholder="Nombre *" required className="input-dark" />
+                    <input value={nuevaBarberiaForm.direccion} onChange={e => setNuevaBarberiaForm({ ...nuevaBarberiaForm, direccion: e.target.value })}
+                      placeholder="Direccion (opcional)" className="input-dark" />
+                    <input value={nuevaBarberiaForm.telefono} onChange={e => setNuevaBarberiaForm({ ...nuevaBarberiaForm, telefono: e.target.value })}
+                      placeholder="Telefono (opcional)" className="input-dark" />
+                    {barberiaError && <p style={{ color: '#E63946', fontSize: 13, margin: 0 }}>{barberiaError}</p>}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button type="button" onClick={() => { setMostrarFormBarberia(false); setBarberiaError(''); }} className="btn-outline" style={{ flex: 1 }}>
+                        Cancelar
+                      </button>
+                      <button type="submit" disabled={barberiaCargando} className="btn-gold" style={{ flex: 1, opacity: barberiaCargando ? 0.7 : 1 }}>
+                        {barberiaCargando ? 'Creando...' : 'Crear barberia'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )
+            ) : (
+              <div style={{
+                background: 'var(--bg-card)', border: '1px solid var(--border)',
+                borderRadius: 14, padding: '20px', textAlign: 'center',
+              }}>
+                <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '0 0 8px 0' }}>
+                  Tu plan <strong style={{ color: '#C9A84C', textTransform: 'capitalize' }}>{plan}</strong> permite hasta {limiteBarberias} barberia(s).
+                </p>
+                <button onClick={() => navigate('/planes')} style={{
+                  background: 'none', border: 'none', color: '#C9A84C',
+                  fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans'", fontWeight: 600,
+                }}>
+                  Mejorar plan
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

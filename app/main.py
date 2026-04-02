@@ -5,6 +5,11 @@ from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.core.config import settings
 from app.routers import barberias, barberos, clientes, servicios, citas, auth, webhook
+from app.routers import suscripcion, stats, admin, lista_espera
+from app.models.lista_espera import ListaEspera
+from app.models.suscripcion import Suscripcion
+from app.services.whatsapp import notificar_lista_espera
+from app.core.config import settings
 from app.database import SessionLocal
 from app.models.cita import Cita
 from app.models.barbero import Barbero
@@ -119,11 +124,97 @@ def auto_cancelar_citas_sin_atender():
     finally:
         db.close()
 
+def procesar_lista_espera():
+    """
+    Cuando una cita se cancela (manejado en routers/citas.py),
+    este job corre cada 5 minutos para:
+    1. Expirar notificaciones sin confirmar después de 30 min
+    2. Notificar al siguiente en la lista
+    """
+    db = SessionLocal()
+    try:
+        ahora = datetime.utcnow()
+        expira = ahora - timedelta(minutes=30)
+
+        # Expirar notificados hace más de 30 min sin confirmar
+        notificados = db.query(ListaEspera).filter(
+            ListaEspera.estado == "notificado",
+            ListaEspera.notificado_en < expira,
+        ).all()
+
+        for entrada in notificados:
+            entrada.estado = "expirado"
+
+        db.flush()
+
+        # Para cada barbería con expirados, notificar al siguiente en cola
+        barberias_con_expirados = {e.barberia_id for e in notificados}
+        for barberia_id in barberias_con_expirados:
+            siguiente = (
+                db.query(ListaEspera)
+                .filter(
+                    ListaEspera.barberia_id == barberia_id,
+                    ListaEspera.estado == "esperando",
+                )
+                .order_by(ListaEspera.posicion.asc())
+                .first()
+            )
+            if siguiente:
+                link = f"{settings.FRONTEND_URL}/agendar/{barberia_id}"
+                # Obtener nombre de barbería
+                from app.models.barberia import Barberia as BarberiaModel
+                barberia = db.query(BarberiaModel).filter(BarberiaModel.id == barberia_id).first()
+                nombre_barberia = barberia.nombre if barberia else "la barbería"
+                try:
+                    notificar_lista_espera(
+                        telefono=siguiente.cliente_telefono,
+                        nombre=siguiente.cliente_nombre,
+                        barberia_nombre=nombre_barberia,
+                        link_agendamiento=link,
+                    )
+                    siguiente.estado = "notificado"
+                    siguiente.notificado_en = ahora
+                except Exception as e:
+                    print(f"[lista_espera] Error notificando: {e}")
+
+        db.commit()
+    except Exception as e:
+        print(f"[lista_espera] Error: {e}")
+    finally:
+        db.close()
+
+
+def verificar_trials_vencidos():
+    """Suspender barberias cuyo trial venció hace más de 1 día sin suscripción activa."""
+    db = SessionLocal()
+    try:
+        ahora = datetime.utcnow()
+        vencidos = db.query(Suscripcion).filter(
+            Suscripcion.estado == "trial",
+            Suscripcion.fecha_trial_fin < ahora,
+        ).all()
+        for sus in vencidos:
+            sus.estado = "suspendida"
+            from app.models.barberia import Barberia as BarberiaModel
+            barberia = db.query(BarberiaModel).filter(BarberiaModel.id == sus.barberia_id).first()
+            if barberia:
+                barberia.activa = False
+        if vencidos:
+            db.commit()
+            print(f"[trials] {len(vencidos)} trials vencidos suspendidos.")
+    except Exception as e:
+        print(f"[trials] Error: {e}")
+    finally:
+        db.close()
+
+
 scheduler = BackgroundScheduler()
 scheduler.add_job(limpiar_citas_antiguas, "interval", hours=24)
 scheduler.add_job(enviar_recordatorios_24h, "interval", minutes=30)
 scheduler.add_job(enviar_recordatorios_1h, "interval", minutes=30)
 scheduler.add_job(auto_cancelar_citas_sin_atender, "interval", hours=1)
+scheduler.add_job(procesar_lista_espera, "interval", minutes=5)
+scheduler.add_job(verificar_trials_vencidos, "interval", hours=6)
 
 @asynccontextmanager
 async def lifespan(app):
@@ -135,9 +226,10 @@ app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"],  # Safe: no cookies, JWT only (allow_credentials=False)
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
+    allow_credentials=False,
 )
 
 app.include_router(auth.router)
@@ -147,7 +239,11 @@ app.include_router(barberos.router)
 app.include_router(clientes.router)
 app.include_router(servicios.router)
 app.include_router(citas.router)
+app.include_router(suscripcion.router)
+app.include_router(stats.router)
+app.include_router(admin.router)
+app.include_router(lista_espera.router)
 
 @app.get("/")
 def root():
-    return {"mensaje": "BarberSaaS activo, vibras lo mas importante!!🔥"}
+    return {"mensaje": "BarberSaaS activo"}

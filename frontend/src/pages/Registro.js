@@ -42,7 +42,7 @@ function Registro() {
             <label className="block text-gray-300 mb-1">Telefono de la barberia</label>
             <input value={telefono} onChange={e => setTelefono(e.target.value)}
               className="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-              placeholder="+573001234567" />
+              placeholder="+50688887777" />
           </div>
           <div>
             <label className="block text-gray-300 mb-1">Tu email</label>

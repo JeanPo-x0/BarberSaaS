@@ -12,6 +12,7 @@ class ServicioCreate(ServicioBase):
 
 class ServicioResponse(ServicioBase):
     id: int
+    disponible: bool = True
 
     class Config:
         from_attributes = True

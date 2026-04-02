@@ -7,6 +7,15 @@ class UsuarioCreate(BaseModel):
     rol: str
     barberia_id: Optional[int] = None
 
+
+class OnboardingCreate(BaseModel):
+    email: str
+    password: str
+    nombre_barberia: str
+    direccion: Optional[str] = None
+    telefono: Optional[str] = None
+    plan: str = "basico"  # basico | pro | premium
+
 class UsuarioResponse(BaseModel):
     id: int
     email: str

@@ -12,9 +12,12 @@ from app.models.usuario import Usuario
 from app.schemas import CitaCreate, CitaResponse
 from app.services.whatsapp import (
     confirmar_cita, notificar_cancelacion,
-    notificar_barbero_nueva_cita, notificar_barbero_cancelacion
+    notificar_barbero_nueva_cita, notificar_barbero_cancelacion,
+    notificar_lista_espera,
 )
 from app.core.deps import get_usuario_actual
+from app.core.config import settings
+from app.models.lista_espera import ListaEspera
 
 router = APIRouter(prefix="/citas", tags=["Citas"])
 
@@ -150,6 +153,35 @@ def cancelar_cita(cita_id: int, db: Session = Depends(get_db)):
                 cliente=cliente.nombre if cliente else "Cliente",
                 fecha_hora=fecha_hora_str
             )
+    except Exception:
+        pass
+
+    # Notificar al primero en lista de espera de esta barbería
+    try:
+        barbero_cita = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
+        if barbero_cita:
+            siguiente = (
+                db.query(ListaEspera)
+                .filter(
+                    ListaEspera.barberia_id == barbero_cita.barberia_id,
+                    ListaEspera.estado == "esperando",
+                )
+                .order_by(ListaEspera.posicion.asc())
+                .first()
+            )
+            if siguiente:
+                from app.models.barberia import Barberia
+                barberia = db.query(Barberia).filter(Barberia.id == barbero_cita.barberia_id).first()
+                link = f"{settings.FRONTEND_URL}/agendar/{barbero_cita.barberia_id}"
+                notificar_lista_espera(
+                    telefono=siguiente.cliente_telefono,
+                    nombre=siguiente.cliente_nombre,
+                    barberia_nombre=barberia.nombre if barberia else "la barbería",
+                    link_agendamiento=link,
+                )
+                siguiente.estado = "notificado"
+                siguiente.notificado_en = datetime.utcnow()
+                db.commit()
     except Exception:
         pass
 

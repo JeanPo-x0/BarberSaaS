@@ -8,12 +8,15 @@ client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
 FROM = os.getenv("TWILIO_WHATSAPP_FROM")
 
 def enviar_mensaje(telefono: str, mensaje: str):
+    if not FROM:
+        print("[WhatsApp] ERROR: TWILIO_WHATSAPP_FROM no esta configurado en .env")
+        return
     numero = f"whatsapp:{telefono}" if telefono.startswith("+") else f"whatsapp:+{telefono}"
-    client.messages.create(
-        from_=FROM,
-        to=numero,
-        body=mensaje
-    )
+    try:
+        client.messages.create(from_=FROM, to=numero, body=mensaje)
+        print(f"[WhatsApp] Mensaje enviado a {numero}")
+    except Exception as e:
+        print(f"[WhatsApp] ERROR enviando a {numero}: {e}")
 
 def confirmar_cita(telefono: str, nombre: str, fecha_hora: str, servicio: str, barbero: str):
     mensaje = (
@@ -60,5 +63,28 @@ def notificar_barbero_cancelacion(telefono: str, nombre_barbero: str, cliente: s
         f"Cliente: {cliente}\n"
         f"Fecha y hora: {fecha_hora}\n\n"
         f"Ese horario quedo libre."
+    )
+    enviar_mensaje(telefono, mensaje)
+
+
+def notificar_lista_espera(telefono: str, nombre: str, barberia_nombre: str, link_agendamiento: str):
+    """Avisa al primero en lista de espera que se liberó un turno."""
+    mensaje = (
+        f"Hola {nombre}! Tenemos buenas noticias.\n\n"
+        f"Se libero un turno en *{barberia_nombre}*.\n"
+        f"Tienes 30 minutos para confirmar tu cita:\n"
+        f"{link_agendamiento}\n\n"
+        f"Si no confirmas, le avisaremos al siguiente en la lista."
+    )
+    enviar_mensaje(telefono, mensaje)
+
+
+def reenganche_cliente(telefono: str, nombre: str, barberia_nombre: str, link_agendamiento: str):
+    """WhatsApp de reenganche para clientes inactivos +30 días."""
+    mensaje = (
+        f"Hola {nombre}! Te echamos de menos en *{barberia_nombre}* ✂️\n\n"
+        f"Ya paso un tiempo desde tu ultima visita. Agenda tu proximo corte rapido:\n"
+        f"{link_agendamiento}\n\n"
+        f"Te esperamos!"
     )
     enviar_mensaje(telefono, mensaje)

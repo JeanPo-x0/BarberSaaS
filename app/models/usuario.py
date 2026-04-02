@@ -11,4 +11,4 @@ class Usuario(Base):
     rol = Column(String, nullable=False)  # "dueno" o "barbero"
     barberia_id = Column(Integer, ForeignKey("barberias.id"))
 
-    barberia = relationship("Barberia")
+    barberia = relationship("Barberia", foreign_keys=[barberia_id])

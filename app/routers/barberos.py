@@ -23,6 +23,45 @@ def mis_barberos(usuario: Usuario = Depends(get_usuario_actual), db: Session = D
         return []
     return db.query(Barbero).filter(Barbero.barberia_id == usuario.barberia_id).all()
 
+@router.get("/barberia/{barberia_id}", response_model=List[BarberoResponse])
+def barberos_por_barberia(barberia_id: int, db: Session = Depends(get_db)):
+    # Returns all barbers (active and inactive) so the public page can show unavailable ones
+    return db.query(Barbero).filter(Barbero.barberia_id == barberia_id).all()
+
+@router.patch("/{barbero_id}/toggle", response_model=BarberoResponse)
+def toggle_barbero(barbero_id: int, usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
+    barbero = db.query(Barbero).filter(
+        Barbero.id == barbero_id,
+        Barbero.barberia_id == usuario.barberia_id
+    ).first()
+    if not barbero:
+        raise HTTPException(status_code=404, detail="Barbero no encontrado")
+    barbero.activo = not barbero.activo
+    db.commit()
+    db.refresh(barbero)
+    return barbero
+
+@router.delete("/{barbero_id}")
+def eliminar_barbero(barbero_id: int, usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
+    from app.models.cita import Cita
+    from datetime import datetime
+    barbero = db.query(Barbero).filter(
+        Barbero.id == barbero_id,
+        Barbero.barberia_id == usuario.barberia_id
+    ).first()
+    if not barbero:
+        raise HTTPException(status_code=404, detail="Barbero no encontrado")
+    citas_futuras = db.query(Cita).filter(
+        Cita.barbero_id == barbero_id,
+        Cita.estado == "pendiente",
+        Cita.fecha_hora > datetime.utcnow()
+    ).count()
+    if citas_futuras > 0:
+        raise HTTPException(status_code=400, detail=f"El barbero tiene {citas_futuras} cita(s) pendiente(s). Cancelalas antes de eliminar.")
+    db.delete(barbero)
+    db.commit()
+    return {"ok": True}
+
 @router.get("/", response_model=List[BarberoResponse])
 def listar_barberos(db: Session = Depends(get_db)):
     return db.query(Barbero).all()

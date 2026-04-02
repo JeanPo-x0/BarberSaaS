@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react';
 import { getMisCitas } from '../services/api';
 import { useNavigate, Link } from 'react-router-dom';
-import LogoLink from '../components/LogoLink';
+import Navbar from '../components/Navbar';
+
+const ESTADO_COLOR = {
+  cancelada: { bg: 'rgba(230,57,70,0.1)', color: '#E63946', border: 'rgba(230,57,70,0.3)' },
+  completada: { bg: 'rgba(74,222,128,0.08)', color: '#4ade80', border: 'rgba(74,222,128,0.25)' },
+};
 
 function Historial() {
   const [citas, setCitas] = useState([]);
+  const [filtro, setFiltro] = useState('todas');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,44 +26,107 @@ function Historial() {
     });
   }, [navigate]);
 
+  const citasFiltradas = filtro === 'todas' ? citas : citas.filter(c => c.estado === filtro);
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <nav className="bg-gray-800 px-6 py-4 flex justify-between items-center">
-        <LogoLink className="text-xl font-bold text-yellow-400">BarberSaaS</LogoLink>
-        <div className="flex gap-4">
-          <Link to="/agenda" className="text-gray-300 hover:text-white px-4 py-2">Agenda</Link>
-          <Link to="/panel" className="text-gray-300 hover:text-white px-4 py-2">Panel</Link>
-        </div>
-      </nav>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+      <Navbar links={[
+        { label: 'Agenda', to: '/agenda' },
+        { label: 'Panel', to: '/panel' },
+        { label: 'Ingresos', to: '/ingresos' },
+      ]} />
 
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-4">
-            <Link to="/agenda" className="text-gray-400 hover:text-white transition">← Volver</Link>
-            <h2 className="text-2xl font-bold">Historial</h2>
+      <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+          <div>
+            <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.08em', margin: 0, color: 'var(--text-primary)' }}>
+              Historial
+            </h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '4px 0 0 0' }}>
+              Ultimos 30 dias
+            </p>
           </div>
-          <p className="text-gray-500 text-sm">Ultimos 30 dias</p>
+          <Link to="/agenda" style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none',
+            padding: '8px 14px', borderRadius: 8,
+            border: '1px solid var(--border)',
+            transition: 'color 0.2s, border-color 0.2s',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#F5F5F5'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Volver
+          </Link>
         </div>
 
-        {citas.length === 0 ? (
-          <div className="bg-gray-800 rounded-2xl p-8 text-center text-gray-400">
-            <p>No hay citas en el historial</p>
+        {/* Filtros */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+          {['todas', 'completada', 'cancelada'].map(f => (
+            <button
+              key={f}
+              onClick={() => setFiltro(f)}
+              style={{
+                background: filtro === f ? '#C9A84C' : 'var(--bg-card)',
+                color: filtro === f ? '#0A0A0A' : 'var(--text-muted)',
+                border: `1px solid ${filtro === f ? '#C9A84C' : 'var(--border)'}`,
+                borderRadius: 8, padding: '6px 14px',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                fontFamily: "'DM Sans'",
+                transition: 'all 0.2s',
+                textTransform: 'capitalize',
+              }}
+            >
+              {f === 'todas' ? 'Todas' : f}
+            </button>
+          ))}
+        </div>
+
+        {/* Lista */}
+        {citasFiltradas.length === 0 ? (
+          <div style={{
+            background: 'var(--bg-card)', border: '1px solid var(--border)',
+            borderRadius: 14, padding: '48px 24px', textAlign: 'center',
+          }}>
+            <p style={{ color: 'var(--text-muted)', margin: 0 }}>No hay citas en el historial</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {citas.map(cita => (
-              <div key={cita.id} className="bg-gray-800 rounded-xl p-4 flex justify-between items-center opacity-70">
-                <div>
-                  <p className="font-semibold">Cita #{cita.id}</p>
-                  <p className="text-gray-400 text-sm">{new Date(cita.fecha_hora).toLocaleString('es-CR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' })}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {citasFiltradas.map(cita => {
+              const est = ESTADO_COLOR[cita.estado] || ESTADO_COLOR.completada;
+              return (
+                <div key={cita.id} style={{
+                  background: 'var(--bg-card)', border: '1px solid var(--border)',
+                  borderRadius: 12, padding: '16px 20px',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  opacity: 0.85,
+                }}>
+                  <div>
+                    <p style={{ fontWeight: 600, fontSize: 15, margin: '0 0 4px 0', color: 'var(--text-primary)' }}>
+                      Cita #{cita.id}
+                    </p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>
+                      {new Date(cita.fecha_hora).toLocaleString('es-CR', {
+                        day: '2-digit', month: '2-digit', year: '2-digit',
+                        hour: '2-digit', minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                  <span style={{
+                    background: est.bg, color: est.color,
+                    border: `1px solid ${est.border}`,
+                    borderRadius: 100, padding: '4px 12px',
+                    fontSize: 12, fontWeight: 600, textTransform: 'capitalize',
+                  }}>
+                    {cita.estado}
+                  </span>
                 </div>
-                <span className={`text-xs px-3 py-1 rounded-full ${
-                  cita.estado === 'cancelada' ? 'bg-red-500' : 'bg-blue-500'
-                }`}>
-                  {cita.estado}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

@@ -2,68 +2,173 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import LogoLink from '../components/LogoLink';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [cargando, setCargando] = useState(false);
+  const [showPass, setShowPass] = useState(false);
   const { iniciarSesion } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setCargando(true);
     try {
       const res = await login({ email, password });
       iniciarSesion(res.data.access_token, { email });
       navigate('/agenda');
-    } catch {
-      setError('Email o contrasena incorrectos');
+    } catch (err) {
+      if (!err.response) {
+        setError('No se pudo conectar con el servidor.');
+      } else {
+        setError('Email o contrasena incorrectos.');
+      }
+    } finally {
+      setCargando(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-      <div className="bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-md">
-        <h1 className="text-3xl font-bold text-yellow-400 text-center mb-2">BarberSaaS</h1>
-        <p className="text-gray-400 text-center mb-8">Panel de administracion</p>
-        <form onSubmit={handleLogin} className="space-y-4">
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--bg-primary)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px',
+      fontFamily: "'DM Sans', sans-serif",
+    }}>
+      {/* Back link */}
+      <div style={{ position: 'absolute', top: 24, left: 24 }}>
+        <LogoLink to="/" />
+      </div>
+
+      <div className="anim-fadeup" style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+        borderRadius: 18,
+        padding: '40px 36px',
+        width: '100%',
+        maxWidth: 420,
+        boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+      }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <h1 style={{
+            fontFamily: "'Bebas Neue', cursive",
+            fontSize: 32, letterSpacing: '0.12em',
+            color: 'var(--text-primary)', margin: '0 0 6px 0',
+          }}>
+            Bienvenido de vuelta
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>
+            Ingresa a tu panel de administracion
+          </p>
+        </div>
+
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Email */}
           <div>
-            <label className="block text-gray-300 mb-1">Email</label>
+            <label style={{ display: 'block', fontSize: 13, color: 'var(--text-muted)', marginBottom: 6, fontWeight: 500 }}>
+              Email
+            </label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              className="input-dark"
               placeholder="tu@email.com"
               required
+              autoComplete="email"
             />
           </div>
+
+          {/* Password */}
           <div>
-            <label className="block text-gray-300 mb-1">Contrasena</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-              placeholder="••••••••"
-              required
-            />
+            <label style={{ display: 'block', fontSize: 13, color: 'var(--text-muted)', marginBottom: 6, fontWeight: 500 }}>
+              Contrasena
+            </label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPass ? 'text' : 'password'}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="input-dark"
+                placeholder="••••••••"
+                required
+                autoComplete="current-password"
+                style={{ paddingRight: 44 }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass(!showPass)}
+                style={{
+                  position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--text-muted)', padding: 0, display: 'flex',
+                }}
+              >
+                {showPass ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+
+          {/* Error */}
+          {error && (
+            <div style={{
+              background: 'rgba(230,57,70,0.08)',
+              border: '1px solid rgba(230,57,70,0.25)',
+              borderRadius: 10, padding: '10px 14px',
+              fontSize: 13, color: '#E63946',
+            }}>
+              {error}
+            </div>
+          )}
+
+          {/* Submit */}
           <button
             type="submit"
-            className="w-full bg-yellow-400 text-gray-900 font-bold py-2 rounded-lg hover:bg-yellow-300 transition"
+            className="btn-gold"
+            disabled={cargando}
+            style={{ width: '100%', marginTop: 4, opacity: cargando ? 0.7 : 1 }}
           >
-            Entrar
+            {cargando ? 'Ingresando...' : 'Entrar'}
           </button>
         </form>
-        <p className="text-center text-gray-500 text-sm mt-6">
-          ¿Eres nuevo?{' '}
-          <Link to="/registro" className="text-yellow-400 hover:underline">
-            Registra tu barberia aqui
+
+        {/* Links */}
+        <div style={{ marginTop: 20, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Link to="/recuperar-password" style={{
+            fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none',
+            transition: 'color 0.2s',
+          }}
+            onMouseEnter={e => e.target.style.color = '#C9A84C'}
+            onMouseLeave={e => e.target.style.color = 'var(--text-muted)'}
+          >
+            Olvide mi contrasena
           </Link>
-        </p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+            No tenes cuenta?{' '}
+            <Link to="/registro" style={{ color: '#C9A84C', textDecoration: 'none', fontWeight: 600 }}>
+              Registra tu barberia
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -1,0 +1,52 @@
+services:
+  - type: web
+    name: barbersaas-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: barbersaas-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "10080"
+      - key: FRONTEND_URL
+        value: https://TU-APP.vercel.app       # reemplazar después del deploy
+      - key: SAAS_DOMAIN
+        value: TU-DOMINIO.com                  # reemplazar
+      - key: SUPERADMIN_EMAIL
+        value: admin@TU-DOMINIO.com            # reemplazar
+      # Stripe — completar con tus keys reales
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_PRO_MENSUAL
+        sync: false
+      - key: STRIPE_PRICE_PRO_ANUAL
+        sync: false
+      - key: STRIPE_PRICE_PREMIUM_MENSUAL
+        sync: false
+      - key: STRIPE_PRICE_PREMIUM_ANUAL
+        sync: false
+      # Twilio — completar con tus keys reales
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_WHATSAPP_FROM
+        sync: false
+
+databases:
+  - name: barbersaas-db
+    databaseName: barbersaas
+    user: barbersaas
+    region: oregon
+    plan: free
