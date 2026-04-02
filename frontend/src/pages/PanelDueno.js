@@ -18,13 +18,6 @@ const tabStyle = (activo) => ({
   transition: 'all 0.2s',
 });
 
-const inputStyle = {
-  width: '100%', background: 'var(--bg-secondary)',
-  border: '1px solid var(--border)', borderRadius: 10,
-  padding: '10px 14px', color: 'var(--text-primary)',
-  fontFamily: "'DM Sans'", fontSize: 13, outline: 'none',
-};
-
 const toggleBtn = (activo) => ({
   padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700,
   cursor: 'pointer', border: 'none', fontFamily: "'DM Sans'",

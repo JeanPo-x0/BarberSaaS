@@ -4,7 +4,7 @@ import {
   getMisBarberos, getMisServicios,
   buscarOCrearCliente, crearCita, getDisponibilidad,
 } from '../services/api';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
 const ESTADO_STYLE = {
@@ -82,12 +82,6 @@ function Agenda() {
 
   const citasActivas = citas.filter(c => c.estado !== 'cancelada' && c.estado !== 'completada');
   const hoy = new Date().toISOString().split('T')[0];
-
-  const inputStyle = {
-    width: '100%', background: 'var(--bg-secondary)', border: '1px solid var(--border)',
-    borderRadius: 10, padding: '10px 14px', color: 'var(--text-primary)',
-    fontFamily: "'DM Sans'", fontSize: 13, outline: 'none',
-  };
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>

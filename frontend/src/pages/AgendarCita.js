@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { NavLogo } from '../components/LogoLink';
 import {
   getBarberosPorBarberia, getServiciosPorBarberia, getBarberia,
@@ -11,7 +11,6 @@ const hoy = new Date().toISOString().split('T')[0];
 function AgendarCita() {
   const { barberia_id, slug } = useParams();
   const [barberia, setBarberia] = useState(null);
-  const [barberiaIdResuelto, setBarberiaIdResuelto] = useState(null);
   const [barberos, setBarberos] = useState([]);
   const [servicios, setServicios] = useState([]);
   const [slots, setSlots] = useState([]);
@@ -24,8 +23,6 @@ function AgendarCita() {
   const [paso, setPaso] = useState(1);
   const [error, setError] = useState('');
   const [confirmado, setConfirmado] = useState(false);
-  const navigate = useNavigate();
-
   useEffect(() => {
     const resolveId = slug
       ? getBarberiaBySlug(slug).then(r => { setBarberia(r.data); return r.data.id; })
@@ -34,7 +31,6 @@ function AgendarCita() {
         : Promise.resolve(null);
     resolveId.then(id => {
       if (!id) return;
-      setBarberiaIdResuelto(id);
       getBarberosPorBarberia(id).then(r => setBarberos(r.data));
       getServiciosPorBarberia(id).then(r => setServicios(r.data));
     }).catch(() => {});
