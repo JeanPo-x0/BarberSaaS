@@ -18,11 +18,11 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "10080"
       - key: FRONTEND_URL
-        value: https://TU-APP.vercel.app       # reemplazar después del deploy
+        value: https://barber-saa-s-qlay.vercel.app
       - key: SAAS_DOMAIN
-        value: TU-DOMINIO.com                  # reemplazar
+        value: barber-saa-s-qlay.vercel.app
       - key: SUPERADMIN_EMAIL
-        value: admin@TU-DOMINIO.com            # reemplazar
+        value: admin@barbersaas.com
       # Stripe — completar con tus keys reales
       - key: STRIPE_SECRET_KEY
         sync: false
