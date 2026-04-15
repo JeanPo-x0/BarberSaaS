@@ -139,7 +139,7 @@ function PanelDueno() {
         { label: 'Ingresos', to: '/ingresos' },
       ]} />
 
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
+      <div className="mobile-px" style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
           <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.08em', margin: 0 }}>
             Panel
@@ -171,7 +171,7 @@ function PanelDueno() {
               <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.06em', margin: '0 0 16px 0' }}>
                 Agregar barbero
               </h2>
-              <form onSubmit={handleCrearBarbero} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <form onSubmit={handleCrearBarbero} className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <input value={nomBarbero} onChange={e => setNomBarbero(e.target.value)} placeholder="Nombre *" required
                   className="input-dark" style={{ gridColumn: '1 / -1' }} />
                 <div style={{ display: 'flex' }}>
@@ -199,7 +199,7 @@ function PanelDueno() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {barberos.map(b => (
-                <div key={b.id} style={{
+                <div key={b.id} className="mobile-item-row" style={{
                   background: 'var(--bg-card)', border: '1px solid var(--border)',
                   borderRadius: 12, padding: '14px 18px',
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -240,7 +240,7 @@ function PanelDueno() {
               <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.06em', margin: '0 0 16px 0' }}>
                 Agregar servicio
               </h2>
-              <form onSubmit={handleCrearServicio} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <form onSubmit={handleCrearServicio} className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <input value={nomServicio} onChange={e => setNomServicio(e.target.value)} placeholder="Nombre del servicio *" required
                   className="input-dark" style={{ gridColumn: '1 / -1' }} />
                 <input value={durServicio} onChange={e => setDurServicio(e.target.value)} placeholder="Duracion (min) *" type="number" required className="input-dark" />
@@ -258,7 +258,7 @@ function PanelDueno() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {servicios.map(s => (
-                <div key={s.id} style={{
+                <div key={s.id} className="mobile-item-row" style={{
                   background: 'var(--bg-card)', border: '1px solid var(--border)',
                   borderRadius: 12, padding: '14px 18px',
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',

@@ -131,7 +131,7 @@ export default function DashboardIngresos() {
         ) : null}
       />
 
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 24px' }}>
+      <div className="mobile-px" style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 24px' }}>
         <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.08em', color: '#C9A84C', margin: '0 0 4px 0' }}>
             Dashboard de Ingresos
@@ -157,7 +157,7 @@ export default function DashboardIngresos() {
         {/* Tab Ingresos */}
         {tabActiva === 'ingresos' && datos && (
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 28 }}>
+            <div className="stats-grid-mobile" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 28 }}>
               {TARJETAS.map(({ key, label }) => (
                 <StatCard key={key} label={label} value={`$${datos.ingresos?.[key]?.toFixed(2) || '0.00'}`} />
               ))}
@@ -236,7 +236,7 @@ export default function DashboardIngresos() {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {retencion.clientes_inactivos.map(c => (
-                      <div key={c.id} style={{
+                      <div key={c.id} className="mobile-item-row" style={{
                         background: 'var(--bg-card)', border: '1px solid var(--border)',
                         borderRadius: 12, padding: '16px 20px',
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -280,7 +280,7 @@ export default function DashboardIngresos() {
         {tabActiva === 'avanzadas' && (
           <div>
             {avanzadas ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+              <div className="stats-grid-mobile" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
                 <StatCard label="Total clientes" value={avanzadas.total_clientes} />
                 <StatCard label="Activos este mes" value={avanzadas.clientes_activos_mes} />
                 <StatCard label="Tasa retencion" value={`${avanzadas.tasa_retencion}%`} />

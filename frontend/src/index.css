@@ -192,3 +192,32 @@ select.input-dark option  { background: var(--bg-secondary); }
 .step-active  { background: var(--gold); color: #0A0A0A; }
 .step-done    { background: rgba(201,168,76,0.2); color: var(--gold); border: 1px solid var(--gold); }
 .step-pending { background: var(--bg-secondary); color: var(--text-muted); border: 1px solid var(--border); }
+
+/* ── Mobile Responsive ───────────────────────────────── */
+@media (max-width: 600px) {
+  /* Reduce page horizontal padding */
+  .mobile-px {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  /* Header rows (title + back/badge) → stack vertically */
+  .mobile-header-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+  /* List item rows (info + actions) → stack vertically */
+  .mobile-item-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px;
+  }
+  /* 2-column form grid → single column */
+  .mobile-grid-1 {
+    grid-template-columns: 1fr !important;
+  }
+  /* Stats/cards grid → single column */
+  .stats-grid-mobile {
+    grid-template-columns: 1fr !important;
+  }
+}

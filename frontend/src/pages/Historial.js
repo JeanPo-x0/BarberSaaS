@@ -36,9 +36,9 @@ function Historial() {
         { label: 'Ingresos', to: '/ingresos' },
       ]} />
 
-      <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
+      <div className="mobile-px" style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+        <div className="mobile-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
           <div>
             <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.08em', margin: 0, color: 'var(--text-primary)' }}>
               Historial
@@ -99,7 +99,7 @@ function Historial() {
             {citasFiltradas.map(cita => {
               const est = ESTADO_COLOR[cita.estado] || ESTADO_COLOR.completada;
               return (
-                <div key={cita.id} style={{
+                <div key={cita.id} className="mobile-item-row" style={{
                   background: 'var(--bg-card)', border: '1px solid var(--border)',
                   borderRadius: 12, padding: '16px 20px',
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
