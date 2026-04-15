@@ -7,10 +7,18 @@ const API = axios.create({
   timeout: 70000, // 70s — cubre el cold start de Render free tier (~60s)
 });
 
-// Despierta el servidor antes de que el usuario haga login.
-// Se llama desde la pagina de Login al montar el componente.
-export const wakeUpServer = () =>
-  axios.get(`${BASE_URL}/health`, { timeout: 70000 }).catch(() => {});
+// Despierta el servidor haciendo polling hasta que responda (cold start Render).
+// Retorna una promesa que resuelve cuando el servidor esta listo o tras 2 min.
+export const wakeUpServer = () => {
+  const deadline = Date.now() + 120000; // 2 min max
+  const poll = () => {
+    if (Date.now() > deadline) return Promise.resolve();
+    return axios
+      .get(`${BASE_URL}/health`, { timeout: 8000 })
+      .catch(() => new Promise(r => setTimeout(r, 4000)).then(poll));
+  };
+  return poll();
+};
 
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
