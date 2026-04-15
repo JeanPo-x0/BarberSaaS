@@ -222,7 +222,12 @@ async def lifespan(app):
     yield
     scheduler.shutdown()
 
-app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
+app = FastAPI(
+    title=settings.APP_NAME,
+    lifespan=lifespan,
+    docs_url="/docs" if settings.DOCS_ENABLED else None,
+    redoc_url="/redoc" if settings.DOCS_ENABLED else None,
+)
 
 app.add_middleware(
     CORSMiddleware,

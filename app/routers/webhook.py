@@ -1,6 +1,8 @@
+import os
 from fastapi import APIRouter, Request, Depends, BackgroundTasks
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
+from twilio.request_validator import RequestValidator
 from app.database import get_db
 from app.services.bot import procesar_mensaje
 
@@ -10,9 +12,20 @@ router = APIRouter(prefix="/webhook", tags=["webhook"])
 @router.post("/whatsapp")
 async def webhook_whatsapp(request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     form = await request.form()
-    from_number = form.get("From", "").replace("whatsapp:", "")
-    to_number = form.get("To", "").replace("whatsapp:", "")
-    body = form.get("Body", "").strip()
+    form_dict = dict(form)
+
+    # Validar firma de Twilio para rechazar requests falsos
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN", "")
+    if auth_token:
+        validator = RequestValidator(auth_token)
+        signature = request.headers.get("X-Twilio-Signature", "")
+        url = str(request.url)
+        if not validator.validate(url, form_dict, signature):
+            return Response(content="Forbidden", status_code=403)
+
+    from_number = form_dict.get("From", "").replace("whatsapp:", "")
+    to_number = form_dict.get("To", "").replace("whatsapp:", "")
+    body = form_dict.get("Body", "").strip()
 
     respuesta, tarea_background = procesar_mensaje(db, from_number, to_number, body)
 

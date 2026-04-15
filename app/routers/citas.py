@@ -122,10 +122,13 @@ def listar_mis_citas(usuario: Usuario = Depends(get_usuario_actual), db: Session
     )
 
 @router.patch("/{cita_id}/completar", response_model=CitaResponse)
-def completar_cita(cita_id: int, db: Session = Depends(get_db)):
+def completar_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
     cita = db.query(Cita).filter(Cita.id == cita_id).first()
     if not cita:
         raise HTTPException(status_code=404, detail="Cita no encontrada")
+    barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
+    if not barbero or barbero.barberia_id != usuario.barberia_id:
+        raise HTTPException(status_code=403, detail="No tienes permiso sobre esta cita")
     if cita.estado != "pendiente":
         raise HTTPException(status_code=400, detail="Solo se pueden completar citas pendientes")
     cita.estado = "completada"
@@ -134,21 +137,32 @@ def completar_cita(cita_id: int, db: Session = Depends(get_db)):
     return cita
 
 @router.get("/", response_model=List[CitaResponse])
-def listar_citas(db: Session = Depends(get_db)):
-    return db.query(Cita).all()
+def listar_citas(usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
+    return (
+        db.query(Cita)
+        .join(Barbero, Cita.barbero_id == Barbero.id)
+        .filter(Barbero.barberia_id == usuario.barberia_id)
+        .all()
+    )
 
 @router.get("/{cita_id}", response_model=CitaResponse)
-def obtener_cita(cita_id: int, db: Session = Depends(get_db)):
+def obtener_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
     cita = db.query(Cita).filter(Cita.id == cita_id).first()
     if not cita:
         raise HTTPException(status_code=404, detail="Cita no encontrada")
+    barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
+    if not barbero or barbero.barberia_id != usuario.barberia_id:
+        raise HTTPException(status_code=403, detail="No tienes permiso sobre esta cita")
     return cita
 
 @router.patch("/{cita_id}/cancelar", response_model=CitaResponse)
-def cancelar_cita(cita_id: int, db: Session = Depends(get_db)):
+def cancelar_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
     cita = db.query(Cita).filter(Cita.id == cita_id).first()
     if not cita:
         raise HTTPException(status_code=404, detail="Cita no encontrada")
+    barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
+    if not barbero or barbero.barberia_id != usuario.barberia_id:
+        raise HTTPException(status_code=403, detail="No tienes permiso sobre esta cita")
     if cita.estado == "cancelada":
         raise HTTPException(status_code=400, detail="La cita ya fue cancelada")
     cita.estado = "cancelada"

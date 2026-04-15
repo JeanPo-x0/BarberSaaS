@@ -251,6 +251,16 @@ def enviar_whatsapp_reenganche(
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
 
+    # Verificar que el cliente tiene citas en la barberia del usuario autenticado
+    cita_propia = (
+        db.query(Cita)
+        .join(Barbero, Cita.barbero_id == Barbero.id)
+        .filter(Cita.cliente_id == datos.cliente_id, Barbero.barberia_id == barberia.id)
+        .first()
+    )
+    if not cita_propia:
+        raise HTTPException(status_code=403, detail="Este cliente no pertenece a tu barberia")
+
     link = f"https://{settings.FRONTEND_URL.replace('http://', '').replace('https://', '')}/agendar/{barberia.id}"
     try:
         reenganche_cliente(

@@ -60,13 +60,16 @@ def onboarding(datos: OnboardingCreate, db: Session = Depends(get_db)):
     if existente:
         raise HTTPException(status_code=400, detail="El email ya esta registrado")
 
-    # Crear barbería
+    if len(datos.password) < 8:
+        raise HTTPException(status_code=400, detail="La contrasena debe tener al menos 8 caracteres")
+
+    # Crear barbería — plan siempre basico al registrarse, se sube via Stripe
     barberia = Barberia(
         nombre=datos.nombre_barberia,
         direccion=datos.direccion,
         telefono=datos.telefono,
         email=datos.email,
-        plan=datos.plan,
+        plan="basico",
         activa=True,
     )
     db.add(barberia)
@@ -75,7 +78,7 @@ def onboarding(datos: OnboardingCreate, db: Session = Depends(get_db)):
     # Crear suscripción trial 14 días
     suscripcion = Suscripcion(
         barberia_id=barberia.id,
-        plan=datos.plan,
+        plan="basico",
         estado="trial",
         fecha_inicio=datetime.utcnow(),
         fecha_trial_fin=datetime.utcnow() + timedelta(days=14),
@@ -152,6 +155,9 @@ def reset_password(datos: ResetPasswordRequest, db: Session = Depends(get_db)):
 
     if not registro:
         raise HTTPException(status_code=400, detail="Token invalido o expirado")
+
+    if len(datos.nueva_password) < 8:
+        raise HTTPException(status_code=400, detail="La contrasena debe tener al menos 8 caracteres")
 
     usuario = db.query(Usuario).filter(Usuario.email == registro.email).first()
     if not usuario:
