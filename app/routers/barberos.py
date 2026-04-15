@@ -5,13 +5,17 @@ from app.models.barbero import Barbero
 from app.models.usuario import Usuario
 from app.schemas import BarberoCreate, BarberoResponse
 from app.core.deps import get_usuario_actual
+from app.utils.phone import formatear_telefono
 from typing import List
 
 router = APIRouter(prefix="/barberos", tags=["Barberos"])
 
 @router.post("/", response_model=BarberoResponse)
 def crear_barbero(barbero: BarberoCreate, db: Session = Depends(get_db)):
-    nuevo = Barbero(**barbero.model_dump())
+    datos = barbero.model_dump()
+    if datos.get('telefono'):
+        datos['telefono'] = formatear_telefono(datos['telefono'])
+    nuevo = Barbero(**datos)
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)

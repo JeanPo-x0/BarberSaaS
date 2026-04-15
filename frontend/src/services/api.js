@@ -1,8 +1,16 @@
 import axios from 'axios';
 
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000',
+  baseURL: BASE_URL,
+  timeout: 70000, // 70s — cubre el cold start de Render free tier (~60s)
 });
+
+// Despierta el servidor antes de que el usuario haga login.
+// Se llama desde la pagina de Login al montar el componente.
+export const wakeUpServer = () =>
+  axios.get(`${BASE_URL}/health`, { timeout: 70000 }).catch(() => {});
 
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { onboarding, login, getMe, crearCheckout } from '../services/api';
 import { NavLogo } from '../components/LogoLink';
+import { formatearInput, formatearTelefono } from '../utils/phone';
 
 const PASOS = ['Tu cuenta', 'Tu barberia', 'Listo'];
 
@@ -43,7 +44,10 @@ export default function Onboarding() {
     if (!form.nombre_barberia.trim()) { setError('El nombre de la barberia es obligatorio'); return; }
     setCargando(true); setError('');
     try {
-      await onboarding(form);
+      await onboarding({
+        ...form,
+        telefono: form.telefono ? formatearTelefono(form.telefono) : '',
+      });
       const loginRes = await login({ email: form.email, password: form.password });
       localStorage.setItem('token', loginRes.data.access_token);
       const meRes = await getMe();
@@ -223,8 +227,23 @@ export default function Onboarding() {
                 value={form.nombre_barberia} onChange={handleChange} className="input-dark" />
               <input name="direccion" placeholder="Direccion (opcional)"
                 value={form.direccion} onChange={handleChange} className="input-dark" />
-              <input name="telefono" placeholder="Telefono (opcional)"
-                value={form.telefono} onChange={handleChange} className="input-dark" />
+              <div style={{ display: 'flex' }}>
+                <span style={{
+                  padding: '0 12px', height: '42px', lineHeight: '42px',
+                  background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                  borderRight: 'none', borderRadius: '8px 0 0 8px',
+                  fontSize: 13, color: 'var(--text-muted)', flexShrink: 0,
+                }}>+506</span>
+                <input
+                  name="telefono"
+                  placeholder="8888 8888 (opcional)"
+                  value={form.telefono}
+                  onChange={e => setForm({ ...form, telefono: formatearInput(e.target.value) })}
+                  className="input-dark"
+                  style={{ borderRadius: '0 8px 8px 0' }}
+                  inputMode="numeric"
+                />
+              </div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
                 Tienes{' '}
                 <strong style={{ color: '#C9A84C' }}>14 dias de prueba gratis</strong>

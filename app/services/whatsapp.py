@@ -1,22 +1,35 @@
 import os
 from twilio.rest import Client
 from dotenv import load_dotenv
+from app.utils.phone import formatear_telefono
 
 load_dotenv()
 
-client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
+TWILIO_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 FROM = os.getenv("TWILIO_WHATSAPP_FROM")
+
+if not TWILIO_SID or not TWILIO_TOKEN:
+    print("[WhatsApp] ADVERTENCIA: TWILIO_ACCOUNT_SID o TWILIO_AUTH_TOKEN no estan configurados.")
+
+client = Client(TWILIO_SID, TWILIO_TOKEN)
 
 def enviar_mensaje(telefono: str, mensaje: str):
     if not FROM:
-        print("[WhatsApp] ERROR: TWILIO_WHATSAPP_FROM no esta configurado en .env")
+        print("[WhatsApp] ERROR: TWILIO_WHATSAPP_FROM no esta configurado.")
         return
-    numero = f"whatsapp:{telefono}" if telefono.startswith("+") else f"whatsapp:+{telefono}"
+    if not TWILIO_SID or not TWILIO_TOKEN:
+        print("[WhatsApp] ERROR: Credenciales de Twilio no configuradas.")
+        return
+
+    numero_e164 = formatear_telefono(telefono)
+    numero_wa = f"whatsapp:{numero_e164}"
+
     try:
-        client.messages.create(from_=FROM, to=numero, body=mensaje)
-        print(f"[WhatsApp] Mensaje enviado a {numero}")
+        msg = client.messages.create(from_=FROM, to=numero_wa, body=mensaje)
+        print(f"[WhatsApp] Enviado a {numero_wa} | SID: {msg.sid}")
     except Exception as e:
-        print(f"[WhatsApp] ERROR enviando a {numero}: {e}")
+        print(f"[WhatsApp] ERROR enviando a {numero_wa}: {e}")
 
 def confirmar_cita(telefono: str, nombre: str, fecha_hora: str, servicio: str, barbero: str):
     mensaje = (

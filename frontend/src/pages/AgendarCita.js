@@ -5,6 +5,7 @@ import {
   getBarberosPorBarberia, getServiciosPorBarberia, getBarberia,
   getBarberiaBySlug, buscarOCrearCliente, crearCita, getDisponibilidad,
 } from '../services/api';
+import { formatearInput, formatearTelefono } from '../utils/phone';
 
 const hoy = new Date().toISOString().split('T')[0];
 
@@ -49,7 +50,7 @@ function AgendarCita() {
     e.preventDefault();
     setError('');
     try {
-      const cliente = await buscarOCrearCliente({ nombre, telefono });
+      const cliente = await buscarOCrearCliente({ nombre, telefono: formatearTelefono(telefono) });
       await crearCita({
         fecha_hora: `${fecha}T${horaSeleccionada}:00`,
         barbero_id: parseInt(barberoId),
@@ -332,8 +333,23 @@ function AgendarCita() {
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>WhatsApp</label>
-                <input value={telefono} onChange={e => setTelefono(e.target.value)}
-                  placeholder="+50688887777" required className="input-dark" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                  <span style={{
+                    padding: '0 12px', height: '42px', lineHeight: '42px',
+                    background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                    borderRight: 'none', borderRadius: '8px 0 0 8px',
+                    fontSize: 13, color: 'var(--text-muted)', flexShrink: 0,
+                  }}>+506</span>
+                  <input
+                    value={telefono}
+                    onChange={e => setTelefono(formatearInput(e.target.value))}
+                    placeholder="8888 8888"
+                    required
+                    className="input-dark"
+                    style={{ borderRadius: '0 8px 8px 0' }}
+                    inputMode="numeric"
+                  />
+                </div>
               </div>
 
               {/* Resumen */}

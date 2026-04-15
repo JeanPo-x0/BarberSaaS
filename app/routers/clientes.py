@@ -3,16 +3,20 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.cliente import Cliente
 from app.schemas import ClienteCreate, ClienteResponse
+from app.utils.phone import formatear_telefono
 from typing import List
 
 router = APIRouter(prefix="/clientes", tags=["Clientes"])
 
 @router.post("/buscar-o-crear", response_model=ClienteResponse)
 def buscar_o_crear_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
-    existente = db.query(Cliente).filter(Cliente.telefono == cliente.telefono).first()
+    telefono_normalizado = formatear_telefono(cliente.telefono)
+    existente = db.query(Cliente).filter(Cliente.telefono == telefono_normalizado).first()
     if existente:
         return existente
-    nuevo = Cliente(**cliente.model_dump())
+    datos = cliente.model_dump()
+    datos['telefono'] = telefono_normalizado
+    nuevo = Cliente(**datos)
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)

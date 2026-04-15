@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { login } from '../services/api';
+import { login, wakeUpServer } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import LogoLink from '../components/LogoLink';
 
@@ -9,26 +9,50 @@ function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [estadoConexion, setEstadoConexion] = useState(''); // mensaje de estado durante cold start
   const [showPass, setShowPass] = useState(false);
   const { iniciarSesion } = useAuth();
   const navigate = useNavigate();
 
+  // Al montar la pagina, despertar el servidor en background
+  useEffect(() => {
+    wakeUpServer();
+  }, []);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setEstadoConexion('');
     setCargando(true);
-    try {
+
+    const intentarLogin = async () => {
       const res = await login({ email, password });
       iniciarSesion(res.data.access_token, { email });
       navigate('/agenda');
+    };
+
+    try {
+      await intentarLogin();
     } catch (err) {
       if (!err.response) {
-        setError('No se pudo conectar con el servidor.');
+        // Cold start: el servidor no respondio a tiempo — reintentamos una vez
+        setEstadoConexion('Iniciando servidor, por favor espera...');
+        try {
+          await intentarLogin();
+        } catch (err2) {
+          setEstadoConexion('');
+          if (!err2.response) {
+            setError('El servidor no responde. Intenta de nuevo en unos segundos.');
+          } else {
+            setError('Email o contrasena incorrectos.');
+          }
+        }
       } else {
         setError('Email o contrasena incorrectos.');
       }
     } finally {
       setCargando(false);
+      setEstadoConexion('');
     }
   };
 
@@ -127,6 +151,18 @@ function Login() {
               </button>
             </div>
           </div>
+
+          {/* Estado cold start */}
+          {estadoConexion && (
+            <div style={{
+              background: 'rgba(201,168,76,0.08)',
+              border: '1px solid rgba(201,168,76,0.25)',
+              borderRadius: 10, padding: '10px 14px',
+              fontSize: 13, color: '#C9A84C', textAlign: 'center',
+            }}>
+              {estadoConexion}
+            </div>
+          )}
 
           {/* Error */}
           {error && (

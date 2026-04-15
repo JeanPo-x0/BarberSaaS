@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { formatearInput, formatearTelefono } from '../utils/phone';
 import {
   getMisBarberos, crearBarbero, toggleBarbero, eliminarBarbero,
   getMisServicios, crearServicio, toggleServicio, eliminarServicio,
@@ -81,7 +82,7 @@ function PanelDueno() {
 
   const handleCrearBarbero = async (e) => {
     e.preventDefault();
-    await crearBarbero({ nombre: nomBarbero, telefono: telBarbero, especialidad: espBarbero, barberia_id: parseInt(barberiaBarbero) });
+    await crearBarbero({ nombre: nomBarbero, telefono: telBarbero ? formatearTelefono(telBarbero) : '', especialidad: espBarbero, barberia_id: parseInt(barberiaBarbero) });
     getMisBarberos().then(r => setBarberos(r.data));
     setNomBarbero(''); setTelBarbero(''); setEspBarbero(''); setBarberiaBarbero('');
   };
@@ -97,7 +98,10 @@ function PanelDueno() {
     e.preventDefault();
     setBarberiaError(''); setBarberiaCargando(true);
     try {
-      await crearBarberiaAdicional(nuevaBarberiaForm);
+      await crearBarberiaAdicional({
+        ...nuevaBarberiaForm,
+        telefono: nuevaBarberiaForm.telefono ? formatearTelefono(nuevaBarberiaForm.telefono) : '',
+      });
       getMiBarberia().then(r => setBarberias(r.data));
       setNuevaBarberiaForm({ nombre: '', direccion: '', telefono: '' });
       setMostrarFormBarberia(false);
@@ -170,7 +174,17 @@ function PanelDueno() {
               <form onSubmit={handleCrearBarbero} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <input value={nomBarbero} onChange={e => setNomBarbero(e.target.value)} placeholder="Nombre *" required
                   className="input-dark" style={{ gridColumn: '1 / -1' }} />
-                <input value={telBarbero} onChange={e => setTelBarbero(e.target.value)} placeholder="Telefono" className="input-dark" />
+                <div style={{ display: 'flex' }}>
+                  <span style={{
+                    padding: '0 10px', height: '42px', lineHeight: '42px',
+                    background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                    borderRight: 'none', borderRadius: '8px 0 0 8px',
+                    fontSize: 12, color: 'var(--text-muted)', flexShrink: 0,
+                  }}>+506</span>
+                  <input value={telBarbero} onChange={e => setTelBarbero(formatearInput(e.target.value))}
+                    placeholder="8888 8888" className="input-dark"
+                    style={{ borderRadius: '0 8px 8px 0' }} inputMode="numeric" />
+                </div>
                 <input value={espBarbero} onChange={e => setEspBarbero(e.target.value)} placeholder="Especialidad" className="input-dark" />
                 <select value={barberiaBarbero} onChange={e => setBarberiaBarbero(e.target.value)} required
                   className="input-dark" style={{ gridColumn: '1 / -1', background: 'var(--bg-secondary)' }}>
@@ -413,8 +427,18 @@ function PanelDueno() {
                       placeholder="Nombre *" required className="input-dark" />
                     <input value={nuevaBarberiaForm.direccion} onChange={e => setNuevaBarberiaForm({ ...nuevaBarberiaForm, direccion: e.target.value })}
                       placeholder="Direccion (opcional)" className="input-dark" />
-                    <input value={nuevaBarberiaForm.telefono} onChange={e => setNuevaBarberiaForm({ ...nuevaBarberiaForm, telefono: e.target.value })}
-                      placeholder="Telefono (opcional)" className="input-dark" />
+                    <div style={{ display: 'flex' }}>
+                      <span style={{
+                        padding: '0 10px', height: '42px', lineHeight: '42px',
+                        background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                        borderRight: 'none', borderRadius: '8px 0 0 8px',
+                        fontSize: 12, color: 'var(--text-muted)', flexShrink: 0,
+                      }}>+506</span>
+                      <input value={nuevaBarberiaForm.telefono}
+                        onChange={e => setNuevaBarberiaForm({ ...nuevaBarberiaForm, telefono: formatearInput(e.target.value) })}
+                        placeholder="8888 8888 (opcional)" className="input-dark"
+                        style={{ borderRadius: '0 8px 8px 0' }} inputMode="numeric" />
+                    </div>
                     {barberiaError && <p style={{ color: '#E63946', fontSize: 13, margin: 0 }}>{barberiaError}</p>}
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button type="button" onClick={() => { setMostrarFormBarberia(false); setBarberiaError(''); }} className="btn-outline" style={{ flex: 1 }}>

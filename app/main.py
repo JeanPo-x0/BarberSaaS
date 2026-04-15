@@ -247,3 +247,7 @@ app.include_router(lista_espera.router)
 @app.get("/")
 def root():
     return {"mensaje": "BarberSaaS activo"}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
