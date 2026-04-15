@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
+import { wakeUpServer } from './services/api';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Barberias from './pages/Barberias';
@@ -21,6 +23,9 @@ function PlanesRedirect() {
 }
 
 function App() {
+  // Despertar el servidor al cargar la app — cubre todas las páginas
+  useEffect(() => { wakeUpServer(); }, []);
+
   return (
     <AuthProvider>
       <BrowserRouter>

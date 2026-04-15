@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login, wakeUpServer } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -13,13 +13,6 @@ function Login() {
   const [showPass, setShowPass] = useState(false);
   const { iniciarSesion } = useAuth();
   const navigate = useNavigate();
-  const wakeRef = useRef(null);
-
-  // Al montar la pagina, despertar el servidor. Guardamos la promesa
-  // para awaitarla si el primer intento de login falla por red.
-  useEffect(() => {
-    wakeRef.current = wakeUpServer();
-  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -40,7 +33,7 @@ function Login() {
         // Cold start / CORS durante arranque: esperamos a que el servidor
         // confirme que esta listo (polling /health) antes de reintentar.
         setEstadoConexion('Iniciando servidor, por favor espera...');
-        await (wakeRef.current ?? Promise.resolve());
+        await wakeUpServer();
         try {
           await intentarLogin();
         } catch (err2) {
