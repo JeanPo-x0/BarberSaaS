@@ -113,9 +113,25 @@ def ver_disponibilidad(barbero_id: int, fecha: str, db: Session = Depends(get_db
 
 @router.get("/mias", response_model=List[CitaResponse])
 def listar_mis_citas(usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
-    return db.query(Cita).join(Barbero, Cita.barbero_id == Barbero.id).filter(
-        Barbero.barberia_id == usuario.barberia_id
-    ).all()
+    return (
+        db.query(Cita)
+        .join(Barbero, Cita.barbero_id == Barbero.id)
+        .filter(Barbero.barberia_id == usuario.barberia_id)
+        .order_by(Cita.fecha_hora.asc())
+        .all()
+    )
+
+@router.patch("/{cita_id}/completar", response_model=CitaResponse)
+def completar_cita(cita_id: int, db: Session = Depends(get_db)):
+    cita = db.query(Cita).filter(Cita.id == cita_id).first()
+    if not cita:
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+    if cita.estado != "pendiente":
+        raise HTTPException(status_code=400, detail="Solo se pueden completar citas pendientes")
+    cita.estado = "completada"
+    db.commit()
+    db.refresh(cita)
+    return cita
 
 @router.get("/", response_model=List[CitaResponse])
 def listar_citas(db: Session = Depends(get_db)):

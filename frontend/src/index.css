@@ -65,6 +65,36 @@ body {
 .anim-fadeup  { animation: fadeUp 0.65s ease both; }
 .anim-float   { animation: float 3.5s ease-in-out infinite; }
 
+/* Entrada escalonada para listas de cards */
+.anim-item { opacity: 0; animation: fadeUp 0.45s ease forwards; }
+.anim-item:nth-child(1)  { animation-delay: 0.04s; }
+.anim-item:nth-child(2)  { animation-delay: 0.08s; }
+.anim-item:nth-child(3)  { animation-delay: 0.12s; }
+.anim-item:nth-child(4)  { animation-delay: 0.16s; }
+.anim-item:nth-child(5)  { animation-delay: 0.20s; }
+.anim-item:nth-child(6)  { animation-delay: 0.24s; }
+.anim-item:nth-child(7)  { animation-delay: 0.28s; }
+.anim-item:nth-child(8)  { animation-delay: 0.32s; }
+
+/* Skeleton loading */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-card) 25%, rgba(255,255,255,0.04) 50%, var(--bg-card) 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 8px;
+}
+
+/* Slide down para modals/forms */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.anim-slidedown { animation: slideDown 0.3s ease both; }
+
 .bar1 { transform-origin: bottom; animation: barGrow 2s ease-in-out infinite 0s; }
 .bar2 { transform-origin: bottom; animation: barGrow 2s ease-in-out infinite 0.35s; }
 .bar3 { transform-origin: bottom; animation: barGrow 2s ease-in-out infinite 0.7s; }

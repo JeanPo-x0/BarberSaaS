@@ -76,6 +76,7 @@ export const getCitas = () => API.get('/citas/');
 export const getMisCitas = () => API.get('/citas/mias');
 export const crearCita = (data) => API.post('/citas/', data);
 export const cancelarCita = (id) => API.patch(`/citas/${id}/cancelar`);
+export const completarCita = (id) => API.patch(`/citas/${id}/completar`);
 export const getDisponibilidad = (barbero_id, fecha) =>
   API.get(`/citas/disponibilidad/${barbero_id}?fecha=${fecha}`);
 
