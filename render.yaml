@@ -5,7 +5,7 @@ services:
     region: oregon
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -18,9 +18,9 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "10080"
       - key: FRONTEND_URL
-        value: https://barber-saa-s-qlay.vercel.app
+        value: https://barber-saa-s-phi.vercel.app
       - key: SAAS_DOMAIN
-        value: barber-saa-s-qlay.vercel.app
+        value: barber-saa-s-phi.vercel.app
       - key: SUPERADMIN_EMAIL
         value: admin@barbersaas.com
       # Stripe — completar con tus keys reales
