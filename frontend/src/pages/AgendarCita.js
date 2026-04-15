@@ -158,7 +158,7 @@ function AgendarCita() {
         )}
       </header>
 
-      <div style={{ maxWidth: 560, margin: '0 auto', padding: '36px 24px' }}>
+      <div className="mobile-px" style={{ maxWidth: 560, margin: '0 auto', padding: '36px 24px' }}>
         {/* Titulo */}
         <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 34, letterSpacing: '0.08em', margin: '0 0 4px 0' }}>

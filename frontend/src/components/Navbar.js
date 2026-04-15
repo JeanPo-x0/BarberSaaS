@@ -47,13 +47,13 @@ export default function Navbar({ links = [], actions = null }) {
         <NavLogo />
 
         {/* Desktop links */}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, marginLeft: 16 }}
+        <div style={{ flex: 1, alignItems: 'center', gap: 4, marginLeft: 16 }}
           className="hidden md:flex">
           {links.map(l => <NavLink key={l.to} to={l.to}>{l.label}</NavLink>)}
         </div>
 
         {/* Right actions desktop */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="hidden md:flex">
+        <div style={{ alignItems: 'center', gap: 8 }} className="hidden md:flex">
           {actions}
           <button
             onClick={handleSalir}
@@ -73,7 +73,7 @@ export default function Navbar({ links = [], actions = null }) {
         {/* Mobile hamburger */}
         <button
           onClick={() => setOpen(!open)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, marginLeft: 'auto', display: 'flex' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, marginLeft: 'auto' }}
           className="flex md:hidden"
         >
           {open ? (
