@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.core.limiter import limiter
+from app.core.geo import obtener_geo, es_vpn, get_real_ip
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -235,6 +236,40 @@ app = FastAPI(
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# ── Rutas excluidas del geo-bloqueo ───────────────────────────
+# Los webhooks de Twilio y Stripe vienen de IPs de EEUU — no bloquear
+GEO_BYPASS_PREFIXES = ("/webhook", "/health", "/", "/openapi.json")
+
+@app.middleware("http")
+async def geo_block_middleware(request: Request, call_next):
+    path = request.url.path
+
+    # Excluir webhooks, health check y docs internos
+    if any(path.startswith(p) for p in GEO_BYPASS_PREFIXES):
+        return await call_next(request)
+
+    ip = get_real_ip(request)
+
+    # Permitir localhost en desarrollo
+    if ip in ("127.0.0.1", "::1"):
+        return await call_next(request)
+
+    geo = await obtener_geo(ip)
+
+    if geo["country"] != "CR":
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "Servicio disponible unicamente en Costa Rica"},
+        )
+
+    if es_vpn(geo["org"]):
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "El uso de VPN no esta permitido"},
+        )
+
+    return await call_next(request)
 
 app.add_middleware(
     CORSMiddleware,

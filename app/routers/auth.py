@@ -1,4 +1,5 @@
 import os
+import re
 import secrets
 import hashlib
 from datetime import datetime, timedelta
@@ -17,6 +18,46 @@ from app.core.deps import get_usuario_actual
 from app.services.email import enviar_reset_password, enviar_bienvenida
 from app.core.limiter import limiter
 
+# ── Dominios de email permitidos ─────────────────────────────
+DOMINIOS_PERMITIDOS = {
+    # Google
+    "gmail.com", "googlemail.com",
+    # Microsoft
+    "hotmail.com", "hotmail.es", "hotmail.co.cr", "hotmail.com.ar",
+    "outlook.com", "outlook.es", "outlook.co.cr",
+    "live.com", "live.co.cr", "live.es",
+    "msn.com",
+    # Yahoo
+    "yahoo.com", "yahoo.es", "yahoo.co.cr", "yahoo.com.ar", "yahoo.com.mx",
+    # Apple
+    "icloud.com", "me.com", "mac.com",
+    # Otros comunes
+    "aol.com", "zoho.com",
+}
+
+def validar_password(password: str):
+    """Valida: 8-12 chars, 1 mayúscula, 1 especial. Lanza HTTPException si no cumple."""
+    if len(password) < 8:
+        raise HTTPException(status_code=400, detail="La contrasena debe tener al menos 8 caracteres")
+    if len(password) > 12:
+        raise HTTPException(status_code=400, detail="La contrasena no puede superar los 12 caracteres")
+    if not re.search(r"[A-Z]", password):
+        raise HTTPException(status_code=400, detail="La contrasena debe tener al menos una letra mayuscula")
+    if not re.search(r"[!@#$%^&*()\-_=+\[\]{}|;:',.<>?/\\]", password):
+        raise HTTPException(status_code=400, detail="La contrasena debe tener al menos un caracter especial (!@#$%...)")
+
+def validar_dominio_email(email: str):
+    """Solo permite dominios de email convencionales. Bloquea proveedores de privacidad."""
+    partes = email.lower().strip().split("@")
+    if len(partes) != 2 or not partes[1]:
+        raise HTTPException(status_code=400, detail="Email invalido")
+    dominio = partes[1]
+    if dominio not in DOMINIOS_PERMITIDOS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Solo se permiten emails de proveedores convencionales (Gmail, Hotmail, Outlook, Yahoo, iCloud)"
+        )
+
 router = APIRouter(prefix="/auth", tags=["Autenticacion"])
 
 class EmailRequest(BaseModel):
@@ -29,6 +70,8 @@ class ResetPasswordRequest(BaseModel):
 @router.post("/registro", response_model=UsuarioResponse)
 @limiter.limit("5/minute")
 def registrar_usuario(request: Request, usuario: UsuarioCreate, db: Session = Depends(get_db)):
+    validar_dominio_email(usuario.email)
+    validar_password(usuario.password)
     existente = db.query(Usuario).filter(Usuario.email == usuario.email).first()
     if existente:
         raise HTTPException(status_code=400, detail="El email ya esta registrado")
@@ -59,12 +102,11 @@ def me(usuario: Usuario = Depends(get_usuario_actual)):
 @router.post("/onboarding", response_model=UsuarioResponse)
 def onboarding(datos: OnboardingCreate, db: Session = Depends(get_db)):
     """Registro completo: crea usuario dueño + barbería + suscripción trial."""
+    validar_dominio_email(datos.email)
+    validar_password(datos.password)
     existente = db.query(Usuario).filter(Usuario.email == datos.email).first()
     if existente:
         raise HTTPException(status_code=400, detail="El email ya esta registrado")
-
-    if len(datos.password) < 8:
-        raise HTTPException(status_code=400, detail="La contrasena debe tener al menos 8 caracteres")
 
     # Crear barbería — plan siempre basico al registrarse, se sube via Stripe
     barberia = Barberia(
@@ -160,8 +202,7 @@ def reset_password(datos: ResetPasswordRequest, db: Session = Depends(get_db)):
     if not registro:
         raise HTTPException(status_code=400, detail="Token invalido o expirado")
 
-    if len(datos.nueva_password) < 8:
-        raise HTTPException(status_code=400, detail="La contrasena debe tener al menos 8 caracteres")
+    validar_password(datos.nueva_password)
 
     usuario = db.query(Usuario).filter(Usuario.email == registro.email).first()
     if not usuario:
