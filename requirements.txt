@@ -41,6 +41,8 @@ python-multipart==0.0.22
 requests==2.32.5
 rsa==4.9.1
 six==1.17.0
+slowapi==0.1.9
+limits==5.8.0
 SQLAlchemy==2.0.48
 starlette==0.52.1
 stripe==15.0.0

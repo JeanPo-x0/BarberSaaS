@@ -2,7 +2,7 @@ import os
 import secrets
 import hashlib
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -15,6 +15,7 @@ from app.core.security import hash_password, verify_password, crear_token
 from app.core.config import settings
 from app.core.deps import get_usuario_actual
 from app.services.email import enviar_reset_password, enviar_bienvenida
+from app.core.limiter import limiter
 
 router = APIRouter(prefix="/auth", tags=["Autenticacion"])
 
@@ -26,7 +27,8 @@ class ResetPasswordRequest(BaseModel):
     nueva_password: str
 
 @router.post("/registro", response_model=UsuarioResponse)
-def registrar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def registrar_usuario(request: Request, usuario: UsuarioCreate, db: Session = Depends(get_db)):
     existente = db.query(Usuario).filter(Usuario.email == usuario.email).first()
     if existente:
         raise HTTPException(status_code=400, detail="El email ya esta registrado")
@@ -42,7 +44,8 @@ def registrar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
     return nuevo
 
 @router.post("/login", response_model=TokenResponse)
-def login(datos: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def login(request: Request, datos: LoginRequest, db: Session = Depends(get_db)):
     usuario = db.query(Usuario).filter(Usuario.email == datos.email).first()
     if not usuario or not verify_password(datos.password, usuario.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email o contrasena incorrectos")
@@ -111,7 +114,8 @@ def onboarding(datos: OnboardingCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/recuperar-password")
-def recuperar_password(datos: EmailRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def recuperar_password(request: Request, datos: EmailRequest, db: Session = Depends(get_db)):
     usuario = db.query(Usuario).filter(Usuario.email == datos.email).first()
     # Siempre responder igual para no revelar si el email existe
     if not usuario:
