@@ -7,20 +7,20 @@ import { getCouponActivo } from '../services/api';
 const PLANES = [
   {
     id: 'basico', nombre: 'Basico',
-    precio_mensual: 0, precio_anual: 0,
+    precio_mensual: 0, precio_anual: 0, ahorro: 0, equiv_mensual: 0,
     badge: '14 dias gratis',
     features: ['1 barbero', 'Agenda basica', 'Link de agendamiento', 'Recordatorios WhatsApp'],
   },
   {
     id: 'pro', nombre: 'Pro',
-    precio_mensual: 29, precio_anual: 278,
+    precio_mensual: 29, precio_anual: 232, ahorro: 116, equiv_mensual: 19.33,
     badge: 'Mas popular', popular: true,
     features: ['Hasta 3 barberos', 'Dashboard de ingresos', 'Recordatorios WhatsApp',
       'Historial de clientes', 'Lista de espera inteligente'],
   },
   {
     id: 'premium', nombre: 'Premium',
-    precio_mensual: 59, precio_anual: 566,
+    precio_mensual: 59, precio_anual: 472, ahorro: 236, equiv_mensual: 39.33,
     badge: 'Todo incluido',
     features: ['Barberos ilimitados', 'Todo lo del plan Pro', 'Metricas de retencion',
       'WhatsApp de reenganche', 'Exportar PDF', 'Subdominio propio', 'Soporte prioritario'],
@@ -431,10 +431,14 @@ export default function Home() {
                 Anual
               </span>
               <span style={{
-                fontSize: 11, fontWeight: 700, color: '#0A0A0A',
-                background: '#C9A84C', borderRadius: 100, padding: '2px 8px',
+                fontSize: 11, fontWeight: 800, letterSpacing: '0.03em',
+                background: anual ? '#C9A84C' : 'rgba(201,168,76,0.15)',
+                color: anual ? '#0A0A0A' : '#C9A84C',
+                borderRadius: 100, padding: '3px 10px',
+                transition: 'all 0.3s',
+                border: anual ? 'none' : '1px solid rgba(201,168,76,0.3)',
               }}>
-                -20%
+                2 MESES GRATIS
               </span>
             </div>
           </div>
@@ -476,7 +480,7 @@ export default function Home() {
                     {plan.nombre}
                   </h3>
 
-                  <div style={{ marginBottom: 24 }}>
+                  <div style={{ marginBottom: 24, minHeight: 68 }}>
                     {esGratis ? (
                       <>
                         <span style={{ fontFamily: "'Bebas Neue'", fontSize: 42, color: '#C9A84C', letterSpacing: '0.05em' }}>
@@ -486,19 +490,35 @@ export default function Home() {
                           14 dias de prueba, sin tarjeta
                         </p>
                       </>
+                    ) : anual ? (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                          <span style={{ fontFamily: "'Bebas Neue'", fontSize: 42, color: '#C9A84C', letterSpacing: '0.05em' }}>
+                            ${plan.precio_anual}
+                          </span>
+                          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/año</span>
+                          <span style={{
+                            fontSize: 10, fontWeight: 800,
+                            background: 'rgba(74,222,128,0.12)', color: '#4ade80',
+                            border: '1px solid rgba(74,222,128,0.25)',
+                            borderRadius: 100, padding: '2px 7px',
+                          }}>
+                            AHORRÁ ${plan.ahorro}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                          Equivale a <strong style={{ color: '#F5F5F5' }}>${plan.equiv_mensual}/mes</strong>
+                        </p>
+                      </>
                     ) : (
                       <>
                         <span style={{ fontFamily: "'Bebas Neue'", fontSize: 42, color: '#C9A84C', letterSpacing: '0.05em' }}>
-                          ${precio}
+                          ${plan.precio_mensual}
                         </span>
-                        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                          /{anual ? 'ano' : 'mes'}
-                        </span>
-                        {anual && (
-                          <p style={{ fontSize: 12, color: '#4ade80', margin: '4px 0 0 0' }}>
-                            Ahorras ${plan.precio_mensual * 12 - plan.precio_anual}/ano
-                          </p>
-                        )}
+                        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/mes</span>
+                        <p style={{ fontSize: 12, color: 'rgba(251,146,60,0.7)', margin: '4px 0 0 0', fontWeight: 600 }}>
+                          Cambia a anual y ahorrá ${plan.ahorro}/año
+                        </p>
                       </>
                     )}
                   </div>
@@ -513,7 +533,7 @@ export default function Home() {
                   </ul>
 
                   <button
-                    onClick={() => navigate('/registro', { state: { plan: plan.id } })}
+                    onClick={() => navigate('/planes')}
                     className={plan.popular ? 'btn-gold' : 'btn-outline'}
                     style={{ width: '100%' }}
                   >

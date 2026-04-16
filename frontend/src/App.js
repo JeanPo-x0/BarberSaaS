@@ -15,12 +15,8 @@ import Onboarding from './pages/Onboarding';
 import DashboardIngresos from './pages/DashboardIngresos';
 import SuperAdmin from './pages/SuperAdmin';
 import SuscripcionExito from './pages/SuscripcionExito';
+import Planes from './pages/Planes';
 import './App.css';
-
-function PlanesRedirect() {
-  window.location.replace('/#planes');
-  return null;
-}
 
 function App() {
   // Despertar el servidor al cargar la app — cubre todas las páginas
@@ -33,7 +29,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Onboarding />} />
-          <Route path="/planes" element={<PlanesRedirect />} />
+          <Route path="/planes" element={<Planes />} />
           <Route path="/barberias" element={<Barberias />} />
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/agendar" element={<AgendarCita />} />
