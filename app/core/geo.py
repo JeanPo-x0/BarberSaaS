@@ -54,8 +54,15 @@ def es_vpn(org: str) -> bool:
 
 
 def get_real_ip(request) -> str:
-    """IP real del cliente — considera el proxy de Render (X-Forwarded-For)."""
+    """IP real del cliente — usa el ÚLTIMO valor de X-Forwarded-For.
+
+    Render agrega la IP real del cliente al FINAL de la cadena, lo que hace
+    que sea imposible de falsificar con un header X-Forwarded-For manipulado.
+    Tomar el primero permite bypass del geobloqueo enviando una IP falsa.
+    """
     forwarded = request.headers.get("X-Forwarded-For", "")
     if forwarded:
-        return forwarded.split(",")[0].strip()
+        ips = [ip.strip() for ip in forwarded.split(",") if ip.strip()]
+        if ips:
+            return ips[-1]  # La IP que agregó Render — no manipulable por el cliente
     return getattr(request.client, "host", "127.0.0.1") or "127.0.0.1"

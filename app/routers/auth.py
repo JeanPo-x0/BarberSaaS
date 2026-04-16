@@ -36,11 +36,11 @@ DOMINIOS_PERMITIDOS = {
 }
 
 def validar_password(password: str):
-    """Valida: 8-12 chars, 1 mayúscula, 1 especial. Lanza HTTPException si no cumple."""
+    """Valida: 8-64 chars, 1 mayúscula, 1 especial. Lanza HTTPException si no cumple."""
     if len(password) < 8:
         raise HTTPException(status_code=400, detail="La contrasena debe tener al menos 8 caracteres")
-    if len(password) > 12:
-        raise HTTPException(status_code=400, detail="La contrasena no puede superar los 12 caracteres")
+    if len(password) > 64:
+        raise HTTPException(status_code=400, detail="La contrasena no puede superar los 64 caracteres")
     if not re.search(r"[A-Z]", password):
         raise HTTPException(status_code=400, detail="La contrasena debe tener al menos una letra mayuscula")
     if not re.search(r"[!@#$%^&*()\-_=+\[\]{}|;:',.<>?/\\]", password):
@@ -100,7 +100,8 @@ def me(usuario: Usuario = Depends(get_usuario_actual)):
     return usuario
 
 @router.post("/onboarding", response_model=UsuarioResponse)
-def onboarding(datos: OnboardingCreate, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(get_db)):
     """Registro completo: crea usuario dueño + barbería + suscripción trial."""
     validar_dominio_email(datos.email)
     validar_password(datos.password)
@@ -184,8 +185,8 @@ def recuperar_password(request: Request, datos: EmailRequest, db: Session = Depe
 
     try:
         enviar_reset_password(datos.email, token_plano, settings.FRONTEND_URL)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Error enviando el correo. Verifica la configuracion de email.")
+    except Exception:
+        pass  # No revelar si el email existe o si el envío falló
 
     return {"mensaje": "Si el email existe, recibiras un correo con instrucciones"}
 
