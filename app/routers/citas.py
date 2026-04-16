@@ -67,8 +67,10 @@ def crear_cita(cita: CitaCreate, db: Session = Depends(get_db)):
                 servicio=servicio.nombre if servicio else "Servicio",
                 fecha_hora=fecha_hora_str
             )
-    except Exception:
-        pass  # Si falla WhatsApp, la cita igual se guarda
+        else:
+            print(f"[WhatsApp] Barbero {barbero.id} ({barbero.nombre}) no tiene telefono guardado")
+    except Exception as e:
+        print(f"[WhatsApp] ERROR en notificacion de nueva cita: {e}")  # Si falla WhatsApp, la cita igual se guarda
 
     return nueva
 
@@ -146,8 +148,8 @@ def completar_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual),
                 nombre=cliente.nombre,
                 barberia_nombre=barberia.nombre,
             )
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[WhatsApp] ERROR en notificacion de completada: {e}")
 
     return cita
 
@@ -198,8 +200,8 @@ def cancelar_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), 
                 cliente=cliente.nombre if cliente else "Cliente",
                 fecha_hora=fecha_hora_str
             )
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[WhatsApp] ERROR en notificacion de cancelacion: {e}")
 
     # Notificar al primero en lista de espera de esta barbería
     try:
