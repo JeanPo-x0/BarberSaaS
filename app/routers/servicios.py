@@ -10,7 +10,23 @@ from typing import List
 router = APIRouter(prefix="/servicios", tags=["Servicios"])
 
 @router.post("/", response_model=ServicioResponse)
-def crear_servicio(servicio: ServicioCreate, db: Session = Depends(get_db)):
+def crear_servicio(
+    servicio: ServicioCreate,
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    from app.models.barberia import Barberia
+    barberia = db.query(Barberia).filter(
+        Barberia.id == servicio.barberia_id,
+        Barberia.dueno_id == usuario.id,
+    ).first()
+    if not barberia:
+        barberia = db.query(Barberia).filter(
+            Barberia.id == servicio.barberia_id,
+            Barberia.id == usuario.barberia_id,
+        ).first()
+    if not barberia:
+        raise HTTPException(status_code=403, detail="No tienes permiso sobre esa barberia")
     nuevo = Servicio(**servicio.model_dump())
     db.add(nuevo)
     db.commit()
@@ -63,8 +79,12 @@ def eliminar_servicio(servicio_id: int, usuario: Usuario = Depends(get_usuario_a
     return {"ok": True}
 
 @router.get("/", response_model=List[ServicioResponse])
-def listar_servicios(db: Session = Depends(get_db)):
-    return db.query(Servicio).all()
+def listar_servicios(
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    """Solo devuelve los servicios de la barbería del usuario logueado."""
+    return db.query(Servicio).filter(Servicio.barberia_id == usuario.barberia_id).all()
 
 @router.get("/{servicio_id}", response_model=ServicioResponse)
 def obtener_servicio(servicio_id: int, db: Session = Depends(get_db)):

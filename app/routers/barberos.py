@@ -11,7 +11,23 @@ from typing import List
 router = APIRouter(prefix="/barberos", tags=["Barberos"])
 
 @router.post("/", response_model=BarberoResponse)
-def crear_barbero(barbero: BarberoCreate, db: Session = Depends(get_db)):
+def crear_barbero(
+    barbero: BarberoCreate,
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    from app.models.barberia import Barberia
+    barberia = db.query(Barberia).filter(
+        Barberia.id == barbero.barberia_id,
+        Barberia.dueno_id == usuario.id,
+    ).first()
+    if not barberia:
+        barberia = db.query(Barberia).filter(
+            Barberia.id == barbero.barberia_id,
+            Barberia.id == usuario.barberia_id,
+        ).first()
+    if not barberia:
+        raise HTTPException(status_code=403, detail="No tienes permiso sobre esa barberia")
     datos = barbero.model_dump()
     if datos.get('telefono'):
         datos['telefono'] = formatear_telefono(datos['telefono'])
@@ -67,8 +83,12 @@ def eliminar_barbero(barbero_id: int, usuario: Usuario = Depends(get_usuario_act
     return {"ok": True}
 
 @router.get("/", response_model=List[BarberoResponse])
-def listar_barberos(db: Session = Depends(get_db)):
-    return db.query(Barbero).all()
+def listar_barberos(
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    """Solo devuelve los barberos de la barbería del usuario logueado."""
+    return db.query(Barbero).filter(Barbero.barberia_id == usuario.barberia_id).all()
 
 @router.get("/{barbero_id}", response_model=BarberoResponse)
 def obtener_barbero(barbero_id: int, db: Session = Depends(get_db)):

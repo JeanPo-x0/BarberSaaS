@@ -3,6 +3,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
+from app.core.config import settings
 
 load_dotenv()
 
@@ -73,7 +74,7 @@ def enviar_aviso_suspension(email: str, nombre_barberia: str):
         <h2 style="color:#ef4444;">Cuenta suspendida ⚠️</h2>
         <p style="color:#ccc;">Hola <strong style="color:#fff;">{nombre_barberia}</strong>, tu cuenta ha sido <strong style="color:#ef4444;">suspendida</strong> porque no pudimos procesar tu pago.</p>
         <p style="color:#ccc;">Para reactivar tu cuenta, actualiza tu método de pago:</p>
-        <a href="http://localhost:3000/suscripcion/portal" style="display:inline-block;background:#facc15;color:#111;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Actualizar método de pago</a>
+        <a href="{settings.FRONTEND_URL}/suscripcion/portal" style="display:inline-block;background:#facc15;color:#111;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Actualizar método de pago</a>
         <p style="color:#666; font-size:12px; margin-top:24px;">Si necesitas ayuda contáctanos.</p>
     </div>
     """
