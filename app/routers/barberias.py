@@ -18,14 +18,6 @@ router = APIRouter(prefix="/barberias", tags=["Barberias"])
 LIMITE_POR_PLAN = {"basico": 1, "pro": 3, "premium": None}  # None = ilimitado
 
 
-@router.post("/", response_model=BarberiaResponse)
-def crear_barberia(barberia: BarberiaCreate, db: Session = Depends(get_db)):
-    nueva = Barberia(**barberia.model_dump())
-    db.add(nueva)
-    db.commit()
-    db.refresh(nueva)
-    return nueva
-
 
 @router.get("/mia", response_model=List[BarberiaResponse])
 def mi_barberia(usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
@@ -90,10 +82,6 @@ def toggle_barberia(barberia_id: int, usuario: Usuario = Depends(get_usuario_act
     db.refresh(barberia)
     return barberia
 
-
-@router.get("/", response_model=List[BarberiaResponse])
-def listar_barberias(db: Session = Depends(get_db)):
-    return db.query(Barberia).all()
 
 
 @router.get("/slug/{subdominio}", response_model=BarberiaResponse)

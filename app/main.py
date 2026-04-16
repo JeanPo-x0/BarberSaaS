@@ -232,6 +232,7 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/docs" if settings.DOCS_ENABLED else None,
     redoc_url="/redoc" if settings.DOCS_ENABLED else None,
+    openapi_url="/openapi.json" if settings.DOCS_ENABLED else None,
 )
 
 app.state.limiter = limiter
@@ -239,7 +240,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── Rutas excluidas del geo-bloqueo ───────────────────────────
 # Los webhooks de Twilio y Stripe vienen de IPs de EEUU — no bloquear
-GEO_BYPASS_PREFIXES = ("/webhook", "/health", "/", "/openapi.json")
+GEO_BYPASS_PREFIXES = ("/webhook", "/health", "/")
 
 @app.middleware("http")
 async def geo_block_middleware(request: Request, call_next):
