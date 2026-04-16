@@ -104,15 +104,18 @@ export default function Navbar({ links = [], actions = null }) {
               )}
             </button>
           )}
-          {/* Salir mobile si no hay hamburger ni actions ni primaryLinks */}
-          {!hasHamburger && !actions && primaryLinks.length === 0 && (
+          {/* Salir mobile siempre visible cuando no hay hamburguesa (Salir va dentro del dropdown si hay hamburguesa) */}
+          {!hasHamburger && (
             <button
               onClick={handleSalir}
               style={{
-                background: 'none', border: 'none', color: '#E63946',
-                fontFamily: "'DM Sans'", fontSize: 13, fontWeight: 600,
-                padding: '6px 0', cursor: 'pointer',
+                background: 'none', border: 'none', color: 'var(--text-muted)',
+                fontFamily: "'DM Sans'", fontSize: 12, fontWeight: 600,
+                padding: '5px 10px', cursor: 'pointer', borderRadius: 8,
+                border: '1px solid rgba(230,57,70,0.2)',
               }}
+              onTouchStart={e => e.currentTarget.style.color = '#E63946'}
+              onTouchEnd={e => e.currentTarget.style.color = 'var(--text-muted)'}
             >
               Salir
             </button>

@@ -119,9 +119,11 @@ export default function Planes() {
 
           {/* Toggle mensual / anual */}
           <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 14, marginTop: 28,
+            display: 'inline-flex', alignItems: 'center', gap: 10, marginTop: 28,
+            flexWrap: 'wrap', justifyContent: 'center',
             background: 'var(--bg-card)', border: '1px solid var(--border)',
-            borderRadius: 100, padding: '8px 24px',
+            borderRadius: 100, padding: '8px 20px',
+            maxWidth: '100%',
           }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: !anual ? '#F5F5F5' : 'var(--text-muted)', transition: 'color 0.2s' }}>
               Mensual

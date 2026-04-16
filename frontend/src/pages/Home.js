@@ -286,7 +286,7 @@ export default function Home() {
       {/* ── Hero ── */}
       <section style={{
         maxWidth: 1200, margin: '0 auto',
-        padding: '80px 24px 100px',
+        padding: 'clamp(40px, 8vw, 80px) 24px clamp(48px, 8vw, 100px)',
         display: 'flex', alignItems: 'center', gap: 60,
         flexWrap: 'wrap',
         justifyContent: 'center',
@@ -310,7 +310,7 @@ export default function Home() {
 
           <h1 style={{
             fontFamily: "'Bebas Neue', cursive",
-            fontSize: 'clamp(52px, 8vw, 84px)',
+            fontSize: 'clamp(40px, 10vw, 84px)',
             lineHeight: 1.0,
             margin: '0 0 24px 0',
             letterSpacing: '0.02em',
@@ -320,8 +320,8 @@ export default function Home() {
           </h1>
 
           <p style={{
-            fontSize: 18, color: 'var(--text-muted)', lineHeight: 1.7,
-            margin: '0 0 40px 0', maxWidth: 460,
+            fontSize: 'clamp(15px, 4vw, 18px)', color: 'var(--text-muted)', lineHeight: 1.7,
+            margin: '0 0 32px 0', maxWidth: 460,
           }}>
             Tus clientes agendan por WhatsApp. Sin llamadas, sin grupos, sin estar pendiente del telefono.
           </p>
@@ -351,7 +351,7 @@ export default function Home() {
         background: 'var(--bg-secondary)',
         borderTop: '1px solid var(--border)',
         borderBottom: '1px solid var(--border)',
-        padding: '80px 24px',
+        padding: 'clamp(48px, 8vw, 80px) 24px',
       }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
@@ -392,7 +392,7 @@ export default function Home() {
       </section>
 
       {/* ── Planes ── */}
-      <section id="planes" style={{ padding: '80px 24px 100px', scrollMarginTop: 64 }}>
+      <section id="planes" style={{ padding: 'clamp(48px, 8vw, 80px) 24px clamp(56px, 8vw, 100px)', scrollMarginTop: 64 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <h2 style={{
@@ -406,9 +406,13 @@ export default function Home() {
             </p>
 
             {/* Toggle */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 14,
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              flexWrap: 'wrap', justifyContent: 'center',
               background: 'var(--bg-card)', border: '1px solid var(--border)',
-              borderRadius: 100, padding: '6px 20px' }}>
+              borderRadius: 100, padding: '6px 16px',
+              maxWidth: '100%',
+            }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: !anual ? '#F5F5F5' : 'var(--text-muted)', transition: 'color 0.2s' }}>
                 Mensual
               </span>
