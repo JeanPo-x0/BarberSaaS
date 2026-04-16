@@ -6,7 +6,7 @@ import {
   getMisBarberos, crearBarbero, toggleBarbero, eliminarBarbero,
   getMisServicios, crearServicio, toggleServicio, eliminarServicio,
   getMiBarberia, toggleBarberia, crearBarberiaAdicional,
-  getEstadoSuscripcion, actualizarSubdominio,
+  getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio,
 } from '../services/api';
 
 /* ── Helpers ─────────────────────────────────────────── */
@@ -22,8 +22,8 @@ const tabStyle = (activo) => ({
 const toggleBtn = (activo) => ({
   padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700,
   cursor: 'pointer', border: 'none', fontFamily: "'DM Sans'",
-  background: activo ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.06)',
-  color: activo ? '#4ade80' : 'var(--text-muted)',
+  background: activo ? 'rgba(74,222,128,0.12)' : 'rgba(251,146,60,0.12)',
+  color: activo ? '#4ade80' : '#FB923C',
   transition: 'all 0.2s',
 });
 
@@ -112,6 +112,16 @@ function PanelDueno() {
     }
   };
 
+  const handleEliminarSlug = async (barberiaId) => {
+    if (!window.confirm('Eliminar URL personalizada?')) return;
+    try {
+      await eliminarSubdominio(barberiaId);
+      getMiBarberia().then(r => setBarberias(r.data));
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Error al eliminar');
+    }
+  };
+
   const handleGuardarSlug = async (barberiaId) => {
     setSlugError(''); setSlugCargando(true);
     try {
@@ -140,7 +150,7 @@ function PanelDueno() {
       ]} />
 
       <div className="mobile-px" style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: plan !== 'premium' ? 12 : 28 }}>
           <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.08em', margin: 0 }}>
             Panel
           </h1>
@@ -154,6 +164,28 @@ function PanelDueno() {
             </span>
           )}
         </div>
+
+        {/* Banner Mejorar plan — solo para basico y pro */}
+        {suscripcion && plan !== 'premium' && (
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)',
+            borderRadius: 12, padding: '12px 18px', marginBottom: 24,
+          }}>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+              {plan === 'basico'
+                ? 'Pasa a Pro y agrega hasta 3 barberos, historial de clientes y mas.'
+                : 'Pasa a Premium y desbloquea barberos ilimitados, reenganche y subdominio propio.'}
+            </p>
+            <button
+              onClick={() => navigate('/planes')}
+              className="btn-gold"
+              style={{ padding: '7px 16px', fontSize: 12, flexShrink: 0, marginLeft: 14 }}
+            >
+              Mejorar plan
+            </button>
+          </div>
+        )}
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
@@ -353,6 +385,11 @@ function PanelDueno() {
                       <button onClick={() => { setEditandoSlug(b.id); setSlugInput(b.subdominio); setSlugError(''); }}
                         style={{ ...deleteBtn, color: 'var(--text-muted)', background: 'none', border: '1px solid var(--border)' }}>
                         Editar
+                      </button>
+                      <button onClick={() => handleEliminarSlug(b.id)} style={deleteBtn}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,57,70,0.18)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(230,57,70,0.08)'}>
+                        Eliminar
                       </button>
                     </div>
                   </div>

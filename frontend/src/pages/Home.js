@@ -231,7 +231,7 @@ export default function Home() {
         <NavLogo />
 
         {/* Desktop links */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="hidden md:flex">
+        <div style={{ alignItems: 'center', gap: 8 }} className="hidden md:flex">
           <button onClick={scrollToPlanes} style={{
             background: 'none', border: 'none', color: 'var(--text-muted)',
             fontFamily: "'DM Sans'", fontSize: 14, fontWeight: 500,

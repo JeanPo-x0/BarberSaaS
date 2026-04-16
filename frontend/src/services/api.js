@@ -49,6 +49,7 @@ export const crearBarberiaAdicional = (data) => API.post('/barberias/nueva', dat
 export const toggleBarberia = (id) => API.patch(`/barberias/${id}/toggle`);
 export const getBarberia = (id) => API.get(`/barberias/${id}`);
 export const actualizarSubdominio = (id, subdominio) => API.patch(`/barberias/${id}/subdominio`, { subdominio });
+export const eliminarSubdominio = (id) => API.delete(`/barberias/${id}/subdominio`);
 export const getBarberiaBySlug = (slug) => API.get(`/barberias/slug/${slug}`);
 
 // Auth

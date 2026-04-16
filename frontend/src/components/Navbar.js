@@ -97,6 +97,12 @@ export default function Navbar({ links = [], actions = null }) {
           padding: '16px 24px 20px',
           display: 'flex', flexDirection: 'column', gap: 4,
         }}>
+          {actions && (
+            <div style={{ paddingBottom: 12, marginBottom: 4, borderBottom: '1px solid var(--border)' }}
+              onClick={() => setOpen(false)}>
+              {actions}
+            </div>
+          )}
           {links.map(l => (
             <Link
               key={l.to}

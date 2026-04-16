@@ -143,6 +143,29 @@ def actualizar_subdominio(
     return barberia
 
 
+@router.delete("/{barberia_id}/subdominio", response_model=BarberiaResponse)
+def eliminar_subdominio(
+    barberia_id: int,
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    barberia = db.query(Barberia).filter(
+        Barberia.id == barberia_id,
+        Barberia.dueno_id == usuario.id
+    ).first()
+    if not barberia:
+        barberia = db.query(Barberia).filter(
+            Barberia.id == barberia_id,
+            Barberia.id == usuario.barberia_id
+        ).first()
+    if not barberia:
+        raise HTTPException(status_code=404, detail="Barberia no encontrada")
+    barberia.subdominio = None
+    db.commit()
+    db.refresh(barberia)
+    return barberia
+
+
 @router.get("/{barberia_id}", response_model=BarberiaResponse)
 def obtener_barberia(barberia_id: int, db: Session = Depends(get_db)):
     barberia = db.query(Barberia).filter(Barberia.id == barberia_id).first()

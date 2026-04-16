@@ -402,23 +402,32 @@ function Agenda() {
                 <div style={{ marginTop: 16 }}>
                   <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Horario disponible</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: 6 }}>
-                    {slots.map(slot => (
-                      <button key={slot.hora} type="button"
-                        onClick={() => slot.disponible && setHora(slot.hora)}
-                        disabled={!slot.disponible}
-                        style={{
-                          padding: '7px 4px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                          cursor: slot.disponible ? 'pointer' : 'not-allowed',
-                          border: hora === slot.hora ? '1px solid #C9A84C' : '1px solid var(--border)',
-                          background: hora === slot.hora ? '#C9A84C' : 'var(--bg-secondary)',
-                          color: hora === slot.hora ? '#0A0A0A' : slot.disponible ? 'var(--text-primary)' : 'var(--text-muted)',
-                          opacity: !slot.disponible ? 0.3 : 1,
-                          textDecoration: !slot.disponible ? 'line-through' : 'none',
-                          transition: 'all 0.15s', fontFamily: "'DM Sans'",
-                        }}>
-                        {slot.hora}
-                      </button>
-                    ))}
+                    {slots.map(slot => {
+                      const ocupado = !slot.disponible;
+                      const seleccionado = hora === slot.hora;
+                      return (
+                        <button key={slot.hora} type="button"
+                          onClick={() => !ocupado && setHora(slot.hora)}
+                          disabled={ocupado}
+                          title={ocupado ? 'Horario ocupado' : ''}
+                          style={{
+                            padding: '7px 4px', borderRadius: 8, fontSize: 11, fontWeight: 600,
+                            cursor: ocupado ? 'not-allowed' : 'pointer',
+                            border: seleccionado ? '1px solid #C9A84C'
+                              : ocupado ? '1px solid rgba(230,57,70,0.4)'
+                              : '1px solid var(--border)',
+                            background: seleccionado ? '#C9A84C'
+                              : ocupado ? 'rgba(230,57,70,0.1)'
+                              : 'var(--bg-secondary)',
+                            color: seleccionado ? '#0A0A0A'
+                              : ocupado ? '#E63946'
+                              : 'var(--text-primary)',
+                            transition: 'all 0.15s', fontFamily: "'DM Sans'",
+                          }}>
+                          {slot.hora}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}

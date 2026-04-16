@@ -79,6 +79,14 @@ def notificar_barbero_cancelacion(telefono: str, nombre_barbero: str, cliente: s
     )
     enviar_mensaje(telefono, mensaje)
 
+def notificar_completada_cliente(telefono: str, nombre: str, barberia_nombre: str):
+    mensaje = (
+        f"Tu cita en *{barberia_nombre}* fue completada. "
+        f"Gracias por visitarnos, {nombre}! "
+        f"Esperamos verte pronto. ✂️"
+    )
+    enviar_mensaje(telefono, mensaje)
+
 
 def notificar_lista_espera(telefono: str, nombre: str, barberia_nombre: str, link_agendamiento: str):
     """Avisa al primero en lista de espera que se liberó un turno."""

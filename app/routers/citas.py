@@ -13,7 +13,7 @@ from app.schemas import CitaCreate, CitaResponse
 from app.services.whatsapp import (
     confirmar_cita, notificar_cancelacion,
     notificar_barbero_nueva_cita, notificar_barbero_cancelacion,
-    notificar_lista_espera,
+    notificar_lista_espera, notificar_completada_cliente,
 )
 from app.core.deps import get_usuario_actual
 from app.core.config import settings
@@ -134,6 +134,21 @@ def completar_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual),
     cita.estado = "completada"
     db.commit()
     db.refresh(cita)
+
+    # Notificar al cliente que su cita fue completada
+    try:
+        from app.models.barberia import Barberia
+        cliente = db.query(Cliente).filter(Cliente.id == cita.cliente_id).first()
+        barberia = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first()
+        if cliente and cliente.telefono and barberia:
+            notificar_completada_cliente(
+                telefono=cliente.telefono,
+                nombre=cliente.nombre,
+                barberia_nombre=barberia.nombre,
+            )
+    except Exception:
+        pass
+
     return cita
 
 @router.get("/", response_model=List[CitaResponse])
