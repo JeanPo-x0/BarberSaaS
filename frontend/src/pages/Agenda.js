@@ -197,6 +197,7 @@ function Seccion({ label, citas, onCancelar, onCompletar }) {
 /* ── Main ────────────────────────────────────────────── */
 function Agenda() {
   const [citas, setCitas] = useState([]);
+  const [toastMsg, setToastMsg] = useState('');
   const [cargandoCitas, setCargandoCitas] = useState(true);
   const [barberos, setBarberos] = useState([]);
   const [servicios, setServicios] = useState([]);
@@ -245,6 +246,8 @@ function Agenda() {
   const handleCompletar = async (id) => {
     await completarCita(id);
     cargarCitas();
+    setToastMsg('Cita completada. WhatsApp enviado al cliente.');
+    setTimeout(() => setToastMsg(''), 4000);
   };
 
   const handleCrearCita = async (e) => {
@@ -291,6 +294,25 @@ function Agenda() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+
+      {/* Toast WhatsApp enviado */}
+      {toastMsg && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 999, background: '#1A1A1A', border: '1px solid rgba(74,222,128,0.3)',
+          borderRadius: 12, padding: '12px 20px',
+          display: 'flex', alignItems: 'center', gap: 10,
+          boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+          animation: 'fadeup 0.25s ease',
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M20.52 3.48A11.93 11.93 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.18-1.57A11.96 11.96 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.22-3.48-8.52z" fill="#25D366"/>
+            <path d="M17.5 14.4c-.3-.15-1.77-.87-2.04-.97s-.47-.15-.67.15-.77.97-.94 1.17-.35.22-.65.07c-.3-.15-1.27-.47-2.42-1.49-.89-.8-1.5-1.78-1.67-2.08s-.02-.46.13-.61c.13-.13.3-.35.45-.52s.2-.3.3-.5.05-.37-.03-.52-.67-1.62-.92-2.22c-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37s-1.04 1.02-1.04 2.48 1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.1 4.49.71.31 1.27.49 1.7.62.72.23 1.37.2 1.88.12.57-.09 1.77-.72 2.02-1.42s.25-1.3.17-1.42c-.07-.12-.27-.2-.57-.35z" fill="#fff"/>
+          </svg>
+          <span style={{ color: '#4ade80', fontSize: 13, fontWeight: 600 }}>{toastMsg}</span>
+        </div>
+      )}
+
       <Navbar
         links={[
           { label: 'Historial', to: '/historial' },

@@ -145,7 +145,7 @@ function PanelDueno() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
       <Navbar links={[
-        { label: 'Agenda', to: '/agenda' },
+        { label: 'Agenda', to: '/agenda', primary: true },
         { label: 'Ingresos', to: '/ingresos' },
       ]} />
 

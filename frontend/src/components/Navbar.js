@@ -20,7 +20,7 @@ const NavLink = ({ to, children, onClick }) => (
 );
 
 /**
- * links: [{ label, to }]
+ * links: [{ label, to, primary? }]  — primary:true se muestra directo en mobile sin hamburguesa
  * actions: JSX additional buttons on the right (before Salir)
  */
 export default function Navbar({ links = [], actions = null }) {
@@ -32,6 +32,10 @@ export default function Navbar({ links = [], actions = null }) {
     cerrarSesion();
     navigate('/login');
   };
+
+  const primaryLinks = links.filter(l => l.primary);
+  const secondaryLinks = links.filter(l => !l.primary);
+  const hasHamburger = secondaryLinks.length > 0;
 
   return (
     <>
@@ -70,26 +74,54 @@ export default function Navbar({ links = [], actions = null }) {
           </button>
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          onClick={() => setOpen(!open)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, marginLeft: 'auto' }}
-          className="flex md:hidden"
-        >
-          {open ? (
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <path d="M5 5l12 12M17 5L5 17" stroke="#F5F5F5" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          ) : (
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <path d="M3 6h16M3 11h16M3 16h16" stroke="#F5F5F5" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
+        {/* Mobile: links primarios + actions siempre visibles */}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
+          className="flex md:hidden">
+          {primaryLinks.map(l => (
+            <Link key={l.to} to={l.to} style={{
+              color: 'var(--text-muted)', fontSize: 13, fontWeight: 600,
+              padding: '6px 10px', borderRadius: 8, textDecoration: 'none',
+              border: '1px solid var(--border)',
+            }}>
+              {l.label}
+            </Link>
+          ))}
+          {actions}
+          {/* Hamburger solo si hay links secundarios */}
+          {hasHamburger && (
+            <button
+              onClick={() => setOpen(!open)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+            >
+              {open ? (
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                  <path d="M5 5l12 12M17 5L5 17" stroke="#F5F5F5" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                  <path d="M3 6h16M3 11h16M3 16h16" stroke="#F5F5F5" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              )}
+            </button>
           )}
-        </button>
+          {/* Salir mobile si no hay hamburger ni actions ni primaryLinks */}
+          {!hasHamburger && !actions && primaryLinks.length === 0 && (
+            <button
+              onClick={handleSalir}
+              style={{
+                background: 'none', border: 'none', color: '#E63946',
+                fontFamily: "'DM Sans'", fontSize: 13, fontWeight: 600,
+                padding: '6px 0', cursor: 'pointer',
+              }}
+            >
+              Salir
+            </button>
+          )}
+        </div>
       </nav>
 
-      {/* Mobile dropdown */}
-      {open && (
+      {/* Mobile dropdown — solo links secundarios + Salir */}
+      {open && hasHamburger && (
         <div style={{
           position: 'fixed', top: 60, left: 0, right: 0, zIndex: 99,
           background: 'rgba(17,17,17,0.97)', backdropFilter: 'blur(14px)',
@@ -97,13 +129,7 @@ export default function Navbar({ links = [], actions = null }) {
           padding: '16px 24px 20px',
           display: 'flex', flexDirection: 'column', gap: 4,
         }}>
-          {actions && (
-            <div style={{ paddingBottom: 12, marginBottom: 4, borderBottom: '1px solid var(--border)' }}
-              onClick={() => setOpen(false)}>
-              {actions}
-            </div>
-          )}
-          {links.map(l => (
+          {secondaryLinks.map(l => (
             <Link
               key={l.to}
               to={l.to}
