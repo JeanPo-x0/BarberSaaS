@@ -314,11 +314,6 @@ function Agenda() {
       )}
 
       <Navbar
-        links={[
-          { label: 'Historial', to: '/historial' },
-          { label: 'Panel', to: '/panel' },
-          { label: 'Ingresos', to: '/ingresos' },
-        ]}
         actions={
           <div className="pulse-ring-wrapper" style={{ display: 'inline-flex' }}>
             <button onClick={() => setMostrarForm(true)} className="btn-gold" style={{ padding: '7px 16px', fontSize: 13 }}>

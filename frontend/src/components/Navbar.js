@@ -1,62 +1,110 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { NavLogo } from './LogoLink';
 import { useAuth } from '../context/AuthContext';
 
-const NavLink = ({ to, children, onClick }) => (
-  <Link
-    to={to}
-    onClick={onClick}
-    style={{
-      color: 'var(--text-muted)', fontSize: 14, fontWeight: 500,
-      padding: '8px 12px', borderRadius: 8, textDecoration: 'none',
-      transition: 'color 0.2s',
-    }}
-    onMouseEnter={e => e.currentTarget.style.color = '#F5F5F5'}
-    onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
-  >
-    {children}
-  </Link>
-);
+/* ── Links fijos para todas las páginas post-login ─── */
+const NAV_LINKS = [
+  {
+    label: 'Agenda', to: '/agenda',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <path d="M16 2v4M8 2v4M3 10h18"/>
+      </svg>
+    ),
+  },
+  {
+    label: 'Panel', to: '/panel',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+    ),
+  },
+  {
+    label: 'Ingresos', to: '/ingresos',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+        <polyline points="16 7 22 7 22 13"/>
+      </svg>
+    ),
+  },
+  {
+    label: 'Historial', to: '/historial',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <polyline points="12 7 12 12 15 15"/>
+      </svg>
+    ),
+  },
+];
 
 /**
- * links: [{ label, to, primary? }]  — primary:true se muestra directo en mobile sin hamburguesa
- * actions: JSX additional buttons on the right (before Salir)
+ * actions: JSX — botones extra en la navbar (ej. "+ Nueva cita")
+ * El prop 'links' ya no se usa — los links son siempre los 4 estándar
  */
-export default function Navbar({ links = [], actions = null }) {
+export default function Navbar({ actions = null }) {
   const { cerrarSesion } = useAuth();
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
+  const { pathname } = useLocation();
 
   const handleSalir = () => {
     cerrarSesion();
     navigate('/login');
   };
 
-  const primaryLinks = links.filter(l => l.primary);
-  const secondaryLinks = links.filter(l => !l.primary);
-  const hasHamburger = secondaryLinks.length > 0;
-
   return (
     <>
+      {/* ── Top navbar ─────────────────────────────────── */}
       <nav style={{
         position: 'sticky', top: 0, zIndex: 100,
         height: 60,
-        background: 'var(--bg-secondary)',
+        background: 'rgba(17,17,17,0.95)',
+        backdropFilter: 'blur(14px)',
         borderBottom: '1px solid var(--border)',
         display: 'flex', alignItems: 'center',
-        padding: '0 24px',
-        gap: 8,
+        padding: '0 24px', gap: 8,
       }}>
         <NavLogo />
 
-        {/* Desktop links */}
-        <div style={{ flex: 1, alignItems: 'center', gap: 4, marginLeft: 16 }}
+        {/* Desktop: links con estado activo */}
+        <div style={{ flex: 1, alignItems: 'center', gap: 2, marginLeft: 16 }}
           className="hidden md:flex">
-          {links.map(l => <NavLink key={l.to} to={l.to}>{l.label}</NavLink>)}
+          {NAV_LINKS.map(l => {
+            const active = pathname === l.to;
+            return (
+              <Link key={l.to} to={l.to} style={{
+                color: active ? '#C9A84C' : 'var(--text-muted)',
+                fontSize: 14, fontWeight: active ? 700 : 500,
+                padding: '6px 12px', borderRadius: 8,
+                textDecoration: 'none',
+                transition: 'color 0.2s',
+                position: 'relative',
+              }}
+                onMouseEnter={e => { if (!active) e.currentTarget.style.color = '#F5F5F5'; }}
+                onMouseLeave={e => { if (!active) e.currentTarget.style.color = 'var(--text-muted)'; }}
+              >
+                {l.label}
+                {active && (
+                  <span style={{
+                    position: 'absolute', bottom: -1, left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 20, height: 2, borderRadius: 2,
+                    background: '#C9A84C',
+                    display: 'block',
+                  }} />
+                )}
+              </Link>
+            );
+          })}
         </div>
 
-        {/* Right actions desktop */}
+        {/* Desktop: actions + Salir */}
         <div style={{ alignItems: 'center', gap: 8 }} className="hidden md:flex">
           {actions}
           <button
@@ -65,7 +113,8 @@ export default function Navbar({ links = [], actions = null }) {
               background: 'none', border: '1px solid rgba(230,57,70,0.2)',
               color: 'var(--text-muted)', fontFamily: "'DM Sans'",
               fontSize: 13, fontWeight: 500, padding: '6px 14px',
-              borderRadius: 8, cursor: 'pointer', transition: 'color 0.2s, border-color 0.2s',
+              borderRadius: 8, cursor: 'pointer',
+              transition: 'color 0.2s, border-color 0.2s',
             }}
             onMouseEnter={e => { e.currentTarget.style.color = '#E63946'; e.currentTarget.style.borderColor = '#E63946'; }}
             onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'rgba(230,57,70,0.2)'; }}
@@ -74,90 +123,68 @@ export default function Navbar({ links = [], actions = null }) {
           </button>
         </div>
 
-        {/* Mobile: links primarios + actions siempre visibles */}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
+        {/* Mobile: actions directo + Salir */}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}
           className="flex md:hidden">
-          {primaryLinks.map(l => (
-            <Link key={l.to} to={l.to} style={{
-              color: 'var(--text-muted)', fontSize: 13, fontWeight: 600,
-              padding: '6px 10px', borderRadius: 8, textDecoration: 'none',
-              border: '1px solid var(--border)',
-            }}>
-              {l.label}
-            </Link>
-          ))}
           {actions}
-          {/* Hamburger solo si hay links secundarios */}
-          {hasHamburger && (
-            <button
-              onClick={() => setOpen(!open)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
-            >
-              {open ? (
-                <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                  <path d="M5 5l12 12M17 5L5 17" stroke="#F5F5F5" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              ) : (
-                <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                  <path d="M3 6h16M3 11h16M3 16h16" stroke="#F5F5F5" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              )}
-            </button>
-          )}
-          {/* Salir mobile siempre visible cuando no hay hamburguesa (Salir va dentro del dropdown si hay hamburguesa) */}
-          {!hasHamburger && (
-            <button
-              onClick={handleSalir}
-              style={{
-                background: 'none', color: 'var(--text-muted)',
-                fontFamily: "'DM Sans'", fontSize: 12, fontWeight: 600,
-                padding: '5px 10px', cursor: 'pointer', borderRadius: 8,
-                border: '1px solid rgba(230,57,70,0.2)',
-              }}
-              onTouchStart={e => e.currentTarget.style.color = '#E63946'}
-              onTouchEnd={e => e.currentTarget.style.color = 'var(--text-muted)'}
-            >
-              Salir
-            </button>
-          )}
-        </div>
-      </nav>
-
-      {/* Mobile dropdown — solo links secundarios + Salir */}
-      {open && hasHamburger && (
-        <div style={{
-          position: 'fixed', top: 60, left: 0, right: 0, zIndex: 99,
-          background: 'rgba(17,17,17,0.97)', backdropFilter: 'blur(14px)',
-          borderBottom: '1px solid var(--border)',
-          padding: '16px 24px 20px',
-          display: 'flex', flexDirection: 'column', gap: 4,
-        }}>
-          {secondaryLinks.map(l => (
-            <Link
-              key={l.to}
-              to={l.to}
-              onClick={() => setOpen(false)}
-              style={{
-                color: 'var(--text-muted)', fontSize: 15, padding: '10px 0',
-                textDecoration: 'none', borderBottom: '1px solid var(--border)',
-                display: 'block',
-              }}
-            >
-              {l.label}
-            </Link>
-          ))}
           <button
-            onClick={() => { setOpen(false); handleSalir(); }}
+            onClick={handleSalir}
             style={{
-              background: 'none', border: 'none', color: '#E63946',
-              fontFamily: "'DM Sans'", fontSize: 15, fontWeight: 600,
-              padding: '10px 0', textAlign: 'left', cursor: 'pointer', marginTop: 4,
+              background: 'none', color: 'var(--text-muted)',
+              fontFamily: "'DM Sans'", fontSize: 12, fontWeight: 600,
+              padding: '5px 10px', cursor: 'pointer', borderRadius: 8,
+              border: '1px solid rgba(230,57,70,0.2)',
             }}
           >
             Salir
           </button>
         </div>
-      )}
+      </nav>
+
+      {/* ── Bottom nav — solo mobile ────────────────────── */}
+      <nav
+        className="md:hidden"
+        style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+          height: 64,
+          background: 'rgba(17,17,17,0.97)',
+          backdropFilter: 'blur(16px)',
+          borderTop: '1px solid var(--border)',
+          display: 'flex',
+        }}
+      >
+        {NAV_LINKS.map(l => {
+          const active = pathname === l.to;
+          return (
+            <Link
+              key={l.to}
+              to={l.to}
+              style={{
+                flex: 1,
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                gap: 3, textDecoration: 'none',
+                color: active ? '#C9A84C' : 'var(--text-muted)',
+                transition: 'color 0.2s',
+                position: 'relative',
+              }}
+            >
+              {active && (
+                <span style={{
+                  position: 'absolute', top: 0, left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 32, height: 2, borderRadius: '0 0 4px 4px',
+                  background: '#C9A84C',
+                }} />
+              )}
+              {l.icon}
+              <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, letterSpacing: '0.02em' }}>
+                {l.label}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
     </>
   );
 }

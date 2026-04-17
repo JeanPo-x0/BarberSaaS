@@ -194,6 +194,12 @@ select.input-dark option  { background: var(--bg-secondary); }
 .step-pending { background: var(--bg-secondary); color: var(--text-muted); border: 1px solid var(--border); }
 
 /* ── Mobile Responsive ───────────────────────────────── */
+
+/* Espacio para bottom nav en todas las páginas post-login */
+@media (max-width: 768px) {
+  body { padding-bottom: 72px; }
+}
+
 @media (max-width: 600px) {
   /* Reduce page horizontal padding */
   .mobile-px {

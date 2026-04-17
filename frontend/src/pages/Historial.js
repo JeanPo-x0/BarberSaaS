@@ -30,11 +30,7 @@ function Historial() {
 
   return (
     <div className="bg-grid-lines" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
-      <Navbar links={[
-        { label: 'Agenda', to: '/agenda' },
-        { label: 'Panel', to: '/panel' },
-        { label: 'Ingresos', to: '/ingresos' },
-      ]} />
+      <Navbar />
 
       <div className="mobile-px" style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
         {/* Header */}

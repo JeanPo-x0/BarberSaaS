@@ -123,7 +123,7 @@ export default function DashboardIngresos() {
 
   return (
     <div className="bg-grid-lines" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
-      <Navbar links={[{ label: 'Panel', to: '/panel' }, { label: 'Agenda', to: '/agenda' }]}
+      <Navbar
         actions={avanzadas ? (
           <button onClick={exportarPDF} className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }}>
             Exportar PDF
