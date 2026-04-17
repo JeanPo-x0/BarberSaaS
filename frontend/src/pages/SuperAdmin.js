@@ -103,7 +103,7 @@ export default function SuperAdmin() {
   );
 
   return (
-    <div className="bg-grid-lines" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="bg-panel" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
       <Navbar links={[{ label: 'Panel', to: '/panel' }]} />
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>
