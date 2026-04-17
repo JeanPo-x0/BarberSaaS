@@ -215,7 +215,10 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-animated bg-dots" style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="bg-orbs bg-grid-dots bg-noise" style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+
+      {/* Tercer orb central */}
+      <div className="orb-mid" aria-hidden="true" />
 
       {/* ── Navbar ── */}
       <nav style={{

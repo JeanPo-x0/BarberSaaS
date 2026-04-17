@@ -293,7 +293,7 @@ function Agenda() {
   const hoyStr = new Date().toISOString().split('T')[0];
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="bg-grid-lines" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
 
       {/* Toast WhatsApp enviado */}
       {toastMsg && (

@@ -143,7 +143,7 @@ function PanelDueno() {
   const sectionCard = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '24px' };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="bg-grid-lines" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
       <Navbar links={[
         { label: 'Agenda', to: '/agenda', primary: true },
         { label: 'Ingresos', to: '/ingresos' },

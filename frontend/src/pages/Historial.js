@@ -29,7 +29,7 @@ function Historial() {
   const citasFiltradas = filtro === 'todas' ? citas : citas.filter(c => c.estado === filtro);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="bg-grid-lines" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
       <Navbar links={[
         { label: 'Agenda', to: '/agenda' },
         { label: 'Panel', to: '/panel' },
