@@ -124,7 +124,7 @@ export default function Navbar({ actions = null }) {
         </div>
 
         {/* Mobile: actions directo + Salir */}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}
+        <div style={{ marginLeft: 'auto', alignItems: 'center', gap: 8 }}
           className="flex md:hidden">
           {actions}
           <button
