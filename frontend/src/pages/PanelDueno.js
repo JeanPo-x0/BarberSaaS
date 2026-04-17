@@ -150,7 +150,7 @@ function PanelDueno() {
       ]} />
 
       <div className="mobile-px" style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: plan !== 'premium' ? 12 : 28 }}>
+        <div className="anim-fadein" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: plan !== 'premium' ? 12 : 28 }}>
           <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.08em', margin: 0 }}>
             Panel
           </h1>
@@ -231,7 +231,7 @@ function PanelDueno() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {barberos.map(b => (
-                <div key={b.id} className="mobile-item-row" style={{
+                <div key={b.id} className="mobile-item-row anim-item" style={{
                   background: 'var(--bg-card)', border: '1px solid var(--border)',
                   borderRadius: 12, padding: '14px 18px',
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -290,7 +290,7 @@ function PanelDueno() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {servicios.map(s => (
-                <div key={s.id} className="mobile-item-row" style={{
+                <div key={s.id} className="mobile-item-row anim-item" style={{
                   background: 'var(--bg-card)', border: '1px solid var(--border)',
                   borderRadius: 12, padding: '14px 18px',
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -329,7 +329,7 @@ function PanelDueno() {
         {tab === 'barberias' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {barberias.map(b => (
-              <div key={b.id} style={{
+              <div key={b.id} className="anim-item" style={{
                 background: 'var(--bg-card)', border: '1px solid var(--border)',
                 borderRadius: 14, padding: '20px',
               }}>

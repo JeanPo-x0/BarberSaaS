@@ -69,7 +69,7 @@ function Login() {
         <LogoLink to="/" />
       </div>
 
-      <div className="anim-fadeup" style={{
+      <div className="anim-fadeup anim-scalein" style={{
         background: 'var(--bg-card)',
         border: '1px solid var(--border)',
         borderRadius: 18,

@@ -174,7 +174,7 @@ export default function Planes() {
             const cargando = loadingPlan === plan.id;
 
             return (
-              <div key={plan.id} style={{
+              <div key={plan.id} className="anim-item" style={{
                 position: 'relative',
                 background: 'var(--bg-card)',
                 border: `1px solid ${plan.popular ? '#C9A84C' : 'var(--border)'}`,

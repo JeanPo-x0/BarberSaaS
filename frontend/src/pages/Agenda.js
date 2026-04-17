@@ -320,9 +320,11 @@ function Agenda() {
           { label: 'Ingresos', to: '/ingresos' },
         ]}
         actions={
-          <button onClick={() => setMostrarForm(true)} className="btn-gold" style={{ padding: '7px 16px', fontSize: 13 }}>
-            + Nueva cita
-          </button>
+          <div className="pulse-ring-wrapper" style={{ display: 'inline-flex' }}>
+            <button onClick={() => setMostrarForm(true)} className="btn-gold" style={{ padding: '7px 16px', fontSize: 13 }}>
+              + Nueva cita
+            </button>
+          </div>
         }
       />
 
@@ -339,7 +341,7 @@ function Agenda() {
               { label: 'Ingresos hoy', value: cargandoCitas ? '—' : `₡${ingresosHoy.toLocaleString()}` },
               { label: 'Proxima', value: cargandoCitas ? '—' : proximaCita ? fmt(proximaCita.fecha_hora).hora : 'Ninguna' },
             ].map(({ label, value }) => (
-              <div key={label} style={{
+              <div key={label} className="anim-scalein" style={{
                 background: 'var(--bg-card)', border: '1px solid var(--border)',
                 borderRadius: 12, padding: '14px 16px',
               }}>

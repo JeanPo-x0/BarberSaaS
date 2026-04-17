@@ -136,7 +136,7 @@ function DashboardCard() {
       padding: '24px',
       width: '100%',
       maxWidth: 340,
-      boxShadow: '0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,168,76,0.1)',
+      boxShadow: '0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,168,76,0.12), 0 0 48px rgba(201,168,76,0.06)',
     }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -215,7 +215,7 @@ export default function Home() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="bg-animated bg-dots" style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: "'DM Sans', sans-serif" }}>
 
       {/* ── Navbar ── */}
       <nav style={{
@@ -316,7 +316,7 @@ export default function Home() {
             letterSpacing: '0.02em',
           }}>
             Tu barberia en{' '}
-            <span style={{ color: '#C9A84C' }}>piloto automatico</span>
+            <span className="text-gold-shimmer">piloto automatico</span>
           </h1>
 
           <p style={{
@@ -327,9 +327,11 @@ export default function Home() {
           </p>
 
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <Link to="/registro" className="btn-gold" style={{ fontSize: 16, padding: '14px 32px' }}>
-              Empezar gratis
-            </Link>
+            <div className="pulse-ring-wrapper">
+              <Link to="/registro" className="btn-gold" style={{ fontSize: 16, padding: '14px 32px' }}>
+                Empezar gratis
+              </Link>
+            </div>
             <button onClick={scrollToPlanes} className="btn-outline" style={{ fontSize: 16, padding: '14px 32px' }}>
               Ver planes
             </button>
@@ -372,7 +374,7 @@ export default function Home() {
             gap: 20,
           }}>
             {FEATURES.map(({ Icon, title, desc }) => (
-              <div key={title} className="card card-hover" style={{ padding: '28px 24px' }}>
+              <div key={title} className="card card-hover anim-item" style={{ padding: '28px 24px' }}>
                 <div style={{ marginBottom: 18 }}>
                   <Icon />
                 </div>
