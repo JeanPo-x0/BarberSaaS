@@ -143,14 +143,13 @@ export default function Navbar({ actions = null }) {
 
       {/* ── Bottom nav — solo mobile ────────────────────── */}
       <nav
-        className="md:hidden"
+        className="flex md:hidden"
         style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
           height: 64,
           background: 'rgba(17,17,17,0.97)',
           backdropFilter: 'blur(16px)',
           borderTop: '1px solid var(--border)',
-          display: 'flex',
         }}
       >
         {NAV_LINKS.map(l => {
