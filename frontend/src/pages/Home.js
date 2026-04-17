@@ -459,7 +459,6 @@ export default function Home() {
             gap: 20, alignItems: 'start',
           }}>
             {PLANES.map((plan) => {
-              const precio = anual ? plan.precio_anual : plan.precio_mensual;
               const esGratis = plan.precio_mensual === 0;
               return (
                 <div key={plan.id} style={{

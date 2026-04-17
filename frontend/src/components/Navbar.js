@@ -109,7 +109,7 @@ export default function Navbar({ links = [], actions = null }) {
             <button
               onClick={handleSalir}
               style={{
-                background: 'none', border: 'none', color: 'var(--text-muted)',
+                background: 'none', color: 'var(--text-muted)',
                 fontFamily: "'DM Sans'", fontSize: 12, fontWeight: 600,
                 padding: '5px 10px', cursor: 'pointer', borderRadius: 8,
                 border: '1px solid rgba(230,57,70,0.2)',
