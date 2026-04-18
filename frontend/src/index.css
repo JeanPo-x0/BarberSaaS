@@ -227,6 +227,15 @@ select.input-dark option  { background: var(--bg-secondary); }
     grid-template-columns: 1fr !important;
   }
 
+  /* ── Agenda cita card mobile ── */
+  .agenda-card-actions-desktop { display: none !important; }
+  .agenda-card-actions-mobile  { display: flex !important; }
+
+  /* Stats grid → 3 cols igual pero más compacto */
+  .stats-grid-mobile {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
   /* ── Historial cards mobile ── */
   .historial-card {
     flex-direction: column !important;

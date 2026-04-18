@@ -59,14 +59,11 @@ function CitaCard({ cita, onCancelar, onCompletar }) {
   const esPendiente = cita.estado === 'pendiente';
 
   return (
-    <div className="anim-item" style={{
+    <div className="anim-item agenda-cita-card" style={{
       background: 'var(--bg-card)',
       border: `1px solid var(--border)`,
       borderRadius: 14,
-      padding: '16px 20px',
-      display: 'flex',
-      gap: 16,
-      alignItems: 'flex-start',
+      overflow: 'hidden',
       transition: 'border-color 0.2s, box-shadow 0.2s',
     }}
       onMouseEnter={e => {
@@ -78,92 +75,130 @@ function CitaCard({ cita, onCancelar, onCompletar }) {
         e.currentTarget.style.boxShadow = 'none';
       }}
     >
-      {/* Bloque hora */}
-      <div style={{
-        background: 'var(--bg-secondary)', border: '1px solid var(--border)',
-        borderRadius: 10, padding: '10px 12px', textAlign: 'center',
-        flexShrink: 0, minWidth: 58,
-      }}>
-        <p style={{ fontFamily: "'Bebas Neue'", fontSize: 22, letterSpacing: '0.04em', color: '#C9A84C', margin: 0, lineHeight: 1 }}>
-          {hora}
-        </p>
-        <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '4px 0 0 0', textTransform: 'capitalize' }}>
-          {fecha}
-        </p>
-      </div>
-
-      {/* Info principal */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <p style={{ fontWeight: 700, fontSize: 15, margin: 0, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {cita.cliente?.nombre || `Cliente #${cita.cliente_id}`}
-          </p>
-          <span style={{
-            background: est.bg, color: est.color, border: `1px solid ${est.border}`,
-            borderRadius: 100, padding: '2px 9px', fontSize: 10, fontWeight: 700,
-            flexShrink: 0,
-          }}>
-            {est.label}
-          </span>
-        </div>
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px' }}>
-          {cita.servicio && (
-            <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/>
-                <path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-                <path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/>
-                <path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/>
-                <path d="M14 14.5V9H10v5.5"/>
-                <path d="M14 9.5V4H4v10h10V9.5z"/>
-              </svg>
-              {cita.servicio.nombre}
-            </span>
-          )}
-          {cita.barbero && (
-            <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-              {cita.barbero.nombre}
-            </span>
-          )}
-          {cita.servicio && (
-            <span style={{ fontSize: 12, color: '#C9A84C', fontWeight: 600 }}>
-              ₡{cita.servicio.precio.toLocaleString()}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Acciones */}
+      {/* Franja de color por estado (pendiente = dorado) */}
       {esPendiente && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+        <div style={{ height: 2, background: 'linear-gradient(90deg, #C9A84C, transparent)' }} />
+      )}
+
+      <div style={{ padding: '14px 18px', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+        {/* Bloque hora */}
+        <div style={{
+          background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+          borderRadius: 10, padding: '10px 12px', textAlign: 'center',
+          flexShrink: 0, minWidth: 58,
+        }}>
+          <p style={{ fontFamily: "'Bebas Neue'", fontSize: 22, letterSpacing: '0.04em', color: '#C9A84C', margin: 0, lineHeight: 1 }}>
+            {hora}
+          </p>
+          <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '4px 0 0 0', textTransform: 'capitalize' }}>
+            {fecha}
+          </p>
+        </div>
+
+        {/* Info principal */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+            <p style={{ fontWeight: 700, fontSize: 15, margin: 0, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {cita.cliente?.nombre || `Cliente #${cita.cliente_id}`}
+            </p>
+            <span style={{
+              background: est.bg, color: est.color, border: `1px solid ${est.border}`,
+              borderRadius: 100, padding: '2px 9px', fontSize: 10, fontWeight: 700,
+              flexShrink: 0,
+            }}>
+              {est.label}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px' }}>
+            {cita.servicio && (
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/>
+                  <path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                  <path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/>
+                  <path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/>
+                </svg>
+                {cita.servicio.nombre}
+              </span>
+            )}
+            {cita.barbero && (
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                {cita.barbero.nombre}
+              </span>
+            )}
+            {cita.servicio && (
+              <span style={{ fontSize: 12, color: '#C9A84C', fontWeight: 700 }}>
+                ₡{cita.servicio.precio.toLocaleString()}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Acciones — solo desktop (se esconden en mobile con CSS) */}
+        {esPendiente && (
+          <div className="agenda-card-actions-desktop" style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+            <button
+              onClick={() => onCompletar(cita.id)}
+              style={{
+                padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                cursor: 'pointer', fontFamily: "'DM Sans'",
+                background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)',
+                color: '#4ade80', transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(74,222,128,0.18)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(74,222,128,0.08)'}
+            >
+              Completar
+            </button>
+            <button
+              onClick={() => onCancelar(cita.id)}
+              style={{
+                padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                cursor: 'pointer', fontFamily: "'DM Sans'",
+                background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.2)',
+                color: '#E63946', transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,57,70,0.18)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(230,57,70,0.08)'}
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Acciones mobile — fila separada, ancho completo */}
+      {esPendiente && (
+        <div className="agenda-card-actions-mobile" style={{
+          display: 'none',
+          borderTop: '1px solid var(--border)',
+          padding: '10px 14px',
+          gap: 8,
+        }}>
           <button
             onClick={() => onCompletar(cita.id)}
             style={{
-              padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+              flex: 1, padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 700,
               cursor: 'pointer', fontFamily: "'DM Sans'",
               background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)',
               color: '#4ade80', transition: 'background 0.15s',
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(74,222,128,0.18)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(74,222,128,0.08)'}
           >
-            Completar
+            ✓ Completar
           </button>
           <button
             onClick={() => onCancelar(cita.id)}
             style={{
-              padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+              flex: 1, padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 700,
               cursor: 'pointer', fontFamily: "'DM Sans'",
-              background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.2)',
+              background: 'rgba(230,57,70,0.06)', border: '1px solid rgba(230,57,70,0.2)',
               color: '#E63946', transition: 'background 0.15s',
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,57,70,0.18)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(230,57,70,0.08)'}
           >
             Cancelar
           </button>
@@ -323,14 +358,14 @@ function Agenda() {
         }
       />
 
-      <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
+      <div className="mobile-px" style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
 
         {/* Header + stats */}
         <div className="anim-fadeup" style={{ marginBottom: 28 }}>
           <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 34, letterSpacing: '0.08em', margin: '0 0 20px 0' }}>
             Agenda
           </h1>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+          <div className="stats-grid-mobile" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
             {[
               { label: 'Citas hoy', value: cargandoCitas ? '—' : totalHoy },
               { label: 'Ingresos hoy', value: cargandoCitas ? '—' : `₡${ingresosHoy.toLocaleString()}` },
@@ -368,7 +403,7 @@ function Agenda() {
             </div>
 
             <form onSubmit={handleCrearCita}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>Barbero</label>
                   <select value={barberoId} onChange={e => setBarberoId(e.target.value)} required
