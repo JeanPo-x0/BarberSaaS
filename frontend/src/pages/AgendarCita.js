@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { NavLogo } from '../components/LogoLink';
 import {
@@ -24,6 +24,156 @@ function Initials({ name }) {
       fontFamily: "'Bebas Neue'", fontSize: 17, color: '#C9A84C', letterSpacing: '0.05em',
     }}>
       {ini.toUpperCase()}
+    </div>
+  );
+}
+
+/* ── Calendar Picker ─────────────────────────────────── */
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS  = ['Do','Lu','Ma','Mi','Ju','Vi','Sa'];
+
+function CalendarPicker({ value, onChange, min }) {
+  const [open, setOpen]       = useState(false);
+  const [view, setView]       = useState(() => {
+    const d = value ? new Date(value + 'T12:00:00') : new Date();
+    return { year: d.getFullYear(), month: d.getMonth() };
+  });
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (value) {
+      const d = new Date(value + 'T12:00:00');
+      setView({ year: d.getFullYear(), month: d.getMonth() });
+    }
+  }, [value]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const minDate   = min ? new Date(min + 'T00:00:00') : null;
+  const daysCount = new Date(view.year, view.month + 1, 0).getDate();
+  const firstDay  = new Date(view.year, view.month, 1).getDay();
+
+  const isPast = day => {
+    if (!minDate) return false;
+    const d = new Date(view.year, view.month, day);
+    return d < new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate());
+  };
+  const isSel   = day => {
+    if (!value) return false;
+    const s = new Date(value + 'T12:00:00');
+    return s.getFullYear() === view.year && s.getMonth() === view.month && s.getDate() === day;
+  };
+  const isToday = day => {
+    const t = new Date();
+    return t.getFullYear() === view.year && t.getMonth() === view.month && t.getDate() === day;
+  };
+
+  const prevMonth = () => setView(v => v.month === 0  ? { year: v.year-1, month: 11 } : { ...v, month: v.month-1 });
+  const nextMonth = () => setView(v => v.month === 11 ? { year: v.year+1, month: 0  } : { ...v, month: v.month+1 });
+
+  const handleDay = day => {
+    if (isPast(day)) return;
+    const m = String(view.month + 1).padStart(2,'0');
+    const d = String(day).padStart(2,'0');
+    onChange(`${view.year}-${m}-${d}`);
+    setOpen(false);
+  };
+
+  const displayValue = value
+    ? new Date(value + 'T12:00:00').toLocaleDateString('es-CR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' })
+    : null;
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      {/* Trigger */}
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="input-dark"
+        style={{
+          width: '100%', textAlign: 'left', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          color: value ? 'var(--text-primary)' : 'var(--text-muted)',
+          textTransform: 'capitalize',
+        }}
+      >
+        <span>{displayValue || 'Selecciona una fecha'}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <path d="M16 2v4M8 2v4M3 10h18"/>
+        </svg>
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div className="anim-slidedown" style={{
+          position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0,
+          background: '#161616', border: '1px solid rgba(201,168,76,0.25)',
+          borderRadius: 16, padding: '18px 16px',
+          zIndex: 200, boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+          minWidth: 280,
+        }}>
+          {/* Navegación mes */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <button type="button" onClick={prevMonth} style={{
+              background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+              color: 'var(--text-muted)', borderRadius: 8, width: 32, height: 32,
+              cursor: 'pointer', fontSize: 18, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>‹</button>
+
+            <span style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.07em', color: '#C9A84C' }}>
+              {MESES[view.month]} {view.year}
+            </span>
+
+            <button type="button" onClick={nextMonth} style={{
+              background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+              color: 'var(--text-muted)', borderRadius: 8, width: 32, height: 32,
+              cursor: 'pointer', fontSize: 18, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>›</button>
+          </div>
+
+          {/* Cabecera días */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 4 }}>
+            {DIAS.map(d => (
+              <div key={d} style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', padding: '4px 0' }}>
+                {d}
+              </div>
+            ))}
+          </div>
+
+          {/* Grid días */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
+            {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
+            {Array.from({ length: daysCount }).map((_, i) => {
+              const day  = i + 1;
+              const past = isPast(day);
+              const sel  = isSel(day);
+              const today = isToday(day);
+              return (
+                <button key={day} type="button" onClick={() => handleDay(day)} disabled={past}
+                  style={{
+                    padding: '9px 4px', borderRadius: 9, fontSize: 13, fontWeight: sel ? 700 : 400,
+                    cursor: past ? 'default' : 'pointer', fontFamily: "'DM Sans'",
+                    border: today && !sel ? '1px solid rgba(201,168,76,0.55)' : '1px solid transparent',
+                    background: sel ? '#C9A84C' : 'transparent',
+                    color: sel ? '#0A0A0A' : past ? 'rgba(255,255,255,0.18)' : 'var(--text-primary)',
+                    transition: 'background 0.12s',
+                  }}
+                  onMouseEnter={e => { if (!past && !sel) e.currentTarget.style.background = 'rgba(201,168,76,0.12)'; }}
+                  onMouseLeave={e => { if (!past && !sel) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -416,14 +566,7 @@ function AgendarCita() {
                 <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-muted)', margin: '0 0 10px 0', textTransform: 'uppercase' }}>
                   Fecha
                 </p>
-                <input
-                  type="date"
-                  value={fecha}
-                  onChange={e => setFecha(e.target.value)}
-                  min={hoy}
-                  className="input-dark"
-                  style={{ width: '100%' }}
-                />
+                <CalendarPicker value={fecha} onChange={setFecha} min={hoy} />
               </div>
 
               {fecha && (
