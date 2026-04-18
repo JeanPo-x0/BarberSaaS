@@ -195,9 +195,17 @@ select.input-dark option  { background: var(--bg-secondary); }
 
 /* ── Mobile Responsive ───────────────────────────────── */
 
-/* Espacio para bottom nav en todas las páginas post-login */
+/* Espacio para bottom nav en mobile */
 @media (max-width: 768px) {
   body { padding-bottom: 72px; }
+}
+
+/* Sidebar offset en desktop — todas las páginas post-login */
+@media (min-width: 769px) {
+  .bg-panel,
+  .bg-grid-lines {
+    padding-left: 220px;
+  }
 }
 
 @media (max-width: 600px) {
