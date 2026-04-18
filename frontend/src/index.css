@@ -226,6 +226,33 @@ select.input-dark option  { background: var(--bg-secondary); }
   .stats-grid-mobile {
     grid-template-columns: 1fr !important;
   }
+
+  /* ── Historial cards mobile ── */
+  .historial-card {
+    flex-direction: column !important;
+  }
+  .historial-time-block {
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border) !important;
+    width: 100% !important;
+    min-width: unset !important;
+    padding: 10px 14px !important;
+    gap: 8px !important;
+  }
+  .historial-stats {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  /* ── Panel item cards mobile ── */
+  .panel-item-card {
+    flex-wrap: wrap !important;
+  }
+  .panel-item-actions {
+    width: 100% !important;
+    margin-left: 52px;
+  }
 }
 
 /* ── Nuevas animaciones — improvement 6 ─────────────── */

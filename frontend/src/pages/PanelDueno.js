@@ -9,6 +9,22 @@ import {
   getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio,
 } from '../services/api';
 
+/* ── Initials avatar ─────────────────────────────────── */
+function Initials({ name, size = 38 }) {
+  const parts = (name || '').split(' ');
+  const ini = parts.length >= 2 ? parts[0][0] + parts[1][0] : (name || '?')[0];
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%', flexShrink: 0,
+      background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.25)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: "'Bebas Neue'", fontSize: size * 0.42, color: '#C9A84C', letterSpacing: '0.04em',
+    }}>
+      {ini.toUpperCase()}
+    </div>
+  );
+}
+
 /* ── Helpers ─────────────────────────────────────────── */
 const tabStyle = (activo) => ({
   padding: '8px 18px', borderRadius: 8,
@@ -228,18 +244,25 @@ function PanelDueno() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {barberos.map(b => (
-                <div key={b.id} className="mobile-item-row anim-item" style={{
+                <div key={b.id} className="anim-item panel-item-card" style={{
                   background: 'var(--bg-card)', border: '1px solid var(--border)',
-                  borderRadius: 12, padding: '14px 18px',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                }}>
-                  <div>
-                    <p style={{ fontWeight: 600, fontSize: 14, margin: '0 0 2px 0' }}>{b.nombre}</p>
-                    <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>
-                      {[b.especialidad, b.telefono].filter(Boolean).join(' — ')}
+                  borderRadius: 12, padding: '14px 16px',
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  transition: 'border-color 0.2s',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                >
+                  <Initials name={b.nombre} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontWeight: 700, fontSize: 14, margin: '0 0 2px 0', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {b.nombre}
+                    </p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {[b.especialidad, b.telefono].filter(Boolean).join(' · ')}
                     </p>
                   </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
+                  <div className="panel-item-actions" style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                     <button onClick={() => toggleBarbero(b.id).then(() => getMisBarberos().then(r => setBarberos(r.data)))}
                       style={toggleBtn(b.activo)}>
                       {b.activo ? 'Activo' : 'Inactivo'}
@@ -287,19 +310,41 @@ function PanelDueno() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {servicios.map(s => (
-                <div key={s.id} className="mobile-item-row anim-item" style={{
+                <div key={s.id} className="anim-item panel-item-card" style={{
                   background: 'var(--bg-card)', border: '1px solid var(--border)',
-                  borderRadius: 12, padding: '14px 18px',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                }}>
-                  <div>
-                    <p style={{ fontWeight: 600, fontSize: 14, margin: '0 0 2px 0' }}>{s.nombre}</p>
-                    <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>{s.duracion_minutos} min</p>
+                  borderRadius: 12, padding: '14px 16px',
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  transition: 'border-color 0.2s',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                >
+                  {/* Icono servicio */}
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+                    background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.18)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/>
+                      <path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                      <path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/>
+                      <path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/>
+                    </svg>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontFamily: "'Bebas Neue'", fontSize: 16, color: '#C9A84C', letterSpacing: '0.05em' }}>
-                      ₡{s.precio}
-                    </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontWeight: 700, fontSize: 14, margin: '0 0 2px 0', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {s.nombre}
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>{s.duracion_minutos} min</p>
+                      <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 10 }}>·</span>
+                      <span style={{ fontFamily: "'Bebas Neue'", fontSize: 15, color: '#C9A84C', letterSpacing: '0.05em' }}>
+                        ₡{Number(s.precio).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="panel-item-actions" style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                     <button onClick={() => toggleServicio(s.id).then(() => getMisServicios().then(r => setServicios(r.data)))}
                       style={toggleBtn(s.disponible)}>
                       {s.disponible ? 'Disponible' : 'Inactivo'}
