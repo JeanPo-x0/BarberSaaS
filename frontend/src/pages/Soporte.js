@@ -255,10 +255,10 @@ function GestionSuscripcion() {
           </button>
         )}
         {(sus.estado === 'activa' || sus.estado === 'cancelacion_pendiente') && (
-          <a href="#" onClick={async e => { e.preventDefault(); const r = await import('../services/api').then(m => m.getPortalBilling()); window.location.href = r.data.portal_url; }}
-            style={{ padding: '10px 20px', fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 10, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+          <button onClick={async () => { const r = await import('../services/api').then(m => m.getPortalBilling()); window.location.href = r.data.portal_url; }}
+            style={{ padding: '10px 20px', fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 10, background: 'transparent', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
             Gestionar método de pago
-          </a>
+          </button>
         )}
       </div>
     </div>
