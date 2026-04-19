@@ -1,6 +1,8 @@
+import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.core.limiter import limiter
@@ -294,6 +296,10 @@ app.include_router(admin.router)
 app.include_router(lista_espera.router)
 app.include_router(configuracion_pagos.router)
 app.include_router(soporte.router)
+
+_comprobantes_dir = "/tmp/comprobantes"
+os.makedirs(_comprobantes_dir, exist_ok=True)
+app.mount("/comprobantes", StaticFiles(directory=_comprobantes_dir), name="comprobantes")
 
 @app.get("/")
 def root():

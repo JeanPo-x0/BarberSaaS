@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     # App
     DOCS_ENABLED: bool = False  # Activar solo en desarrollo local con DOCS_ENABLED=true en .env
     FRONTEND_URL: str = "http://localhost:3000"
+    BACKEND_URL: str = "http://localhost:8000"
     SAAS_DOMAIN: str = "barbersaas.com"
     SUPERADMIN_EMAIL: str = "saascompany.cr@gmail.com"
 
