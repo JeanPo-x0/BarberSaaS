@@ -18,6 +18,7 @@ import SuscripcionExito from './pages/SuscripcionExito';
 import Planes from './pages/Planes';
 import Terminos from './pages/Terminos';
 import Privacidad from './pages/Privacidad';
+import Soporte from './pages/Soporte';
 import BannerTC from './components/BannerTC';
 import './App.css';
 
@@ -48,6 +49,7 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/terminos" element={<Terminos />} />
           <Route path="/privacidad" element={<Privacidad />} />
+          <Route path="/soporte" element={<Soporte />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
