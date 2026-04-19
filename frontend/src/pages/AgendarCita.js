@@ -573,16 +573,25 @@ function AgendarCita() {
                 </svg>
               )}
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: configPagos.cancelacion_porcentaje > 0 ? '#E63946' : '#4ade80', margin: '0 0 2px 0' }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: configPagos.cancelacion_porcentaje > 0 ? '#E63946' : '#4ade80', margin: '0 0 6px 0' }}>
                   {configPagos.cancelacion_porcentaje > 0
-                    ? `Cargo del ${configPagos.cancelacion_porcentaje}% del servicio por cancelación tardía`
-                    : 'Cancelación gratuita'}
+                    ? `Retención del ${configPagos.cancelacion_porcentaje}% en caso de cancelación o no presentación`
+                    : 'Reembolso completo al cancelar'}
                 </p>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
-                  {configPagos.cancelacion_porcentaje > 0
-                    ? 'Si cancelás con poco tiempo de anticipación se aplicará este cargo sobre el precio del servicio.'
-                    : 'Podés cancelar tu cita sin ningún costo escribiendo CANCELAR por WhatsApp.'}
-                </p>
+                {configPagos.cancelacion_porcentaje > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                      Al agendar esta cita aceptás que, si la cancelás con poco tiempo de anticipación o no te presentás, <strong style={{ color: '#F5F5F5' }}>se retendrá el {configPagos.cancelacion_porcentaje}% del monto pagado</strong> y solo se te devolverá el {100 - configPagos.cancelacion_porcentaje}% restante.
+                    </p>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                      Ejemplo: si pagaste ₡10,000, recibirías de vuelta ₡{(10000 * (1 - configPagos.cancelacion_porcentaje / 100)).toLocaleString('es-CR')}.
+                    </p>
+                  </div>
+                ) : (
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                    Si cancelás, se te devuelve el 100% de lo que pagaste, sin ningún cargo adicional.
+                  </p>
+                )}
               </div>
             </div>
 
