@@ -38,11 +38,32 @@ async def webhook_whatsapp(request: Request, background_tasks: BackgroundTasks, 
         )
         return Response(content=twiml, media_type="application/xml")
 
-    # Para cualquier otro mensaje entrante, redirigir al link web
-    respuesta = (
-        "Hola! Para agendar tu cita usá el link que te compartió tu barbería. "
-        "Por este medio solo podés cancelar escribiendo CANCELAR."
-    )
+    # Para cualquier otro mensaje, buscar la barbería y devolver el link
+    to_number = form_dict.get("To", "").replace("whatsapp:", "")
+    from app.models.barberia import Barberia
+    from sqlalchemy import and_
+    from app.core.config import settings
+    barberia = db.query(Barberia).filter(
+        and_(Barberia.twilio_numero == to_number, Barberia.activa == True)
+    ).first()
+
+    if barberia:
+        link = (
+            f"{settings.FRONTEND_URL}/b/{barberia.slug}"
+            if barberia.slug
+            else f"{settings.FRONTEND_URL}/agendar/{barberia.id}"
+        )
+        respuesta = (
+            f"Hola! 👋 Las citas en *{barberia.nombre}* se agendan desde el siguiente link:\n"
+            f"{link}\n\n"
+            f"Si querés *cancelar* una cita existente, simplemente respondé *CANCELAR* aquí y lo hacemos en segundos."
+        )
+    else:
+        respuesta = (
+            "Hola! Las citas se agendan desde el link que te compartió tu barbería. "
+            "Para cancelar una cita existente respondé CANCELAR."
+        )
+
     twiml = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         f"<Response><Message>{respuesta}</Message></Response>"

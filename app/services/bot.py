@@ -378,6 +378,24 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
                 barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
                 fecha_str = cita.fecha_hora.strftime("%d/%m/%y a las %H:%M")
 
+                # Construir link de agendamiento
+                from app.core.config import settings
+                link_ag = ""
+                if barbero:
+                    barberia_obj = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first()
+                    if barberia_obj:
+                        link_ag = (
+                            f"{settings.FRONTEND_URL}/b/{barberia_obj.slug}"
+                            if barberia_obj.slug
+                            else f"{settings.FRONTEND_URL}/agendar/{barberia_obj.id}"
+                        )
+
+                msg_cancelacion = (
+                    f"✅ Tu cita del *{fecha_str}* ha sido cancelada exitosamente.\n\n"
+                    f"Cuando quieras volver a agendar, podés hacerlo directamente desde el link de tu barbería"
+                    + (f":\n{link_ag}" if link_ag else ".")
+                )
+
                 def notificar_barbero():
                     try:
                         from app.services.whatsapp import notificar_barbero_cancelacion
@@ -386,12 +404,12 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
                     except Exception:
                         pass
 
-                return f"Tu cita del {fecha_str} ha sido cancelada. Escribe Hola cuando quieras agendar una nueva.", notificar_barbero
+                return msg_cancelacion, notificar_barbero
 
-            return "No encontre una cita pendiente a tu nombre. Si crees que es un error escribe a la barberia directamente.", None
+            return "No encontramos una cita pendiente a tu nombre. Si creés que es un error, contactá directamente a tu barbería.", None
 
         print(f"[CANCELAR] No se encontro cliente con telefono: {telefono!r}")
-        return "No encontre tu numero en el sistema. Asegurate de agendar desde este mismo WhatsApp.", None
+        return "No encontramos tu número en el sistema. Asegurate de agendar siempre desde el mismo WhatsApp con el que vas a cancelar.", None
 
     # Identificar la barberia por el numero Twilio al que escribio el cliente
     barberia = db.query(Barberia).filter(
