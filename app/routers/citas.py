@@ -280,15 +280,27 @@ async def subir_comprobante(cita_id: int, file: UploadFile = File(...), db: Sess
         barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
         cliente = db.query(Cliente).filter(Cliente.id == cita.cliente_id).first()
         servicio = db.query(Servicio).filter(Servicio.id == cita.servicio_id).first()
+        fecha_str = cita.fecha_hora.strftime("%d/%m/%y a las %H:%M")
         if barbero and barbero.telefono:
             notificar_comprobante_barbero(
                 telefono=barbero.telefono,
                 nombre_barbero=barbero.nombre,
                 cliente=cliente.nombre if cliente else "Cliente",
                 servicio=servicio.nombre if servicio else "Servicio",
-                fecha_hora=cita.fecha_hora.strftime("%d/%m/%y a las %H:%M"),
+                fecha_hora=fecha_str,
                 monto=servicio.precio if servicio else 0,
                 comprobante_url=comprobante_url,
+            )
+        # Notificar al cliente que su pago está pendiente de confirmación
+        if cliente and cliente.telefono:
+            from app.services.whatsapp import enviar_mensaje
+            enviar_mensaje(
+                cliente.telefono,
+                f"Hola {cliente.nombre}! Recibimos tu comprobante de pago.\n\n"
+                f"Servicio: {servicio.nombre if servicio else 'Servicio'}\n"
+                f"Fecha: {fecha_str}\n\n"
+                f"Tu cita queda *pendiente de confirmacion* hasta que el barbero verifique el pago. "
+                f"Te avisaremos cuando este confirmada."
             )
     except Exception as e:
         print(f"[WhatsApp] ERROR enviando comprobante: {e}")
