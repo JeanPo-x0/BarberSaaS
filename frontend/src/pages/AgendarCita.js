@@ -8,7 +8,9 @@ import {
 } from '../services/api';
 import { formatearInput, formatearTelefono } from '../utils/phone';
 
-const hoy = new Date().toISOString().split('T')[0];
+// Fecha local (no UTC) para evitar que hoy aparezca en rojo por diferencia de zona horaria
+const _hoyD = new Date();
+const hoy = `${_hoyD.getFullYear()}-${String(_hoyD.getMonth()+1).padStart(2,'0')}-${String(_hoyD.getDate()).padStart(2,'0')}`;
 
 const STEP_LABELS = ['Barbero', 'Fecha y hora', 'Confirmar'];
 

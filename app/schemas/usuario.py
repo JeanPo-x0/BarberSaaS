@@ -4,7 +4,7 @@ from typing import Optional
 class UsuarioCreate(BaseModel):
     email: str
     password: str
-    rol: str
+    # rol ignorado — siempre se fuerza "cliente" server-side
     barberia_id: Optional[int] = None
 
 
@@ -31,4 +31,5 @@ class LoginRequest(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
+    refresh_token: Optional[str] = None
     token_type: str = "bearer"

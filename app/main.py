@@ -272,9 +272,10 @@ async def geo_block_middleware(request: Request, call_next):
 
     return await call_next(request)
 
+_cors_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Safe: no cookies, JWT only (allow_credentials=False)
+    allow_origins=_cors_origins,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
     allow_headers=["Authorization", "Content-Type", "Accept"],
     allow_credentials=False,

@@ -12,7 +12,8 @@ from app.models.barberia import Barberia
 from app.models.suscripcion import Suscripcion
 from app.models.password_reset import PasswordResetToken
 from app.schemas import UsuarioCreate, UsuarioResponse, LoginRequest, TokenResponse, OnboardingCreate
-from app.core.security import hash_password, verify_password, crear_token
+from app.core.security import hash_password, verify_password, crear_token, crear_refresh_token, verificar_token
+import re as _re
 from app.core.config import settings
 from app.core.deps import get_usuario_actual
 from app.services.email import enviar_reset_password, enviar_bienvenida
@@ -35,16 +36,20 @@ DOMINIOS_PERMITIDOS = {
     "aol.com", "zoho.com",
 }
 
+_HTML_RE = _re.compile(r'<[^>]+>')
+
+def sanitizar(texto: str) -> str:
+    """Elimina tags HTML del input del usuario."""
+    return _HTML_RE.sub('', texto).strip() if texto else texto
+
 def validar_password(password: str):
-    """Valida: 8-64 chars, 1 mayúscula, 1 especial. Lanza HTTPException si no cumple."""
-    if len(password) < 8:
-        raise HTTPException(status_code=400, detail="La contrasena debe tener al menos 8 caracteres")
-    if len(password) > 64:
-        raise HTTPException(status_code=400, detail="La contrasena no puede superar los 64 caracteres")
+    """Valida: 8-64 chars, 1 mayúscula, 1 especial."""
+    if len(password) < 8 or len(password) > 64:
+        raise HTTPException(status_code=400, detail="Password no cumple requisitos de seguridad")
     if not re.search(r"[A-Z]", password):
-        raise HTTPException(status_code=400, detail="La contrasena debe tener al menos una letra mayuscula")
+        raise HTTPException(status_code=400, detail="Password no cumple requisitos de seguridad")
     if not re.search(r"[!@#$%^&*()\-_=+\[\]{}|;:',.<>?/\\]", password):
-        raise HTTPException(status_code=400, detail="La contrasena debe tener al menos un caracter especial (!@#$%...)")
+        raise HTTPException(status_code=400, detail="Password no cumple requisitos de seguridad")
 
 def validar_dominio_email(email: str):
     """Solo permite dominios de email convencionales. Bloquea proveedores de privacidad."""
@@ -70,15 +75,16 @@ class ResetPasswordRequest(BaseModel):
 @router.post("/registro", response_model=UsuarioResponse)
 @limiter.limit("5/minute")
 def registrar_usuario(request: Request, usuario: UsuarioCreate, db: Session = Depends(get_db)):
-    validar_dominio_email(usuario.email)
+    email = sanitizar(usuario.email).lower()
+    validar_dominio_email(email)
     validar_password(usuario.password)
-    existente = db.query(Usuario).filter(Usuario.email == usuario.email).first()
+    existente = db.query(Usuario).filter(Usuario.email == email).first()
     if existente:
-        raise HTTPException(status_code=400, detail="El email ya esta registrado")
+        raise HTTPException(status_code=400, detail="Datos de registro invalidos")
     nuevo = Usuario(
-        email=usuario.email,
+        email=email,
         password_hash=hash_password(usuario.password),
-        rol=usuario.rol,
+        rol="cliente",   # siempre cliente — nunca desde el input
         barberia_id=usuario.barberia_id
     )
     db.add(nuevo)
@@ -86,14 +92,56 @@ def registrar_usuario(request: Request, usuario: UsuarioCreate, db: Session = De
     db.refresh(nuevo)
     return nuevo
 
+
+class PromoverRequest(BaseModel):
+    email: str
+    nuevo_rol: str
+
+@router.post("/admin/promover")
+def promover_usuario(datos: PromoverRequest, usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
+    """Solo superadmin puede cambiar roles."""
+    if usuario.email != settings.SUPERADMIN_EMAIL:
+        raise HTTPException(status_code=403, detail="Sin permisos")
+    ROLES_VALIDOS = {"cliente", "dueno", "barbero", "superadmin"}
+    if datos.nuevo_rol not in ROLES_VALIDOS:
+        raise HTTPException(status_code=400, detail="Rol invalido")
+    target = db.query(Usuario).filter(Usuario.email == datos.email).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    target.rol = datos.nuevo_rol
+    db.commit()
+    return {"mensaje": f"Rol actualizado a {datos.nuevo_rol}"}
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
 @router.post("/login", response_model=TokenResponse)
-@limiter.limit("10/minute")
+@limiter.limit("5/minute")
 def login(request: Request, datos: LoginRequest, db: Session = Depends(get_db)):
-    usuario = db.query(Usuario).filter(Usuario.email == datos.email).first()
+    usuario = db.query(Usuario).filter(Usuario.email == datos.email.lower().strip()).first()
     if not usuario or not verify_password(datos.password, usuario.password_hash):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email o contrasena incorrectos")
-    token = crear_token({"sub": usuario.email, "rol": usuario.rol, "barberia_id": usuario.barberia_id})
-    return {"access_token": token, "token_type": "bearer"}
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales invalidas")
+    payload = {"sub": usuario.email, "rol": usuario.rol, "barberia_id": usuario.barberia_id}
+    return {
+        "access_token": crear_token(payload),
+        "refresh_token": crear_refresh_token(payload),
+        "token_type": "bearer",
+    }
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh(datos: RefreshRequest, db: Session = Depends(get_db)):
+    payload = verificar_token(datos.refresh_token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Refresh token invalido")
+    usuario = db.query(Usuario).filter(Usuario.email == payload.get("sub")).first()
+    if not usuario or payload.get("rol") != usuario.rol:
+        raise HTTPException(status_code=401, detail="Refresh token invalido")
+    new_payload = {"sub": usuario.email, "rol": usuario.rol, "barberia_id": usuario.barberia_id}
+    return {
+        "access_token": crear_token(new_payload),
+        "refresh_token": crear_refresh_token(new_payload),
+        "token_type": "bearer",
+    }
 
 @router.get("/me", response_model=UsuarioResponse)
 def me(usuario: Usuario = Depends(get_usuario_actual)):
@@ -103,16 +151,17 @@ def me(usuario: Usuario = Depends(get_usuario_actual)):
 @limiter.limit("5/minute")
 def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(get_db)):
     """Registro completo: crea usuario dueño + barbería + suscripción trial."""
-    validar_dominio_email(datos.email)
+    email = sanitizar(datos.email).lower()
+    validar_dominio_email(email)
     validar_password(datos.password)
-    existente = db.query(Usuario).filter(Usuario.email == datos.email).first()
+    existente = db.query(Usuario).filter(Usuario.email == email).first()
     if existente:
-        raise HTTPException(status_code=400, detail="El email ya esta registrado")
+        raise HTTPException(status_code=400, detail="Datos de registro invalidos")
 
     # Crear barbería — plan siempre basico al registrarse, se sube via Stripe
     barberia = Barberia(
-        nombre=datos.nombre_barberia,
-        direccion=datos.direccion,
+        nombre=sanitizar(datos.nombre_barberia),
+        direccion=sanitizar(datos.direccion) if datos.direccion else None,
         telefono=datos.telefono,
         email=datos.email,
         plan="basico",
@@ -133,7 +182,7 @@ def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(
 
     # Crear usuario dueño
     usuario = Usuario(
-        email=datos.email,
+        email=email,
         password_hash=hash_password(datos.password),
         rol="dueno",
         barberia_id=barberia.id,
@@ -148,6 +197,7 @@ def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(
 
     # Email de bienvenida
     link_agendamiento = f"{settings.FRONTEND_URL}/agendar/{barberia.id}"
+    datos.email = email  # normalizar para el email de bienvenida
     try:
         enviar_bienvenida(datos.email, datos.nombre_barberia, link_agendamiento)
     except Exception:

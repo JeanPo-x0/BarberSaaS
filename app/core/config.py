@@ -1,12 +1,22 @@
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from typing import Optional
 
 class Settings(BaseSettings):
     APP_NAME: str = "BarberSaaS"
     DATABASE_URL: str = "postgresql://postgres:kali@localhost/barbersaas"
-    SECRET_KEY: str = "cambia-esta-clave-secreta-en-produccion"
+    SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 días
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60      # 1 hora — se renueva via /auth/refresh
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    CORS_ORIGINS: str = "https://barber-saa-s-phi.vercel.app,http://localhost:3000"
+
+    @field_validator("SECRET_KEY")
+    @classmethod
+    def secret_key_must_be_set(cls, v: str) -> str:
+        if not v or len(v) < 32:
+            raise ValueError("SECRET_KEY debe tener al menos 32 caracteres y estar definida en variables de entorno")
+        return v
 
     # Stripe
     STRIPE_SECRET_KEY: str = ""

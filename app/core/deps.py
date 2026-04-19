@@ -13,7 +13,10 @@ def get_usuario_actual(token: str = Depends(oauth2_scheme), db: Session = Depend
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
     usuario = db.query(Usuario).filter(Usuario.email == payload.get("sub")).first()
     if not usuario:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no encontrado")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
+    # Verificar que el rol del token coincida con el de la DB (detecta escalación de privilegios)
+    if payload.get("rol") != usuario.rol:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
     return usuario
 
 def solo_dueno(usuario: Usuario = Depends(get_usuario_actual)):
