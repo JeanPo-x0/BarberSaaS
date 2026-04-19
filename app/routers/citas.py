@@ -19,6 +19,7 @@ from app.services.whatsapp import (
     notificar_pago_rechazado, notificar_comprobante_barbero,
 )
 from app.models.configuracion_pagos import ConfiguracionPagos
+from app.models.barberia import Barberia
 from app.core.deps import get_usuario_actual
 from app.core.config import settings
 from app.models.lista_espera import ListaEspera
@@ -167,7 +168,6 @@ def completar_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual),
 
     # Notificar al cliente que su cita fue completada
     try:
-        from app.models.barberia import Barberia
         cliente = db.query(Cliente).filter(Cliente.id == cita.cliente_id).first()
         barberia = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first()
         if cliente and cliente.telefono and barberia:
@@ -328,7 +328,11 @@ def cancelar_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), 
         barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
         fecha_hora_str = cita.fecha_hora.strftime("%d/%m/%y a las %H:%M")
         if cliente and cliente.telefono:
-            notificar_cancelacion(cliente.telefono, cliente.nombre)
+            barberia_obj = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first() if barbero else None
+            link_ag = f"{settings.FRONTEND_URL}/agendar/{barbero.barberia_id}" if barbero else ""
+            if barberia_obj and barberia_obj.slug:
+                link_ag = f"{settings.FRONTEND_URL}/b/{barberia_obj.slug}"
+            notificar_cancelacion(cliente.telefono, cliente.nombre, link_agendamiento=link_ag)
         if barbero and barbero.telefono:
             notificar_barbero_cancelacion(
                 telefono=barbero.telefono,
@@ -353,7 +357,6 @@ def cancelar_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), 
                 .first()
             )
             if siguiente:
-                from app.models.barberia import Barberia
                 barberia = db.query(Barberia).filter(Barberia.id == barbero_cita.barberia_id).first()
                 link = f"{settings.FRONTEND_URL}/agendar/{barbero_cita.barberia_id}"
                 notificar_lista_espera(
