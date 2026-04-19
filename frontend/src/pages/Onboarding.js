@@ -7,15 +7,14 @@ import { formatearInput, formatearTelefono } from '../utils/phone';
 const PASOS = ['Tu cuenta', 'Tu barberia', 'Listo'];
 
 const PLANES_INFO = {
-  basico:  { label: 'Basico',  color: 'var(--text-muted)' },
-  pro:     { label: 'Pro',     color: '#C9A84C' },
-  premium: { label: 'Premium', color: '#a78bfa' },
+  pro:     { label: 'Pro',     color: '#C9A84C',  desc: '$29/mes · Hasta 3 barberos' },
+  premium: { label: 'Premium', color: '#a78bfa',  desc: '$59/mes · Barberos ilimitados' },
 };
 
 export default function Onboarding() {
   const location = useLocation();
   const navigate = useNavigate();
-  const planInicial = location.state?.plan || 'basico';
+  const planInicial = location.state?.plan || 'pro';
 
   const [paso, setPaso] = useState(0);
   const [cargando, setCargando] = useState(false);
@@ -55,12 +54,13 @@ export default function Onboarding() {
       const meRes = await getMe();
       const bid = meRes.data.barberia_id;
       setLinkGenerado(`${window.location.origin}/agendar/${bid}`);
-      setPaso(2);
-      if (form.plan !== 'basico') {
-        try {
-          const checkoutRes = await crearCheckout({ plan: form.plan, periodo: 'mensual', coupon: coupon.trim() || undefined });
-          window.location.href = checkoutRes.data.checkout_url;
-        } catch { /* Sigue en trial */ }
+      // Siempre redirige a Stripe para registrar tarjeta y activar el trial
+      try {
+        const checkoutRes = await crearCheckout({ plan: form.plan, periodo: 'mensual', coupon: coupon.trim() || undefined });
+        window.location.href = checkoutRes.data.checkout_url;
+      } catch {
+        // Si Stripe falla, igual avanza al paso de confirmación
+        setPaso(2);
       }
     } catch (err) {
       const status = err.response?.status;
@@ -170,15 +170,17 @@ export default function Onboarding() {
 
               {/* Plan selector */}
               <div>
-                <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Plan</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+                  Elegí tu plan — <span style={{ color: '#C9A84C' }}>14 días gratis</span>, cancelá cuando quieras
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {Object.entries(PLANES_INFO).map(([p, info]) => (
                     <button
                       key={p}
                       onClick={() => setForm({ ...form, plan: p })}
                       style={{
-                        padding: '8px 6px', borderRadius: 8,
-                        fontSize: 12, fontWeight: 700,
+                        padding: '10px 8px', borderRadius: 10,
+                        fontSize: 12, fontWeight: 700, textAlign: 'left',
                         border: form.plan === p ? `1px solid ${info.color}` : '1px solid var(--border)',
                         background: form.plan === p ? `${info.color}15` : 'var(--bg-secondary)',
                         color: form.plan === p ? info.color : 'var(--text-muted)',
@@ -186,7 +188,8 @@ export default function Onboarding() {
                         transition: 'all 0.2s',
                       }}
                     >
-                      {info.label}
+                      <div>{info.label}</div>
+                      <div style={{ fontSize: 10, fontWeight: 400, marginTop: 2, opacity: 0.8 }}>{info.desc}</div>
                     </button>
                   ))}
                 </div>
@@ -265,10 +268,10 @@ export default function Onboarding() {
                   inputMode="numeric"
                 />
               </div>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
-                Tienes{' '}
-                <strong style={{ color: '#C9A84C' }}>14 dias de prueba gratis</strong>
-                {' '}— sin tarjeta de credito.
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0', lineHeight: 1.6 }}>
+                Al continuar te pediremos una tarjeta para activar los{' '}
+                <strong style={{ color: '#C9A84C' }}>14 días gratis</strong>.
+                {' '}No se realiza ningún cobro hasta que termine el trial. Cancelá antes sin costo.
               </p>
               <button onClick={handleBarberia} disabled={cargando} className="btn-gold"
                 style={{ width: '100%', opacity: cargando ? 0.7 : 1 }}>
