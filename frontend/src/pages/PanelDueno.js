@@ -82,6 +82,8 @@ function PanelDueno() {
   // Pagos
   const [, setConfigPagos] = useState(null);
   const [guardandoPagos, setGuardandoPagos] = useState(false);
+  const [pagoGuardado, setPagoGuardado] = useState(false);
+  const [editandoSinpe, setEditandoSinpe] = useState(false);
   const [configPagosForm, setConfigPagosForm] = useState({
     sinpe_habilitado: true,
     sinpe_numero: '',
@@ -153,6 +155,9 @@ function PanelDueno() {
     try {
       await updateConfigPagos(configPagosForm);
       getConfigPagos().then(r => { setConfigPagos(r.data); setConfigPagosForm(r.data); });
+      setEditandoSinpe(false);
+      setPagoGuardado(true);
+      setTimeout(() => setPagoGuardado(false), 3000);
     } catch (err) {
       alert(err.response?.data?.detail || 'Error al guardar');
     } finally {
@@ -623,15 +628,66 @@ function PanelDueno() {
             {/* Configuración SINPE */}
             {configPagosForm.sinpe_habilitado && (
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 24 }}>
-                <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.06em', margin: '0 0 16px 0' }}>
-                  Datos SINPE
-                </h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <input value={configPagosForm.sinpe_numero} onChange={e => setConfigPagosForm(f => ({ ...f, sinpe_numero: e.target.value }))}
-                    placeholder="Número de teléfono SINPE (ej: 8888-8888)" className="input-dark" inputMode="numeric" />
-                  <input value={configPagosForm.sinpe_nombre} onChange={e => setConfigPagosForm(f => ({ ...f, sinpe_nombre: e.target.value }))}
-                    placeholder="Nombre que aparece en SINPE (ej: Juan Pérez)" className="input-dark" />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.06em', margin: 0 }}>
+                    Datos SINPE
+                  </h2>
+                  {!editandoSinpe && (
+                    <button
+                      type="button"
+                      onClick={() => setEditandoSinpe(true)}
+                      title="Editar datos SINPE"
+                      style={{
+                        background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)',
+                        borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        color: '#C9A84C', fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans'",
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                        <path d="M11.5 2.5a2.121 2.121 0 0 1 3 3l-9 9-4 1 1-4 9-9z" stroke="#C9A84C" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Editar
+                    </button>
+                  )}
                 </div>
+                {editandoSinpe ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <input value={configPagosForm.sinpe_numero} onChange={e => setConfigPagosForm(f => ({ ...f, sinpe_numero: e.target.value }))}
+                      placeholder="Número de teléfono SINPE (ej: 8888-8888)" className="input-dark" inputMode="numeric" />
+                    <input value={configPagosForm.sinpe_nombre} onChange={e => setConfigPagosForm(f => ({ ...f, sinpe_nombre: e.target.value }))}
+                      placeholder="Nombre que aparece en SINPE (ej: Juan Pérez)" className="input-dark" />
+                    <button
+                      type="button"
+                      onClick={() => setEditandoSinpe(false)}
+                      style={{
+                        background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: 8, padding: '7px 14px', color: '#8A8A8A',
+                        fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans'", alignSelf: 'flex-start',
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{
+                      padding: '10px 14px', background: 'rgba(255,255,255,0.02)',
+                      border: '1px solid var(--border)', borderRadius: 8,
+                      fontSize: 14, color: configPagosForm.sinpe_numero ? '#F5F5F5' : '#8A8A8A',
+                    }}>
+                      {configPagosForm.sinpe_numero || 'Sin número configurado'}
+                    </div>
+                    <div style={{
+                      padding: '10px 14px', background: 'rgba(255,255,255,0.02)',
+                      border: '1px solid var(--border)', borderRadius: 8,
+                      fontSize: 14, color: configPagosForm.sinpe_nombre ? '#F5F5F5' : '#8A8A8A',
+                    }}>
+                      {configPagosForm.sinpe_nombre || 'Sin nombre configurado'}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -717,10 +773,21 @@ function PanelDueno() {
               </div>
             </div>
 
-            <button type="submit" className="btn-gold" disabled={guardandoPagos}
-              style={{ opacity: guardandoPagos ? 0.7 : 1 }}>
-              {guardandoPagos ? 'Guardando...' : 'Guardar configuración de pagos'}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <button type="submit" className="btn-gold" disabled={guardandoPagos}
+                style={{ opacity: guardandoPagos ? 0.7 : 1 }}>
+                {guardandoPagos ? 'Guardando...' : 'Guardar configuración'}
+              </button>
+              {pagoGuardado && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4ade80', fontSize: 13, fontWeight: 600 }}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <circle cx="9" cy="9" r="8.5" stroke="#4ade80"/>
+                    <path d="M5 9l3 3 5-6" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Guardado
+                </div>
+              )}
+            </div>
           </form>
         )}
       </div>

@@ -8,6 +8,7 @@ from app.models.servicio import Servicio
 from app.models.cliente import Cliente
 from app.models.cita import Cita
 from app.services.whatsapp import confirmar_cita, notificar_barbero_nueva_cita
+import re
 
 HORARIO_INICIO = 5   # 5:00 am
 HORARIO_FIN = 12     # 12:00 pm
@@ -37,6 +38,24 @@ def _obtener_o_crear_conv(db: Session, telefono: str) -> ConversacionBot:
         db.commit()
         db.refresh(conv)
     return conv
+
+
+def _normalizar_tel(telefono: str) -> str:
+    """Deja solo dígitos y agrega +506 si es número local CR."""
+    solo = re.sub(r"[^\d]", "", telefono)
+    if solo.startswith("506"):
+        return f"+{solo}"
+    return f"+506{solo}"
+
+
+def _buscar_cliente(db: Session, telefono: str):
+    """Busca el cliente probando varios formatos del teléfono."""
+    formatos = {telefono, _normalizar_tel(telefono)}
+    for fmt in formatos:
+        c = db.query(Cliente).filter(Cliente.telefono == fmt).first()
+        if c:
+            return c
+    return None
 
 
 def _resetear(db: Session, conv: ConversacionBot):
@@ -333,19 +352,20 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
     mensaje = mensaje.strip()
 
     # Keyword global: CANCELAR en cualquier momento
-    if mensaje.upper() == "CANCELAR":
+    if mensaje.upper().startswith("CANCELAR"):
         conv = db.query(ConversacionBot).filter(ConversacionBot.telefono == telefono).first()
         if conv:
             _resetear(db, conv)
 
-        # Buscar cita pendiente proxima del cliente y cancelarla en la BD
-        cliente = db.query(Cliente).filter(Cliente.telefono == telefono).first()
+        cliente = _buscar_cliente(db, telefono)
         if cliente:
+            # Busca la próxima cita pendiente (incluye hasta 30 min en el pasado por margen)
+            margen = datetime.utcnow() - timedelta(minutes=30)
             cita = db.query(Cita).filter(
                 and_(
                     Cita.cliente_id == cliente.id,
                     Cita.estado == "pendiente",
-                    Cita.fecha_hora >= datetime.utcnow()
+                    Cita.fecha_hora >= margen,
                 )
             ).order_by(Cita.fecha_hora).first()
 
@@ -357,7 +377,6 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
                 barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
                 fecha_str = cita.fecha_hora.strftime("%d/%m/%y a las %H:%M")
 
-                # Notificar al barbero en background para no retrasar la respuesta al cliente
                 def notificar_barbero():
                     try:
                         from app.services.whatsapp import notificar_barbero_cancelacion
@@ -366,9 +385,11 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
                     except Exception:
                         pass
 
-                return f"Tu cita del {fecha_str} ha sido cancelada. Escribe 'Hola' cuando quieras agendar una nueva.", notificar_barbero
+                return f"Tu cita del {fecha_str} ha sido cancelada. Escribe Hola cuando quieras agendar una nueva.", notificar_barbero
 
-        return "Tu proceso ha sido cancelado. Escribe 'Hola' cuando quieras agendar una nueva cita.", None
+            return "No encontre una cita pendiente a tu nombre. Si crees que es un error escribe a la barberia directamente.", None
+
+        return "No encontre tu numero en el sistema. Asegurate de agendar desde este mismo WhatsApp.", None
 
     # Identificar la barberia por el numero Twilio al que escribio el cliente
     barberia = db.query(Barberia).filter(

@@ -88,6 +88,8 @@ export const cancelarCita = (id) => API.patch(`/citas/${id}/cancelar`);
 export const completarCita = (id) => API.patch(`/citas/${id}/completar`);
 export const getDisponibilidad = (barbero_id, fecha) =>
   API.get(`/citas/disponibilidad/${barbero_id}?fecha=${fecha}`);
+export const subirComprobante = (citaId, formData) =>
+  API.post(`/citas/${citaId}/comprobante`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
 // Suscripcion
 export const getEstadoSuscripcion = () => API.get('/suscripcion/estado');

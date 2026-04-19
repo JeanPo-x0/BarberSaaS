@@ -4,7 +4,7 @@ import { NavLogo } from '../components/LogoLink';
 import {
   getBarberosPorBarberia, getServiciosPorBarberia, getBarberia,
   getBarberiaBySlug, buscarOCrearCliente, crearCita, getDisponibilidad,
-  getConfigPagosPublica,
+  getConfigPagosPublica, subirComprobante,
 } from '../services/api';
 import { formatearInput, formatearTelefono } from '../utils/phone';
 
@@ -203,6 +203,8 @@ function AgendarCita() {
   const [enviando, setEnviando] = useState(false);
   const [configPagos, setConfigPagos] = useState(null);
   const [metodoPago, setMetodoPago] = useState('');
+  const [comprobante, setComprobante] = useState(null);
+  const [citaCreada, setCitaCreada] = useState(null);
 
   useEffect(() => {
     const resolveId = slug
@@ -236,13 +238,19 @@ function AgendarCita() {
     setEnviando(true);
     try {
       const cliente = await buscarOCrearCliente({ nombre, telefono: formatearTelefono(telefono) });
-      await crearCita({
+      const nuevaCita = await crearCita({
         fecha_hora: `${fecha}T${horaSeleccionada}:00`,
         barbero_id: parseInt(barberoId),
         servicio_id: parseInt(servicioId),
         cliente_id: cliente.data.id,
         metodo_pago: metodoPago || null,
       });
+      setCitaCreada(nuevaCita.data);
+      if (metodoPago === 'sinpe' && comprobante) {
+        const fd = new FormData();
+        fd.append('file', comprobante);
+        await subirComprobante(nuevaCita.data.id, fd);
+      }
       setConfirmado(true);
     } catch (err) {
       setError(err.response?.data?.detail || 'Error al agendar la cita');
@@ -255,6 +263,7 @@ function AgendarCita() {
     setConfirmado(false); setPaso(1);
     setBarberoId(''); setServicioId(''); setFecha(''); setHoraSeleccionada('');
     setNombre(''); setTelefono(''); setSlots([]);
+    setComprobante(null); setCitaCreada(null); setMetodoPago('');
   };
 
   const barberoBusqueda = barberos.find(b => String(b.id) === String(barberoId));
@@ -301,12 +310,13 @@ function AgendarCita() {
   }
 
   /* ── Confirmado ───────────────────── */
+  const pendienteConfirmacion = metodoPago === 'sinpe' && comprobante;
   if (confirmado) {
     return (
       <div className="bg-orbs bg-grid-dots" style={{ ...pageWrap, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div className="anim-scalein" style={{
           background: 'var(--bg-card)',
-          border: '1px solid rgba(201,168,76,0.35)',
+          border: `1px solid ${pendienteConfirmacion ? 'rgba(251,191,36,0.35)' : 'rgba(201,168,76,0.35)'}`,
           borderRadius: 24, padding: '52px 40px', maxWidth: 440, width: '100%', textAlign: 'center',
           boxShadow: '0 0 0 1px rgba(201,168,76,0.1), 0 32px 80px rgba(0,0,0,0.6)',
         }}>
@@ -314,17 +324,30 @@ function AgendarCita() {
           <div className="pulse-ring-wrapper" style={{ display: 'inline-block', marginBottom: 28 }}>
             <div style={{
               width: 72, height: 72, borderRadius: '50%',
-              background: 'rgba(201,168,76,0.12)', border: '2px solid #C9A84C',
+              background: pendienteConfirmacion ? 'rgba(251,191,36,0.12)' : 'rgba(201,168,76,0.12)',
+              border: `2px solid ${pendienteConfirmacion ? '#fbbf24' : '#C9A84C'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <svg width="30" height="30" viewBox="0 0 28 28" fill="none">
-                <path d="M5 14l6 6L23 8" stroke="#C9A84C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              {pendienteConfirmacion ? (
+                <svg width="30" height="30" viewBox="0 0 28 28" fill="none">
+                  <circle cx="14" cy="14" r="10" stroke="#fbbf24" strokeWidth="2"/>
+                  <path d="M14 8v7l4 2" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              ) : (
+                <svg width="30" height="30" viewBox="0 0 28 28" fill="none">
+                  <path d="M5 14l6 6L23 8" stroke="#C9A84C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
             </div>
           </div>
-          <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 34, letterSpacing: '0.08em', color: '#C9A84C', margin: '0 0 10px 0' }}>
-            Cita confirmada
+          <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 34, letterSpacing: '0.08em', color: pendienteConfirmacion ? '#fbbf24' : '#C9A84C', margin: '0 0 10px 0' }}>
+            {pendienteConfirmacion ? 'Pendiente de confirmación' : 'Cita confirmada'}
           </h2>
+          {pendienteConfirmacion && (
+            <p style={{ fontSize: 13, color: '#8A8A8A', margin: '0 0 8px 0', lineHeight: 1.6 }}>
+              El barbero revisará tu comprobante y confirmará la cita. Te avisaremos por WhatsApp.
+            </p>
+          )}
 
           {/* Resumen */}
           <div style={{
@@ -346,7 +369,7 @@ function AgendarCita() {
           </div>
 
           {/* Info de pago si aplica */}
-          {metodoPago === 'sinpe' && configPagos?.sinpe_numero && (
+          {metodoPago === 'sinpe' && configPagos?.sinpe_numero && !comprobante && (
             <div style={{
               background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)',
               borderRadius: 12, padding: '14px 16px', margin: '0 0 16px 0', textAlign: 'left',
@@ -354,8 +377,9 @@ function AgendarCita() {
               <p style={{ fontSize: 11, fontWeight: 700, color: '#C9A84C', letterSpacing: '0.08em', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
                 Envía tu depósito por SINPE
               </p>
-              <p style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 700, margin: '0 0 2px 0' }}>
-                📱 {configPagos.sinpe_numero}
+              <p style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 700, margin: '0 0 2px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <svg width="15" height="15" viewBox="0 0 18 18" fill="none"><rect x="5" y="1" width="8" height="14" rx="1.5" stroke="#C9A84C" strokeWidth="1.4"/><circle cx="9" cy="13" r="0.8" fill="#C9A84C"/></svg>
+                {configPagos.sinpe_numero}
               </p>
               <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
                 A nombre de: {configPagos.sinpe_nombre}
@@ -369,9 +393,18 @@ function AgendarCita() {
             <div style={{
               background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)',
               borderRadius: 12, padding: '12px 16px', margin: '0 0 16px 0',
+              display: 'flex', alignItems: 'center', gap: 8,
             }}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ flexShrink: 0 }}>
+                <rect x="1" y="5" width="16" height="9" rx="1.5" stroke="#4ade80" strokeWidth="1.3"/>
+                <circle cx="9" cy="9.5" r="2" stroke="#4ade80" strokeWidth="1.3"/>
+                <line x1="1" y1="7.5" x2="3.5" y2="7.5" stroke="#4ade80" strokeWidth="1.3" strokeLinecap="round"/>
+                <line x1="1" y1="11.5" x2="3.5" y2="11.5" stroke="#4ade80" strokeWidth="1.3" strokeLinecap="round"/>
+                <line x1="14.5" y1="7.5" x2="17" y2="7.5" stroke="#4ade80" strokeWidth="1.3" strokeLinecap="round"/>
+                <line x1="14.5" y1="11.5" x2="17" y2="11.5" stroke="#4ade80" strokeWidth="1.3" strokeLinecap="round"/>
+              </svg>
               <p style={{ fontSize: 13, color: '#4ade80', margin: 0 }}>
-                💵 Pagas en efectivo al llegar al local. Tu cita está reservada.
+                Pagas en efectivo al llegar al local. Tu cita está reservada.
               </p>
             </div>
           )}
@@ -710,6 +743,16 @@ function AgendarCita() {
                 {/* Método de pago */}
                 {configPagos && (configPagos.sinpe_habilitado || configPagos.efectivo_habilitado) && (
                   <div>
+                    <style>{`
+                      @keyframes signalWave {
+                        0%,100%{opacity:0.3;transform:scale(1)}
+                        50%{opacity:1;transform:scale(1.08)}
+                      }
+                      @keyframes billFloat {
+                        0%,100%{transform:translateY(0)}
+                        50%{transform:translateY(-2px)}
+                      }
+                    `}</style>
                     <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-muted)', margin: '0 0 10px 0', textTransform: 'uppercase' }}>
                       Método de pago
                     </p>
@@ -725,7 +768,15 @@ function AgendarCita() {
                             cursor: 'pointer', fontFamily: "'DM Sans'", width: '100%',
                             transition: 'all 0.2s',
                           }}>
-                          <span style={{ fontSize: 20 }}>📱</span>
+                          {/* SVG teléfono + ondas SINPE */}
+                          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style={{ flexShrink: 0 }}>
+                            <rect x="8" y="3" width="12" height="20" rx="2.5" stroke={metodoPago === 'sinpe' ? '#C9A84C' : '#8A8A8A'} strokeWidth="1.5"/>
+                            <circle cx="14" cy="20" r="1" fill={metodoPago === 'sinpe' ? '#C9A84C' : '#8A8A8A'}/>
+                            <path d="M5 10.5C6.5 8 9.9 6 14 6s7.5 2 9 4.5" stroke={metodoPago === 'sinpe' ? '#C9A84C' : '#8A8A8A'} strokeWidth="1.4" strokeLinecap="round"
+                              style={{ animation: 'signalWave 1.8s ease-in-out infinite', transformOrigin: 'center' }}/>
+                            <path d="M7.5 13C8.8 11 11.2 9.5 14 9.5s5.2 1.5 6.5 3.5" stroke={metodoPago === 'sinpe' ? '#C9A84C' : '#8A8A8A'} strokeWidth="1.4" strokeLinecap="round"
+                              style={{ animation: 'signalWave 1.8s ease-in-out infinite 0.3s', transformOrigin: 'center' }}/>
+                          </svg>
                           <div>
                             <p style={{ fontWeight: 700, fontSize: 14, margin: 0, color: metodoPago === 'sinpe' ? '#C9A84C' : 'var(--text-primary)' }}>
                               SINPE Móvil
@@ -755,7 +806,15 @@ function AgendarCita() {
                             cursor: 'pointer', fontFamily: "'DM Sans'", width: '100%',
                             transition: 'all 0.2s',
                           }}>
-                          <span style={{ fontSize: 20 }}>💵</span>
+                          {/* SVG billete animado */}
+                          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style={{ flexShrink: 0, animation: 'billFloat 2.2s ease-in-out infinite' }}>
+                            <rect x="3" y="8" width="22" height="13" rx="2" stroke={metodoPago === 'efectivo' ? '#C9A84C' : '#8A8A8A'} strokeWidth="1.5"/>
+                            <circle cx="14" cy="14.5" r="3" stroke={metodoPago === 'efectivo' ? '#C9A84C' : '#8A8A8A'} strokeWidth="1.4"/>
+                            <line x1="3" y1="11" x2="6" y2="11" stroke={metodoPago === 'efectivo' ? '#C9A84C' : '#8A8A8A'} strokeWidth="1.4" strokeLinecap="round"/>
+                            <line x1="3" y1="18" x2="6" y2="18" stroke={metodoPago === 'efectivo' ? '#C9A84C' : '#8A8A8A'} strokeWidth="1.4" strokeLinecap="round"/>
+                            <line x1="22" y1="11" x2="25" y2="11" stroke={metodoPago === 'efectivo' ? '#C9A84C' : '#8A8A8A'} strokeWidth="1.4" strokeLinecap="round"/>
+                            <line x1="22" y1="18" x2="25" y2="18" stroke={metodoPago === 'efectivo' ? '#C9A84C' : '#8A8A8A'} strokeWidth="1.4" strokeLinecap="round"/>
+                          </svg>
                           <div>
                             <p style={{ fontWeight: 700, fontSize: 14, margin: 0, color: metodoPago === 'efectivo' ? '#C9A84C' : 'var(--text-primary)' }}>
                               Efectivo
@@ -770,7 +829,68 @@ function AgendarCita() {
                           )}
                         </button>
                       )}
+                      {/* Tarjeta — próximamente */}
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '12px 16px', borderRadius: 12,
+                        border: '1px solid rgba(255,255,255,0.04)',
+                        background: 'rgba(255,255,255,0.01)',
+                        opacity: 0.5, cursor: 'not-allowed',
+                      }}>
+                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style={{ flexShrink: 0 }}>
+                          <rect x="3" y="7" width="22" height="15" rx="2.5" stroke="#8A8A8A" strokeWidth="1.5"/>
+                          <line x1="3" y1="12" x2="25" y2="12" stroke="#8A8A8A" strokeWidth="1.5"/>
+                          <rect x="6" y="16" width="5" height="3" rx="1" fill="#8A8A8A" opacity="0.5"/>
+                        </svg>
+                        <div>
+                          <p style={{ fontWeight: 700, fontSize: 14, margin: 0, color: '#8A8A8A' }}>
+                            Tarjeta
+                          </p>
+                          <p style={{ fontSize: 12, color: '#8A8A8A', margin: 0 }}>Próximamente disponible</p>
+                        </div>
+                        <span style={{
+                          marginLeft: 'auto', fontSize: 10, fontWeight: 700, padding: '2px 7px',
+                          borderRadius: 100, background: 'rgba(201,168,76,0.08)',
+                          border: '1px solid rgba(201,168,76,0.2)', color: '#C9A84C',
+                          letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0,
+                        }}>Pronto</span>
+                      </div>
                     </div>
+
+                    {/* Campo de comprobante para SINPE */}
+                    {metodoPago === 'sinpe' && (
+                      <div style={{ marginTop: 12 }}>
+                        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-muted)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+                          Comprobante SINPE (opcional)
+                        </p>
+                        <label style={{
+                          display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+                          padding: '10px 14px', borderRadius: 10,
+                          border: `1px dashed ${comprobante ? '#C9A84C' : 'rgba(255,255,255,0.15)'}`,
+                          background: comprobante ? 'rgba(201,168,76,0.05)' : 'rgba(255,255,255,0.01)',
+                          transition: 'all 0.2s',
+                        }}>
+                          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <path d="M9 3v9M6 6l3-3 3 3" stroke={comprobante ? '#C9A84C' : '#8A8A8A'} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M3 14h12" stroke={comprobante ? '#C9A84C' : '#8A8A8A'} strokeWidth="1.4" strokeLinecap="round"/>
+                          </svg>
+                          <span style={{ fontSize: 13, color: comprobante ? '#C9A84C' : '#8A8A8A', flex: 1 }}>
+                            {comprobante ? comprobante.name : 'Subir foto del comprobante'}
+                          </span>
+                          {comprobante && (
+                            <button type="button" onClick={e => { e.preventDefault(); setComprobante(null); }}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8A8A8A', fontSize: 16, lineHeight: 1 }}>
+                              ×
+                            </button>
+                          )}
+                          <input type="file" accept="image/*" style={{ display: 'none' }}
+                            onChange={e => setComprobante(e.target.files[0] || null)} />
+                        </label>
+                        <p style={{ fontSize: 11, color: '#8A8A8A', margin: '6px 0 0 0' }}>
+                          Si adjuntás el comprobante, tu cita quedará pendiente de confirmación por el barbero.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 

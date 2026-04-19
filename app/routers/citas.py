@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+import os, uuid, shutil
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from datetime import datetime, timedelta
@@ -15,7 +16,7 @@ from app.services.whatsapp import (
     notificar_barbero_nueva_cita, notificar_barbero_cancelacion,
     notificar_lista_espera, notificar_completada_cliente,
     notificar_pago_pendiente_barbero, notificar_cita_confirmada_pago,
-    notificar_pago_rechazado,
+    notificar_pago_rechazado, notificar_comprobante_barbero,
 )
 from app.models.configuracion_pagos import ConfiguracionPagos
 from app.core.deps import get_usuario_actual
@@ -247,6 +248,51 @@ def rechazar_pago(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), 
             notificar_pago_rechazado(telefono=cliente.telefono, nombre=cliente.nombre)
     except Exception as e:
         print(f"[WhatsApp] ERROR rechazar pago: {e}")
+    return cita
+
+
+COMPROBANTES_DIR = "/tmp/comprobantes"
+ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+
+@router.post("/{cita_id}/comprobante", response_model=CitaResponse)
+async def subir_comprobante(cita_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(status_code=400, detail="Solo se aceptan imágenes (jpg, png, webp, gif)")
+
+    cita = db.query(Cita).filter(Cita.id == cita_id).first()
+    if not cita:
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+
+    ext = file.filename.rsplit(".", 1)[-1] if "." in file.filename else "jpg"
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    os.makedirs(COMPROBANTES_DIR, exist_ok=True)
+    dest = os.path.join(COMPROBANTES_DIR, filename)
+    with open(dest, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    comprobante_url = f"{settings.BACKEND_URL}/comprobantes/{filename}"
+    cita.comprobante_url = comprobante_url
+    cita.estado_pago = "pendiente"
+    db.commit()
+    db.refresh(cita)
+
+    try:
+        barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
+        cliente = db.query(Cliente).filter(Cliente.id == cita.cliente_id).first()
+        servicio = db.query(Servicio).filter(Servicio.id == cita.servicio_id).first()
+        if barbero and barbero.telefono:
+            notificar_comprobante_barbero(
+                telefono=barbero.telefono,
+                nombre_barbero=barbero.nombre,
+                cliente=cliente.nombre if cliente else "Cliente",
+                servicio=servicio.nombre if servicio else "Servicio",
+                fecha_hora=cita.fecha_hora.strftime("%d/%m/%y a las %H:%M"),
+                monto=servicio.precio if servicio else 0,
+                comprobante_url=comprobante_url,
+            )
+    except Exception as e:
+        print(f"[WhatsApp] ERROR enviando comprobante: {e}")
+
     return cita
 
 

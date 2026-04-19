@@ -39,6 +39,7 @@ class CitaResponse(CitaBase):
     estado: str
     estado_pago: str = "exento"
     metodo_pago: Optional[str] = None
+    comprobante_url: Optional[str] = None
     cliente: Optional[_ClienteBasico] = None
     barbero: Optional[_BarberoBasico] = None
     servicio: Optional[_ServicioBasico] = None

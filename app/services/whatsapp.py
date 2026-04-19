@@ -14,7 +14,7 @@ if not TWILIO_SID or not TWILIO_TOKEN:
 
 client = Client(TWILIO_SID, TWILIO_TOKEN)
 
-def enviar_mensaje(telefono: str, mensaje: str):
+def enviar_mensaje(telefono: str, mensaje: str, media_url: str = None):
     if not FROM:
         print("[WhatsApp] ERROR: TWILIO_WHATSAPP_FROM no esta configurado.")
         return
@@ -26,7 +26,10 @@ def enviar_mensaje(telefono: str, mensaje: str):
     numero_wa = f"whatsapp:{numero_e164}"
 
     try:
-        msg = client.messages.create(from_=FROM, to=numero_wa, body=mensaje)
+        kwargs = dict(from_=FROM, to=numero_wa, body=mensaje)
+        if media_url:
+            kwargs["media_url"] = [media_url]
+        msg = client.messages.create(**kwargs)
         print(f"[WhatsApp] Enviado a {numero_wa} | SID: {msg.sid}")
     except Exception as e:
         print(f"[WhatsApp] ERROR enviando a {numero_wa}: {e}")
@@ -98,6 +101,20 @@ def notificar_lista_espera(telefono: str, nombre: str, barberia_nombre: str, lin
         f"Si no confirmas, le avisaremos al siguiente en la lista."
     )
     enviar_mensaje(telefono, mensaje)
+
+
+def notificar_comprobante_barbero(
+    telefono: str, nombre_barbero: str, cliente: str,
+    servicio: str, fecha_hora: str, monto: float, comprobante_url: str,
+):
+    mensaje = (
+        f"Comprobante SINPE recibido, {nombre_barbero}.\n\n"
+        f"Cliente: {cliente}\n"
+        f"Servicio: {servicio} — ₡{monto:,.0f}\n"
+        f"Fecha: {fecha_hora}\n\n"
+        f"Revisá la imagen y confirmá o rechazá el pago desde tu panel."
+    )
+    enviar_mensaje(telefono, mensaje, media_url=comprobante_url)
 
 
 def notificar_pago_pendiente_barbero(
