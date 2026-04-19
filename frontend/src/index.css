@@ -457,26 +457,55 @@ select.input-dark option  { background: var(--bg-secondary); }
   background-size: 28px 28px;
 }
 
-/* ── Panel post-login: aurora suave + grid ── */
+/* ── Panel post-login: aurora + grid ── */
+@keyframes panelOrb1 {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(-6%, 8%) scale(1.12); }
+  66%  { transform: translate(5%, -5%) scale(0.93); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+@keyframes panelOrb2 {
+  0%   { transform: translate(0, 0) scale(1); }
+  40%  { transform: translate(7%, -6%) scale(0.9); }
+  80%  { transform: translate(-4%, 7%) scale(1.1); }
+  100% { transform: translate(0, 0) scale(1); }
+}
 .bg-panel {
   position: relative;
   background-image:
-    linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
-  background-size: 56px 56px;
+    linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+  background-size: 52px 52px;
 }
 .bg-panel::before {
   content: '';
   position: fixed;
-  width: 60vw; height: 50vh;
-  top: -10vh; right: -10vw;
-  background: radial-gradient(ellipse,
-    rgba(201,168,76,0.07) 0%, transparent 65%);
-  filter: blur(80px);
-  border-radius: 50%;
+  width: 70vw; height: 55vh;
+  top: -15vh; right: -12vw;
+  background: radial-gradient(ellipse at center,
+    rgba(201,168,76,0.13) 0%,
+    rgba(180,130,30,0.07) 40%,
+    transparent 70%);
+  filter: blur(70px);
+  border-radius: 45% 55% 50% 50%;
   pointer-events: none;
   z-index: 0;
-  animation: aurora2 30s ease-in-out infinite;
+  animation: panelOrb1 28s ease-in-out infinite;
+}
+.bg-panel::after {
+  content: '';
+  position: fixed;
+  width: 55vw; height: 50vh;
+  bottom: -10vh; left: -8vw;
+  background: radial-gradient(ellipse at center,
+    rgba(201,168,76,0.09) 0%,
+    rgba(160,110,20,0.05) 45%,
+    transparent 70%);
+  filter: blur(80px);
+  border-radius: 55% 45% 45% 55%;
+  pointer-events: none;
+  z-index: 0;
+  animation: panelOrb2 36s ease-in-out infinite;
 }
 
 /* Mantener clase vieja para compatibilidad */

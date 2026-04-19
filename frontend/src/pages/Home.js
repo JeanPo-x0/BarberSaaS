@@ -264,25 +264,63 @@ export default function Home() {
         {/* Mobile hamburger */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}
+          style={{
+            background: menuOpen ? 'rgba(255,255,255,0.06)' : 'none',
+            border: '1px solid ' + (menuOpen ? 'rgba(255,255,255,0.1)' : 'transparent'),
+            cursor: 'pointer', padding: '6px 8px', display: 'flex',
+            borderRadius: 8, transition: 'all 0.2s',
+          }}
           className="flex md:hidden"
         >
           {menuOpen ? <IconX /> : <IconMenu />}
         </button>
       </nav>
 
-      {/* Mobile menu */}
+      {/* Mobile menu — pantalla completa */}
       {menuOpen && (
-        <div style={{
-          position: 'fixed', top: 64, left: 0, right: 0, zIndex: 99,
-          background: 'rgba(17,17,17,0.97)', backdropFilter: 'blur(14px)',
-          borderBottom: '1px solid var(--border)',
-          padding: '16px 24px 24px',
-          display: 'flex', flexDirection: 'column', gap: 12,
+        <div className="anim-fadeup" style={{
+          position: 'fixed', inset: 0, zIndex: 98,
+          background: 'rgba(8,8,8,0.97)', backdropFilter: 'blur(24px)',
+          display: 'flex', flexDirection: 'column',
+          paddingTop: 80,
         }}>
-          <button onClick={scrollToPlanes} className="btn-outline" style={{ width: '100%' }}>Planes</button>
-          <Link to="/login" className="btn-outline" style={{ width: '100%', textAlign: 'center' }} onClick={() => setMenuOpen(false)}>Iniciar sesion</Link>
-          <Link to="/registro" className="btn-gold" style={{ width: '100%', textAlign: 'center' }} onClick={() => setMenuOpen(false)}>Empezar gratis</Link>
+          {/* Links de navegación */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 32px', gap: 4 }}>
+            {[
+              { label: 'Inicio', action: () => { window.scrollTo({ top: 0, behavior: 'smooth' }); setMenuOpen(false); } },
+              { label: 'Planes y precios', action: scrollToPlanes },
+            ].map(({ label, action }) => (
+              <button key={label} onClick={action} style={{
+                background: 'none', border: 'none',
+                fontFamily: "'Bebas Neue'", fontSize: 42, letterSpacing: '0.08em',
+                color: 'var(--text-primary)', cursor: 'pointer',
+                textAlign: 'left', padding: '12px 0',
+                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                transition: 'color 0.2s',
+              }}
+                onMouseEnter={e => e.currentTarget.style.color = '#C9A84C'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-primary)'}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Acciones */}
+          <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <Link to="/login" onClick={() => setMenuOpen(false)} style={{
+              display: 'block', textAlign: 'center', padding: '14px',
+              borderRadius: 14, fontSize: 15, fontWeight: 600,
+              border: '1px solid rgba(255,255,255,0.12)', color: 'var(--text-primary)',
+              textDecoration: 'none', fontFamily: "'DM Sans'",
+              transition: 'border-color 0.2s',
+            }}>
+              Iniciar sesión
+            </Link>
+            <Link to="/registro" onClick={() => setMenuOpen(false)} className="btn-gold" style={{ width: '100%', textAlign: 'center', fontSize: 15, padding: '14px' }}>
+              Empezar gratis — 14 días
+            </Link>
+          </div>
         </div>
       )}
 
