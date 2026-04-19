@@ -63,12 +63,20 @@ Para ejercer cualquiera de estos derechos, el titular debe enviar una solicitud 
 Para mayor detalle, consulte nuestra Política de Privacidad.`,
   },
   {
+    id: 'modificaciones',
+    title: '7. Modificaciones a los Términos',
+    content: `BarberSaaS se reserva el derecho de modificar estos Términos y Condiciones en cualquier momento. Cuando se realicen cambios relevantes, notificaremos a los usuarios activos mediante un aviso visible en la plataforma o por correo electrónico con al menos 15 días de anticipación.
+
+El uso continuado del servicio tras la entrada en vigor de los nuevos términos constituye la aceptación de los mismos. Si el usuario no está de acuerdo con los cambios, puede cancelar su suscripción y dejar de usar la plataforma antes de la fecha de entrada en vigor.
+
+Le recomendamos revisar periódicamente esta página para mantenerse informado sobre cualquier actualización.`,
+  },
+  {
     id: 'contacto',
     title: '6. Contacto',
-    content: `Para consultas, reclamos o solicitudes relacionadas con estos Términos y Condiciones, puede comunicarse con nosotros a través de los siguientes medios:
+    content: `Para consultas, reclamos o solicitudes relacionadas con estos Términos y Condiciones, puede comunicarse con nosotros a través del siguiente medio:
 
-Correo electrónico: soporte@barbersaas.com
-WhatsApp: disponible en la plataforma una vez iniciada sesión.
+Correo electrónico: saascompany.cr@gmail.com
 
 BarberSaaS opera desde Costa Rica. Cualquier controversia derivada de estos términos se resolverá de conformidad con la legislación costarricense vigente.
 
@@ -275,10 +283,10 @@ export default function Terminos() {
             </Link>
             {' '}o escríbanos a{' '}
             <a
-              href="mailto:soporte@barbersaas.com"
+              href="mailto:saascompany.cr@gmail.com"
               style={{ color: '#C9A84C', textDecoration: 'none', fontWeight: 600 }}
             >
-              soporte@barbersaas.com
+              saascompany.cr@gmail.com
             </a>
             .
           </p>
