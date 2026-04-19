@@ -20,6 +20,14 @@ const FAQS = [
     a: 'Las notificaciones de WhatsApp son manejadas automáticamente por BarberSaaS. Si un cliente no recibió su mensaje, verificá que el número esté bien escrito en la cita (solo los 8 dígitos, el prefijo +506 se agrega automáticamente). Si el problema persiste, reportanos el caso desde esta página.',
   },
   {
+    q: '¿Por qué sale "El barbero ya tiene una cita en ese horario"?',
+    a: 'El sistema bloquea un margen de 30 minutos antes y después de cada cita para el mismo barbero. Por ejemplo, si hay una cita a las 9:30, no se puede agendar otra para ese mismo barbero a las 10:00 porque cae dentro del margen. Si son barberos distintos, el horario sí está disponible — verificá que hayas seleccionado el barbero correcto.',
+  },
+  {
+    q: '¿Cómo cancela su cita un cliente por WhatsApp?',
+    a: 'El cliente solo tiene que escribir la palabra CANCELAR (en mayúscula o minúscula) al número de WhatsApp de BarberSaaS. El sistema cancela automáticamente su próxima cita pendiente y le avisa al barbero. El cliente debe usar el mismo número de WhatsApp con el que agendó originalmente.',
+  },
+  {
     q: '¿Puedo tener varias barberías con mi cuenta?',
     a: 'Sí. El plan Pro permite hasta 3 barberos y el plan Premium permite barberos ilimitados.',
   },
