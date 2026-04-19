@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function BannerTC() {
   const [visible, setVisible] = useState(false);
   const [leido, setLeido] = useState(false);
   const [aceptado, setAceptado] = useState(false);
   const scrollRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!localStorage.getItem('tc_aceptado')) setVisible(true);
@@ -169,23 +170,44 @@ export default function BannerTC() {
             He leído y acepto los Términos y Condiciones y la Política de Privacidad de BarberSaaS.
           </label>
 
-          {/* Botón */}
-          <button
-            onClick={confirmar}
-            disabled={!aceptado}
-            className="btn-gold"
-            style={{
-              width: '100%',
-              padding: '13px',
-              fontSize: 14,
-              fontWeight: 700,
-              opacity: aceptado ? 1 : 0.4,
-              cursor: aceptado ? 'pointer' : 'not-allowed',
-              transition: 'opacity 0.2s',
-            }}
-          >
-            Acepto y continúo
-          </button>
+          {/* Botones */}
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button
+              onClick={() => navigate('/')}
+              style={{
+                flex: 1,
+                padding: '13px',
+                fontSize: 14,
+                fontWeight: 600,
+                background: 'transparent',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 10,
+                color: '#8A8A8A',
+                cursor: 'pointer',
+                transition: 'border-color 0.2s, color 0.2s',
+              }}
+              onMouseEnter={e => { e.target.style.borderColor = '#E63946'; e.target.style.color = '#E63946'; }}
+              onMouseLeave={e => { e.target.style.borderColor = 'rgba(255,255,255,0.12)'; e.target.style.color = '#8A8A8A'; }}
+            >
+              No acepto
+            </button>
+            <button
+              onClick={confirmar}
+              disabled={!aceptado}
+              className="btn-gold"
+              style={{
+                flex: 2,
+                padding: '13px',
+                fontSize: 14,
+                fontWeight: 700,
+                opacity: aceptado ? 1 : 0.4,
+                cursor: aceptado ? 'pointer' : 'not-allowed',
+                transition: 'opacity 0.2s',
+              }}
+            >
+              Acepto y continúo
+            </button>
+          </div>
         </div>
       </div>
     </div>
