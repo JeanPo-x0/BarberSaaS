@@ -28,27 +28,71 @@ export default function BannerTC() {
   if (!visible) return null;
 
   return (
-    // Overlay oscuro que bloquea toda la pantalla
+    <>
+      <style>{`
+        @keyframes tcFadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes tcSlideUp {
+          from { opacity: 0; transform: translateY(32px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes tcPulseGold {
+          0%, 100% { opacity: 0.15; transform: scale(1);   }
+          50%       { opacity: 0.3;  transform: scale(1.08); }
+        }
+        @keyframes tcPulseGold2 {
+          0%, 100% { opacity: 0.1;  transform: scale(1);   }
+          50%       { opacity: 0.22; transform: scale(1.06); }
+        }
+      `}</style>
+
+    {/* Overlay con blur suave */}
     <div style={{
       position: 'fixed', inset: 0, zIndex: 9999,
-      background: 'rgba(0,0,0,0.85)',
-      backdropFilter: 'blur(8px)',
+      background: 'rgba(0,0,0,0.55)',
+      backdropFilter: 'blur(4px)',
+      WebkitBackdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '20px',
       fontFamily: "'DM Sans', sans-serif",
+      animation: 'tcFadeIn 0.3s ease',
     }}>
+
+      {/* Orbe dorado superior izquierda */}
+      <div style={{
+        position: 'fixed', top: '-10%', left: '-8%',
+        width: 420, height: 420,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(201,168,76,0.22) 0%, transparent 70%)',
+        animation: 'tcPulseGold 5s ease-in-out infinite',
+        pointerEvents: 'none',
+      }} />
+
+      {/* Orbe dorado inferior derecha */}
+      <div style={{
+        position: 'fixed', bottom: '-12%', right: '-6%',
+        width: 360, height: 360,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(201,168,76,0.18) 0%, transparent 70%)',
+        animation: 'tcPulseGold2 6s ease-in-out infinite',
+        pointerEvents: 'none',
+      }} />
+
       {/* Card del modal */}
       <div style={{
-        background: '#111111',
-        border: '1px solid rgba(201,168,76,0.3)',
-        borderRadius: 18,
+        background: 'rgba(14,14,14,0.92)',
+        border: '1px solid rgba(201,168,76,0.35)',
+        borderRadius: 20,
         width: '100%',
         maxWidth: 560,
-        boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
+        boxShadow: '0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.08)',
         display: 'flex',
         flexDirection: 'column',
         maxHeight: '90vh',
         overflow: 'hidden',
+        animation: 'tcSlideUp 0.35s cubic-bezier(0.16,1,0.3,1)',
       }}>
 
         {/* Header */}
@@ -211,5 +255,6 @@ export default function BannerTC() {
         </div>
       </div>
     </div>
+    </>
   );
 }
