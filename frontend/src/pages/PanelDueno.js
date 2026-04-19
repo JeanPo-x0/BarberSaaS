@@ -687,34 +687,28 @@ function PanelDueno() {
                   </div>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
-                    ¿Con cuánto tiempo de anticipación puede cancelar el cliente sin cargo?
-                  </label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {[
-                      { label: '1 hora',   value: 1 },
-                      { label: '2 horas',  value: 2 },
-                      { label: '4 horas',  value: 4 },
-                      { label: '12 horas', value: 12 },
-                      { label: '24 horas', value: 24 },
-                      { label: '48 horas', value: 48 },
-                    ].map(op => {
-                      const activo = configPagosForm.cancelacion_horas_minimo === op.value;
-                      return (
-                        <button key={op.value} type="button"
-                          onClick={() => setConfigPagosForm(f => ({ ...f, cancelacion_horas_minimo: op.value }))}
-                          style={{
-                            padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                            cursor: 'pointer', fontFamily: "'DM Sans'",
-                            border: `1px solid ${activo ? '#C9A84C' : 'var(--border)'}`,
-                            background: activo ? 'rgba(201,168,76,0.12)' : 'var(--bg-secondary)',
-                            color: activo ? '#C9A84C' : 'var(--text-muted)',
-                            transition: 'all 0.15s',
-                          }}>
-                          {op.label}
-                        </button>
-                      );
-                    })}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+                    <label style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                      ¿Con cuánto tiempo puede cancelar sin cargo?
+                    </label>
+                    <span style={{ fontFamily: "'Bebas Neue'", fontSize: 22, color: '#C9A84C', letterSpacing: '0.04em' }}>
+                      {configPagosForm.cancelacion_horas_minimo === 1
+                        ? '1 hora'
+                        : configPagosForm.cancelacion_horas_minimo < 24
+                          ? `${configPagosForm.cancelacion_horas_minimo} horas`
+                          : configPagosForm.cancelacion_horas_minimo === 24
+                            ? '1 día'
+                            : configPagosForm.cancelacion_horas_minimo === 48
+                              ? '2 días'
+                              : `${configPagosForm.cancelacion_horas_minimo} horas`}
+                    </span>
+                  </div>
+                  <input type="range" min="1" max="72" step="1"
+                    value={configPagosForm.cancelacion_horas_minimo}
+                    onChange={e => setConfigPagosForm(f => ({ ...f, cancelacion_horas_minimo: parseInt(e.target.value) }))}
+                    style={{ width: '100%', accentColor: '#C9A84C' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                    <span>1 hora</span><span>24 horas</span><span>48 horas</span><span>72 horas</span>
                   </div>
                   <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '8px 0 0 0' }}>
                     Si cancela después de ese límite, se aplica el cargo de cancelación.
