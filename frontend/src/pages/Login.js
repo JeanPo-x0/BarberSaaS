@@ -34,6 +34,8 @@ function Login() {
         // confirme que esta listo (polling /health) antes de reintentar.
         setEstadoConexion('Iniciando servidor, por favor espera...');
         await wakeUpServer();
+        // Espera extra para que la DB termine de conectar tras el cold start
+        await new Promise(r => setTimeout(r, 3000));
         try {
           await intentarLogin();
         } catch (err2) {
