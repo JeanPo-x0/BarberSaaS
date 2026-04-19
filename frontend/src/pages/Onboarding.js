@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { onboarding, login, getMe, crearCheckout } from '../services/api';
 import { NavLogo } from '../components/LogoLink';
 import { formatearInput, formatearTelefono } from '../utils/phone';
@@ -22,6 +22,7 @@ export default function Onboarding() {
   const [error, setError] = useState('');
   const [coupon, setCoupon] = useState('');
   const [linkGenerado, setLinkGenerado] = useState('');
+  const [tcAceptado, setTcAceptado] = useState(false);
   const [form, setForm] = useState({
     email: '', password: '',
     nombre_barberia: '', direccion: '', telefono: '',
@@ -37,6 +38,7 @@ export default function Onboarding() {
     if (!form.email || !form.password) { setError('Email y contrasena son obligatorios'); return; }
     if (!form.email.includes('@')) { setError('El email ingresado no es valido'); return; }
     if (form.password.length < 6) { setError('La contrasena debe tener al menos 6 caracteres'); return; }
+    if (!tcAceptado) { setError('Debes aceptar los Términos y Condiciones para continuar'); return; }
     setPaso(1);
   };
 
@@ -201,7 +203,26 @@ export default function Onboarding() {
                   className="input-dark" style={{ borderColor: 'rgba(201,168,76,0.3)' }} />
               )}
 
-              <button onClick={handleRegistro} className="btn-gold" style={{ width: '100%', marginTop: 4 }}>
+              {/* Checkbox T&C */}
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                <input
+                  type="checkbox"
+                  checked={tcAceptado}
+                  onChange={e => setTcAceptado(e.target.checked)}
+                  style={{ marginTop: 2, accentColor: '#C9A84C', flexShrink: 0 }}
+                />
+                <span>
+                  Acepto los{' '}
+                  <Link to="/terminos" target="_blank" style={{ color: '#C9A84C', textDecoration: 'none', fontWeight: 600 }}>
+                    Términos y Condiciones
+                  </Link>{' '}y la{' '}
+                  <Link to="/privacidad" target="_blank" style={{ color: '#C9A84C', textDecoration: 'none', fontWeight: 600 }}>
+                    Política de Privacidad
+                  </Link>
+                </span>
+              </label>
+
+              <button onClick={handleRegistro} className="btn-gold" style={{ width: '100%', marginTop: 4, opacity: tcAceptado ? 1 : 0.5 }}>
                 Continuar
               </button>
               <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>

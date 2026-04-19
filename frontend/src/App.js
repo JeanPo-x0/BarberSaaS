@@ -18,6 +18,7 @@ import SuscripcionExito from './pages/SuscripcionExito';
 import Planes from './pages/Planes';
 import Terminos from './pages/Terminos';
 import Privacidad from './pages/Privacidad';
+import BannerTC from './components/BannerTC';
 import './App.css';
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <BannerTC />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />

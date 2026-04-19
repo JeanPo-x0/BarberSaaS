@@ -822,6 +822,20 @@ function AgendarCita() {
                   </div>
                 )}
 
+                {/* Política de cancelación */}
+                {configPagos && configPagos.cancelacion_porcentaje > 0 && (
+                  <div style={{
+                    background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)',
+                    borderRadius: 10, padding: '12px 14px',
+                    display: 'flex', gap: 10, alignItems: 'flex-start',
+                  }}>
+                    <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+                    <p style={{ fontSize: 12, color: '#fbbf24', margin: 0, lineHeight: 1.5 }}>
+                      <strong>Política de cancelación:</strong> se cobra el {configPagos.cancelacion_porcentaje}% del servicio si cancelás con menos de {configPagos.cancelacion_horas_minimo} horas de anticipación.
+                    </p>
+                  </div>
+                )}
+
                 <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
                   <button type="button" onClick={() => setPaso(2)} className="btn-outline" style={{ flex: 1 }}>
                     ← Atras
