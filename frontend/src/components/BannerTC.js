@@ -133,37 +133,46 @@ export default function BannerTC() {
           }}
         >
           <p>
-            <strong style={{ color: '#F5F5F5' }}>BarberSaaS</strong> es una plataforma de gestión de citas para barberías.
-            Al usar este servicio aceptás cumplir con los términos completos.
+            <strong style={{ color: '#F5F5F5' }}>BarberSaaS</strong> es una plataforma de gestión de citas para barberías costarricenses.
+            Al usar este servicio aceptás cumplir con los términos completos descritos a continuación.
           </p>
 
           <p style={{ marginTop: 14 }}>
-            <strong style={{ color: '#F5F5F5' }}>Uso del servicio:</strong> La plataforma está destinada a propietarios de barberías y sus clientes.
-            Está prohibido usarla para actividades ilegales, fraudulentas o que violen derechos de terceros.
-            Nos reservamos el derecho de suspender cuentas que incumplan estas condiciones.
+            <strong style={{ color: '#F5F5F5' }}>Uso del servicio:</strong> Destinado a propietarios de barberías y sus clientes.
+            Está prohibido usarlo para actividades ilegales o fraudulentas. Nos reservamos el derecho de suspender cuentas que incumplan estas condiciones.
           </p>
 
           <p style={{ marginTop: 14 }}>
-            <strong style={{ color: '#F5F5F5' }}>Datos personales:</strong> Recopilamos nombre, teléfono y correo para gestionar citas.
-            No vendemos datos a terceros. Los datos se almacenan de forma segura y pueden ser eliminados a solicitud del usuario.
+            <strong style={{ color: '#F5F5F5' }}>Datos personales:</strong> Recopilamos nombre, teléfono y correo para gestionar citas, bajo la Ley N.° 8968 de Costa Rica.
+            No vendemos datos a terceros. Podés solicitar la eliminación de tus datos en cualquier momento.
           </p>
 
           <p style={{ marginTop: 14 }}>
-            <strong style={{ color: '#F5F5F5' }}>Pagos y suscripciones:</strong> Los cobros son gestionados por Stripe.
-            Los planes se renuevan automáticamente. Podés cancelar en cualquier momento desde tu panel.
+            <strong style={{ color: '#F5F5F5' }}>Pagos y trial:</strong> El período de prueba es de 14 días con tarjeta requerida. No se realiza ningún cobro durante el trial.
+            Al vencer, se cobra automáticamente el plan seleccionado. Podés cancelar antes del trial sin costo desde la sección Soporte.
           </p>
 
           <p style={{ marginTop: 14 }}>
-            <strong style={{ color: '#F5F5F5' }}>WhatsApp:</strong> Al agendar cita aceptás recibir notificaciones y recordatorios por WhatsApp relacionados con tu cita.
+            <strong style={{ color: '#F5F5F5' }}>Cancelaciones:</strong> Si cancelás durante el trial no se te cobra nada y perdés acceso al terminar los 14 días.
+            Si cancelás un plan ya pagado, seguís con acceso hasta el final del período — sin cobros adicionales ni reembolsos del período en curso.
           </p>
 
           <p style={{ marginTop: 14 }}>
-            <strong style={{ color: '#F5F5F5' }}>Responsabilidad:</strong> El servicio se provee "tal cual". No garantizamos disponibilidad ininterrumpida del 100%.
-            No somos responsables por pérdidas derivadas de interrupciones del servicio.
+            <strong style={{ color: '#F5F5F5' }}>WhatsApp:</strong> Al agendar una cita aceptás recibir notificaciones y recordatorios por WhatsApp relacionados con tu reserva.
           </p>
 
           <p style={{ marginTop: 14 }}>
-            Para consultas o solicitudes escribí a{' '}
+            <strong style={{ color: '#F5F5F5' }}>Responsabilidad:</strong> El servicio se provee "tal cual". No garantizamos disponibilidad ininterrumpida.
+            No somos responsables por pérdidas derivadas de interrupciones. Cualquier controversia se rige bajo la legislación costarricense.
+          </p>
+
+          <p style={{ marginTop: 14 }}>
+            <strong style={{ color: '#F5F5F5' }}>Modificaciones:</strong> Podemos actualizar estos términos avisando con al menos 15 días de anticipación.
+            El uso continuado del servicio implica aceptación de los cambios.
+          </p>
+
+          <p style={{ marginTop: 14 }}>
+            Consultas o solicitudes:{' '}
             <a href="mailto:saascompany.cr@gmail.com" style={{ color: '#C9A84C', textDecoration: 'none' }}>
               saascompany.cr@gmail.com
             </a>
