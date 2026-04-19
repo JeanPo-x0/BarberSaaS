@@ -96,6 +96,7 @@ export const getPortalBilling = () => API.get('/suscripcion/portal');
 export const getCouponActivo = () => API.get('/suscripcion/coupon-earlyaccess');
 export const cancelarSuscripcion = () => API.post('/suscripcion/cancelar');
 export const reactivarSuscripcion = () => API.post('/suscripcion/reactivar');
+export const enviarContactoSoporte = (data) => API.post('/soporte/contacto', data);
 
 // Stats
 export const getIngresos = () => API.get('/stats/ingresos');

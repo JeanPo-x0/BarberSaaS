@@ -579,7 +579,7 @@ export default function Home() {
                   </ul>
 
                   <button
-                    onClick={() => navigate('/planes')}
+                    onClick={() => navigate(esGratis ? '/registro' : '/registro', { state: { plan: plan.id } })}
                     className={plan.popular ? 'btn-gold' : 'btn-outline'}
                     style={{ width: '100%' }}
                   >
