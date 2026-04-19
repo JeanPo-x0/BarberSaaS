@@ -357,6 +357,7 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
         if conv:
             _resetear(db, conv)
 
+        print(f"[CANCELAR] Buscando cliente con telefono: {telefono!r}")
         cliente = _buscar_cliente(db, telefono)
         if cliente:
             # Busca la próxima cita pendiente (incluye hasta 30 min en el pasado por margen)
@@ -389,6 +390,7 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
 
             return "No encontre una cita pendiente a tu nombre. Si crees que es un error escribe a la barberia directamente.", None
 
+        print(f"[CANCELAR] No se encontro cliente con telefono: {telefono!r}")
         return "No encontre tu numero en el sistema. Asegurate de agendar desde este mismo WhatsApp.", None
 
     # Identificar la barberia por el numero Twilio al que escribio el cliente

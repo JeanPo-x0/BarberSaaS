@@ -234,6 +234,10 @@ function AgendarCita() {
   const handleConfirmar = async (e) => {
     e.preventDefault();
     setError('');
+    if (configPagos && (configPagos.sinpe_habilitado || configPagos.efectivo_habilitado) && !metodoPago) {
+      setError('Seleccioná un método de pago para continuar.');
+      return;
+    }
     setEnviando(true);
     try {
       const cliente = await buscarOCrearCliente({ nombre, telefono: formatearTelefono(telefono) });
