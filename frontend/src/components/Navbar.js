@@ -126,19 +126,19 @@ export default function Navbar({ actions = null }) {
       {/* ══════════════════════════════════════════
           DESKTOP — Top bar mínimo (solo actions)
       ══════════════════════════════════════════ */}
-      {actions && (
-        <div className="hidden md:flex" style={{
-          position: 'sticky', top: 0, zIndex: 90,
-          height: 56,
-          background: 'rgba(17,17,17,0.9)',
-          backdropFilter: 'blur(14px)',
-          borderBottom: '1px solid var(--border)',
-          alignItems: 'center', justifyContent: 'flex-end',
-          padding: '0 28px',
-        }}>
-          {actions}
-        </div>
-      )}
+      <div className="hidden md:flex" style={{
+        position: 'sticky', top: 0, zIndex: 90,
+        height: actions ? 56 : 0,
+        overflow: 'hidden',
+        background: 'rgba(17,17,17,0.9)',
+        backdropFilter: 'blur(14px)',
+        borderBottom: actions ? '1px solid var(--border)' : 'none',
+        alignItems: 'center', justifyContent: 'flex-end',
+        padding: actions ? '0 28px' : '0',
+        transition: 'height 0.2s ease',
+      }}>
+        {actions}
+      </div>
 
       {/* ══════════════════════════════════════════
           MOBILE — Top navbar (logo + actions + Salir)
