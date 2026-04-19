@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.core.config import settings
 from app.routers import barberias, barberos, clientes, servicios, citas, auth, webhook
-from app.routers import suscripcion, stats, admin, lista_espera
+from app.routers import suscripcion, stats, admin, lista_espera, configuracion_pagos
 from app.models.lista_espera import ListaEspera
 from app.models.suscripcion import Suscripcion
 from app.services.whatsapp import notificar_lista_espera
@@ -291,6 +291,7 @@ app.include_router(suscripcion.router)
 app.include_router(stats.router)
 app.include_router(admin.router)
 app.include_router(lista_espera.router)
+app.include_router(configuracion_pagos.router)
 
 @app.get("/")
 def root():

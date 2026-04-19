@@ -106,3 +106,12 @@ export const getAdminStats = () => API.get('/admin/stats');
 export const getAdminBarberias = () => API.get('/admin/barberias');
 export const suspenderBarberia = (id) => API.patch(`/admin/barberias/${id}/suspender`);
 export const reactivarBarberia = (id) => API.patch(`/admin/barberias/${id}/reactivar`);
+
+// Configuración de pagos
+export const getConfigPagos = () => API.get('/configuracion-pagos/mia');
+export const updateConfigPagos = (data) => API.put('/configuracion-pagos/mia', data);
+export const getConfigPagosPublica = (barberiaId) => API.get(`/configuracion-pagos/publica/${barberiaId}`);
+
+// Confirmación/rechazo de pago
+export const confirmarPago = (citaId) => API.patch(`/citas/${citaId}/confirmar-pago`);
+export const rechazarPago = (citaId) => API.patch(`/citas/${citaId}/rechazar-pago`);

@@ -7,6 +7,7 @@ import {
   getMisServicios, crearServicio, toggleServicio, eliminarServicio,
   getMiBarberia, toggleBarberia, crearBarberiaAdicional,
   getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio,
+  getConfigPagos, updateConfigPagos,
 } from '../services/api';
 
 /* ── Initials avatar ─────────────────────────────────── */
@@ -78,6 +79,20 @@ function PanelDueno() {
   const [barberiaError, setBarberiaError] = useState('');
   const [barberiaCargando, setBarberiaCargando] = useState(false);
 
+  // Pagos
+  const [configPagos, setConfigPagos] = useState(null);
+  const [guardandoPagos, setGuardandoPagos] = useState(false);
+  const [configPagosForm, setConfigPagosForm] = useState({
+    sinpe_habilitado: true,
+    sinpe_numero: '',
+    sinpe_nombre: '',
+    efectivo_habilitado: true,
+    deposito_requerido: false,
+    deposito_porcentaje: 50,
+    cancelacion_porcentaje: 0,
+    cancelacion_horas_minimo: 24,
+  });
+
   // Slug
   const [editandoSlug, setEditandoSlug] = useState(null);
   const [slugInput, setSlugInput] = useState('');
@@ -89,6 +104,10 @@ function PanelDueno() {
     getMisServicios().then(r => setServicios(r.data)).catch(() => {});
     getMiBarberia().then(r => setBarberias(r.data)).catch(() => {});
     getEstadoSuscripcion().then(r => setSuscripcion(r.data)).catch(() => {});
+    getConfigPagos().then(r => {
+      setConfigPagos(r.data);
+      setConfigPagosForm(r.data);
+    }).catch(() => {});
   };
 
   useEffect(() => {
@@ -125,6 +144,19 @@ function PanelDueno() {
       setBarberiaError(err.response?.data?.detail || 'Error al crear la barberia');
     } finally {
       setBarberiaCargando(false);
+    }
+  };
+
+  const handleGuardarPagos = async (e) => {
+    e.preventDefault();
+    setGuardandoPagos(true);
+    try {
+      await updateConfigPagos(configPagosForm);
+      getConfigPagos().then(r => { setConfigPagos(r.data); setConfigPagosForm(r.data); });
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Error al guardar');
+    } finally {
+      setGuardandoPagos(false);
     }
   };
 
@@ -202,9 +234,9 @@ function PanelDueno() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
-          {['barberos', 'servicios', 'barberias'].map(t => (
+          {['barberos', 'servicios', 'barberias', 'pagos'].map(t => (
             <button key={t} style={tabStyle(tab === t)} onClick={() => setTab(t)}>
-              {t.charAt(0).toUpperCase() + t.slice(1)}
+              {t === 'pagos' ? 'Pagos' : t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
           ))}
         </div>
@@ -547,6 +579,116 @@ function PanelDueno() {
               </div>
             )}
           </div>
+        )}
+
+        {tab === 'pagos' && (
+          <form onSubmit={handleGuardarPagos} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* Métodos habilitados */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 24 }}>
+              <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.06em', margin: '0 0 16px 0' }}>
+                Métodos de pago
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* Toggle SINPE */}
+                <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={configPagosForm.sinpe_habilitado}
+                    onChange={e => setConfigPagosForm(f => ({ ...f, sinpe_habilitado: e.target.checked }))}
+                    style={{ width: 16, height: 16, accentColor: '#C9A84C' }} />
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>SINPE Móvil</span>
+                </label>
+                {/* Toggle efectivo */}
+                <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={configPagosForm.efectivo_habilitado}
+                    onChange={e => setConfigPagosForm(f => ({ ...f, efectivo_habilitado: e.target.checked }))}
+                    style={{ width: 16, height: 16, accentColor: '#C9A84C' }} />
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>Efectivo (paga en el local)</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Configuración SINPE */}
+            {configPagosForm.sinpe_habilitado && (
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 24 }}>
+                <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.06em', margin: '0 0 16px 0' }}>
+                  Datos SINPE
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <input value={configPagosForm.sinpe_numero} onChange={e => setConfigPagosForm(f => ({ ...f, sinpe_numero: e.target.value }))}
+                    placeholder="Número de teléfono SINPE (ej: 8888-8888)" className="input-dark" inputMode="numeric" />
+                  <input value={configPagosForm.sinpe_nombre} onChange={e => setConfigPagosForm(f => ({ ...f, sinpe_nombre: e.target.value }))}
+                    placeholder="Nombre que aparece en SINPE (ej: Juan Pérez)" className="input-dark" />
+                </div>
+              </div>
+            )}
+
+            {/* Depósito */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 24 }}>
+              <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.06em', margin: '0 0 4px 0' }}>
+                Depósito al reservar
+              </h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '0 0 16px 0' }}>
+                Si está activo, el cliente debe enviar un depósito antes de confirmar la cita.
+              </p>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', marginBottom: 12 }}>
+                <input type="checkbox" checked={configPagosForm.deposito_requerido}
+                  onChange={e => setConfigPagosForm(f => ({ ...f, deposito_requerido: e.target.checked }))}
+                  style={{ width: 16, height: 16, accentColor: '#C9A84C' }} />
+                <span style={{ fontWeight: 600, fontSize: 14 }}>Requerir depósito</span>
+              </label>
+              {configPagosForm.deposito_requerido && (
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
+                    Porcentaje del total: {configPagosForm.deposito_porcentaje}%
+                  </label>
+                  <input type="range" min="10" max="100" step="10"
+                    value={configPagosForm.deposito_porcentaje}
+                    onChange={e => setConfigPagosForm(f => ({ ...f, deposito_porcentaje: parseInt(e.target.value) }))}
+                    style={{ width: '100%', accentColor: '#C9A84C' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                    <span>10%</span><span>50%</span><span>100%</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Cancelación */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 24 }}>
+              <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.06em', margin: '0 0 4px 0' }}>
+                Política de cancelación
+              </h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '0 0 16px 0' }}>
+                Cobro por cancelaciones fuera del tiempo mínimo de aviso.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
+                    Cobro por cancelación: {configPagosForm.cancelacion_porcentaje}%
+                  </label>
+                  <input type="range" min="0" max="100" step="5"
+                    value={configPagosForm.cancelacion_porcentaje}
+                    onChange={e => setConfigPagosForm(f => ({ ...f, cancelacion_porcentaje: parseInt(e.target.value) }))}
+                    style={{ width: '100%', accentColor: '#C9A84C' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                    <span>0% (gratis)</span><span>50%</span><span>100%</span>
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
+                    Aviso mínimo para cancelar sin cargo (horas)
+                  </label>
+                  <input type="number" min="1" max="72" value={configPagosForm.cancelacion_horas_minimo}
+                    onChange={e => setConfigPagosForm(f => ({ ...f, cancelacion_horas_minimo: parseInt(e.target.value) }))}
+                    className="input-dark" style={{ width: 120 }} />
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" className="btn-gold" disabled={guardandoPagos}
+              style={{ opacity: guardandoPagos ? 0.7 : 1 }}>
+              {guardandoPagos ? 'Guardando...' : 'Guardar configuración de pagos'}
+            </button>
+          </form>
         )}
       </div>
     </div>

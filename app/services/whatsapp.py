@@ -100,6 +100,42 @@ def notificar_lista_espera(telefono: str, nombre: str, barberia_nombre: str, lin
     enviar_mensaje(telefono, mensaje)
 
 
+def notificar_pago_pendiente_barbero(
+    telefono: str, nombre_barbero: str, cliente: str,
+    servicio: str, metodo: str, fecha_hora: str, monto: float,
+):
+    metodo_label = "SINPE Móvil" if metodo == "sinpe" else "Efectivo"
+    mensaje = (
+        f"Pago pendiente de verificar, {nombre_barbero}.\n\n"
+        f"Cliente: {cliente}\n"
+        f"Servicio: {servicio} — ₡{monto:,.0f}\n"
+        f"Método: {metodo_label}\n"
+        f"Fecha: {fecha_hora}\n\n"
+        f"Confirma o rechaza el pago desde tu panel."
+    )
+    enviar_mensaje(telefono, mensaje)
+
+
+def notificar_cita_confirmada_pago(
+    telefono: str, nombre: str, servicio: str, fecha_hora: str,
+):
+    mensaje = (
+        f"Hola {nombre}! Tu pago fue confirmado.\n\n"
+        f"Servicio: {servicio}\n"
+        f"Fecha y hora: {fecha_hora}\n\n"
+        f"Tu cita está confirmada. Te esperamos!"
+    )
+    enviar_mensaje(telefono, mensaje)
+
+
+def notificar_pago_rechazado(telefono: str, nombre: str):
+    mensaje = (
+        f"Hola {nombre}, tu pago no pudo ser verificado y tu cita fue cancelada.\n\n"
+        f"Si crees que es un error, contacta directamente a la barbería."
+    )
+    enviar_mensaje(telefono, mensaje)
+
+
 def reenganche_cliente(telefono: str, nombre: str, barberia_nombre: str, link_agendamiento: str):
     """WhatsApp de reenganche para clientes inactivos +30 días."""
     mensaje = (

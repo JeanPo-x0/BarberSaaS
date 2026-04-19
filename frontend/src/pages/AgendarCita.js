@@ -4,6 +4,7 @@ import { NavLogo } from '../components/LogoLink';
 import {
   getBarberosPorBarberia, getServiciosPorBarberia, getBarberia,
   getBarberiaBySlug, buscarOCrearCliente, crearCita, getDisponibilidad,
+  getConfigPagosPublica,
 } from '../services/api';
 import { formatearInput, formatearTelefono } from '../utils/phone';
 
@@ -198,6 +199,8 @@ function AgendarCita() {
   const [error, setError] = useState('');
   const [confirmado, setConfirmado] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [configPagos, setConfigPagos] = useState(null);
+  const [metodoPago, setMetodoPago] = useState('');
 
   useEffect(() => {
     const resolveId = slug
@@ -209,6 +212,7 @@ function AgendarCita() {
       if (!id) return;
       getBarberosPorBarberia(id).then(r => setBarberos(r.data));
       getServiciosPorBarberia(id).then(r => setServicios(r.data));
+      getConfigPagosPublica(id).then(r => setConfigPagos(r.data)).catch(() => {});
     }).catch(() => {});
   }, [barberia_id, slug]);
 
@@ -235,6 +239,7 @@ function AgendarCita() {
         barbero_id: parseInt(barberoId),
         servicio_id: parseInt(servicioId),
         cliente_id: cliente.data.id,
+        metodo_pago: metodoPago || null,
       });
       setConfirmado(true);
     } catch (err) {
@@ -337,6 +342,37 @@ function AgendarCita() {
               </div>
             ))}
           </div>
+
+          {/* Info de pago si aplica */}
+          {metodoPago === 'sinpe' && configPagos?.sinpe_numero && (
+            <div style={{
+              background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)',
+              borderRadius: 12, padding: '14px 16px', margin: '0 0 16px 0', textAlign: 'left',
+            }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#C9A84C', letterSpacing: '0.08em', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+                Envía tu depósito por SINPE
+              </p>
+              <p style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 700, margin: '0 0 2px 0' }}>
+                📱 {configPagos.sinpe_numero}
+              </p>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+                A nombre de: {configPagos.sinpe_nombre}
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '8px 0 0 0' }}>
+                Tu cita quedará confirmada una vez que el equipo verifique el pago.
+              </p>
+            </div>
+          )}
+          {metodoPago === 'efectivo' && (
+            <div style={{
+              background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)',
+              borderRadius: 12, padding: '12px 16px', margin: '0 0 16px 0',
+            }}>
+              <p style={{ fontSize: 13, color: '#4ade80', margin: 0 }}>
+                💵 Pagas en efectivo al llegar al local. Tu cita está reservada.
+              </p>
+            </div>
+          )}
 
           <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '0 0 28px 0' }}>
             Te llegara un mensaje de WhatsApp con los detalles de tu cita.
@@ -669,6 +705,73 @@ function AgendarCita() {
               </div>
 
               <form onSubmit={handleConfirmar} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* Método de pago */}
+                {configPagos && (configPagos.sinpe_habilitado || configPagos.efectivo_habilitado) && (
+                  <div>
+                    <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-muted)', margin: '0 0 10px 0', textTransform: 'uppercase' }}>
+                      Método de pago
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {configPagos.sinpe_habilitado && (
+                        <button type="button"
+                          onClick={() => setMetodoPago('sinpe')}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 12,
+                            padding: '12px 16px', borderRadius: 12, textAlign: 'left',
+                            border: `1px solid ${metodoPago === 'sinpe' ? '#C9A84C' : 'var(--border)'}`,
+                            background: metodoPago === 'sinpe' ? 'rgba(201,168,76,0.08)' : 'rgba(255,255,255,0.02)',
+                            cursor: 'pointer', fontFamily: "'DM Sans'", width: '100%',
+                            transition: 'all 0.2s',
+                          }}>
+                          <span style={{ fontSize: 20 }}>📱</span>
+                          <div>
+                            <p style={{ fontWeight: 700, fontSize: 14, margin: 0, color: metodoPago === 'sinpe' ? '#C9A84C' : 'var(--text-primary)' }}>
+                              SINPE Móvil
+                            </p>
+                            {configPagos.deposito_requerido && (
+                              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                                Depósito del {configPagos.deposito_porcentaje}% requerido
+                              </p>
+                            )}
+                          </div>
+                          {metodoPago === 'sinpe' && (
+                            <svg style={{ marginLeft: 'auto', flexShrink: 0 }} width="18" height="18" viewBox="0 0 18 18" fill="none">
+                              <circle cx="9" cy="9" r="8.5" stroke="#C9A84C"/>
+                              <path d="M5 9l3 3 5-6" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </button>
+                      )}
+                      {configPagos.efectivo_habilitado && (
+                        <button type="button"
+                          onClick={() => setMetodoPago('efectivo')}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 12,
+                            padding: '12px 16px', borderRadius: 12, textAlign: 'left',
+                            border: `1px solid ${metodoPago === 'efectivo' ? '#C9A84C' : 'var(--border)'}`,
+                            background: metodoPago === 'efectivo' ? 'rgba(201,168,76,0.08)' : 'rgba(255,255,255,0.02)',
+                            cursor: 'pointer', fontFamily: "'DM Sans'", width: '100%',
+                            transition: 'all 0.2s',
+                          }}>
+                          <span style={{ fontSize: 20 }}>💵</span>
+                          <div>
+                            <p style={{ fontWeight: 700, fontSize: 14, margin: 0, color: metodoPago === 'efectivo' ? '#C9A84C' : 'var(--text-primary)' }}>
+                              Efectivo
+                            </p>
+                            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>Pagas al llegar al local</p>
+                          </div>
+                          {metodoPago === 'efectivo' && (
+                            <svg style={{ marginLeft: 'auto', flexShrink: 0 }} width="18" height="18" viewBox="0 0 18 18" fill="none">
+                              <circle cx="9" cy="9" r="8.5" stroke="#C9A84C"/>
+                              <path d="M5 9l3 3 5-6" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-muted)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
                     Nombre completo

@@ -593,6 +593,26 @@ export default function Home() {
         <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>
           BarberSaaS 2026 &mdash; Hecho en Costa Rica
         </p>
+        <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>
+          © 2025 BarberSaaS &nbsp;&middot;&nbsp;{' '}
+          <Link
+            to="/terminos"
+            style={{ color: '#C9A84C', textDecoration: 'none' }}
+            onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+            onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+          >
+            Términos y Condiciones
+          </Link>
+          &nbsp;&middot;&nbsp;{' '}
+          <Link
+            to="/privacidad"
+            style={{ color: '#C9A84C', textDecoration: 'none' }}
+            onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+            onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+          >
+            Política de Privacidad
+          </Link>
+        </p>
       </footer>
 
     </div>

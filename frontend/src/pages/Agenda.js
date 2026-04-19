@@ -3,6 +3,7 @@ import {
   getMisCitas, cancelarCita, completarCita,
   getMisBarberos, getMisServicios,
   buscarOCrearCliente, crearCita, getDisponibilidad,
+  confirmarPago, rechazarPago,
 } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -14,6 +15,12 @@ const ESTADO = {
   confirmada: { bg: 'rgba(74,222,128,0.08)', color: '#4ade80', border: 'rgba(74,222,128,0.2)',  label: 'Confirmada' },
   completada: { bg: 'rgba(99,102,241,0.1)',  color: '#818cf8', border: 'rgba(99,102,241,0.25)', label: 'Completada' },
   cancelada:  { bg: 'rgba(230,57,70,0.08)',  color: '#E63946', border: 'rgba(230,57,70,0.2)',   label: 'Cancelada' },
+};
+
+const PAGO_BADGE = {
+  pendiente:   { bg: 'rgba(251,191,36,0.1)',  color: '#fbbf24', border: 'rgba(251,191,36,0.25)', label: 'Pago pendiente' },
+  confirmado:  { bg: 'rgba(74,222,128,0.08)', color: '#4ade80', border: 'rgba(74,222,128,0.2)',  label: 'Pago confirmado' },
+  rechazado:   { bg: 'rgba(230,57,70,0.08)',  color: '#E63946', border: 'rgba(230,57,70,0.2)',   label: 'Pago rechazado' },
 };
 
 function fmt(fecha_hora) {
@@ -53,10 +60,12 @@ function SkeletonCard() {
 }
 
 /* ── Cita card ───────────────────────────────────────── */
-function CitaCard({ cita, onCancelar, onCompletar }) {
+function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPago }) {
   const est = ESTADO[cita.estado] || ESTADO.pendiente;
   const { hora, fecha } = fmt(cita.fecha_hora);
   const esPendiente = cita.estado === 'pendiente';
+  const pagoBadge = PAGO_BADGE[cita.estado_pago];
+  const pagoAcciones = cita.estado_pago === 'pendiente';
 
   return (
     <div className="anim-item agenda-cita-card" style={{
@@ -108,6 +117,15 @@ function CitaCard({ cita, onCancelar, onCompletar }) {
             }}>
               {est.label}
             </span>
+            {pagoBadge && (
+              <span style={{
+                background: pagoBadge.bg, color: pagoBadge.color, border: `1px solid ${pagoBadge.border}`,
+                borderRadius: 100, padding: '2px 9px', fontSize: 10, fontWeight: 700,
+                flexShrink: 0,
+              }}>
+                {pagoBadge.label}
+              </span>
+            )}
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px' }}>
@@ -140,68 +158,131 @@ function CitaCard({ cita, onCancelar, onCompletar }) {
         </div>
 
         {/* Acciones — solo desktop (se esconden en mobile con CSS) */}
-        {esPendiente && (
+        {(esPendiente || pagoAcciones) && (
           <div className="agenda-card-actions-desktop" style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-            <button
-              onClick={() => onCompletar(cita.id)}
-              style={{
-                padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
-                cursor: 'pointer', fontFamily: "'DM Sans'",
-                background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)',
-                color: '#4ade80', transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(74,222,128,0.18)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(74,222,128,0.08)'}
-            >
-              Completar
-            </button>
-            <button
-              onClick={() => onCancelar(cita.id)}
-              style={{
-                padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
-                cursor: 'pointer', fontFamily: "'DM Sans'",
-                background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.2)',
-                color: '#E63946', transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,57,70,0.18)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(230,57,70,0.08)'}
-            >
-              Cancelar
-            </button>
+            {pagoAcciones && (
+              <>
+                <button
+                  onClick={() => onConfirmarPago(cita.id)}
+                  style={{
+                    padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: "'DM Sans'",
+                    background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)',
+                    color: '#fbbf24', transition: 'background 0.15s', whiteSpace: 'nowrap',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.2)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.1)'}
+                >
+                  ✓ Pago recibido
+                </button>
+                <button
+                  onClick={() => onRechazarPago(cita.id)}
+                  style={{
+                    padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: "'DM Sans'",
+                    background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.2)',
+                    color: '#E63946', transition: 'background 0.15s', whiteSpace: 'nowrap',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,57,70,0.18)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(230,57,70,0.08)'}
+                >
+                  Rechazar pago
+                </button>
+              </>
+            )}
+            {esPendiente && !pagoAcciones && (
+              <>
+                <button
+                  onClick={() => onCompletar(cita.id)}
+                  style={{
+                    padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: "'DM Sans'",
+                    background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)',
+                    color: '#4ade80', transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(74,222,128,0.18)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(74,222,128,0.08)'}
+                >
+                  Completar
+                </button>
+                <button
+                  onClick={() => onCancelar(cita.id)}
+                  style={{
+                    padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: "'DM Sans'",
+                    background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.2)',
+                    color: '#E63946', transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,57,70,0.18)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(230,57,70,0.08)'}
+                >
+                  Cancelar
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
 
       {/* Acciones mobile — fila separada, ancho completo */}
-      {esPendiente && (
+      {(esPendiente || pagoAcciones) && (
         <div className="agenda-card-actions-mobile" style={{
           display: 'none',
           borderTop: '1px solid var(--border)',
           padding: '10px 14px',
           gap: 8,
         }}>
-          <button
-            onClick={() => onCompletar(cita.id)}
-            style={{
-              flex: 1, padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 700,
-              cursor: 'pointer', fontFamily: "'DM Sans'",
-              background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)',
-              color: '#4ade80', transition: 'background 0.15s',
-            }}
-          >
-            ✓ Completar
-          </button>
-          <button
-            onClick={() => onCancelar(cita.id)}
-            style={{
-              flex: 1, padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 700,
-              cursor: 'pointer', fontFamily: "'DM Sans'",
-              background: 'rgba(230,57,70,0.06)', border: '1px solid rgba(230,57,70,0.2)',
-              color: '#E63946', transition: 'background 0.15s',
-            }}
-          >
-            Cancelar
-          </button>
+          {pagoAcciones ? (
+            <>
+              <button
+                onClick={() => onConfirmarPago(cita.id)}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: "'DM Sans'",
+                  background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)',
+                  color: '#fbbf24',
+                }}
+              >
+                ✓ Pago recibido
+              </button>
+              <button
+                onClick={() => onRechazarPago(cita.id)}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: "'DM Sans'",
+                  background: 'rgba(230,57,70,0.06)', border: '1px solid rgba(230,57,70,0.2)',
+                  color: '#E63946',
+                }}
+              >
+                Rechazar
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => onCompletar(cita.id)}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: "'DM Sans'",
+                  background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)',
+                  color: '#4ade80', transition: 'background 0.15s',
+                }}
+              >
+                ✓ Completar
+              </button>
+              <button
+                onClick={() => onCancelar(cita.id)}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: "'DM Sans'",
+                  background: 'rgba(230,57,70,0.06)', border: '1px solid rgba(230,57,70,0.2)',
+                  color: '#E63946', transition: 'background 0.15s',
+                }}
+              >
+                Cancelar
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -209,7 +290,7 @@ function CitaCard({ cita, onCancelar, onCompletar }) {
 }
 
 /* ── Seccion con label ───────────────────────────────── */
-function Seccion({ label, citas, onCancelar, onCompletar }) {
+function Seccion({ label, citas, onCancelar, onCompletar, onConfirmarPago, onRechazarPago }) {
   if (citas.length === 0) return null;
   return (
     <div style={{ marginBottom: 24 }}>
@@ -222,7 +303,8 @@ function Seccion({ label, citas, onCancelar, onCompletar }) {
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {citas.map(c => (
-          <CitaCard key={c.id} cita={c} onCancelar={onCancelar} onCompletar={onCompletar} />
+          <CitaCard key={c.id} cita={c} onCancelar={onCancelar} onCompletar={onCompletar}
+            onConfirmarPago={onConfirmarPago} onRechazarPago={onRechazarPago} />
         ))}
       </div>
     </div>
@@ -283,6 +365,19 @@ function Agenda() {
     cargarCitas();
     setToastMsg('Cita completada. WhatsApp enviado al cliente.');
     setTimeout(() => setToastMsg(''), 4000);
+  };
+
+  const handleConfirmarPago = async (id) => {
+    await confirmarPago(id);
+    cargarCitas();
+    setToastMsg('Pago confirmado. WhatsApp enviado al cliente.');
+    setTimeout(() => setToastMsg(''), 4000);
+  };
+
+  const handleRechazarPago = async (id) => {
+    if (!window.confirm('Rechazar el pago y cancelar esta cita?')) return;
+    await rechazarPago(id);
+    cargarCitas();
   };
 
   const handleCrearCita = async (e) => {
@@ -544,9 +639,9 @@ function Agenda() {
           </div>
         ) : (
           <>
-            <Seccion label="Hoy"    citas={hoy}     onCancelar={handleCancelar} onCompletar={handleCompletar} />
-            <Seccion label="Manana" citas={manana}   onCancelar={handleCancelar} onCompletar={handleCompletar} />
-            <Seccion label="Proximas" citas={futuras} onCancelar={handleCancelar} onCompletar={handleCompletar} />
+            <Seccion label="Hoy"    citas={hoy}     onCancelar={handleCancelar} onCompletar={handleCompletar} onConfirmarPago={handleConfirmarPago} onRechazarPago={handleRechazarPago} />
+            <Seccion label="Manana" citas={manana}   onCancelar={handleCancelar} onCompletar={handleCompletar} onConfirmarPago={handleConfirmarPago} onRechazarPago={handleRechazarPago} />
+            <Seccion label="Proximas" citas={futuras} onCancelar={handleCancelar} onCompletar={handleCompletar} onConfirmarPago={handleConfirmarPago} onRechazarPago={handleRechazarPago} />
           </>
         )}
       </div>

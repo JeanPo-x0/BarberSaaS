@@ -16,6 +16,8 @@ import DashboardIngresos from './pages/DashboardIngresos';
 import SuperAdmin from './pages/SuperAdmin';
 import SuscripcionExito from './pages/SuscripcionExito';
 import Planes from './pages/Planes';
+import Terminos from './pages/Terminos';
+import Privacidad from './pages/Privacidad';
 import './App.css';
 
 function App() {
@@ -42,6 +44,8 @@ function App() {
           <Route path="/suscripcion/exito" element={<SuscripcionExito />} />
           <Route path="/recuperar-password" element={<RecuperarPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/terminos" element={<Terminos />} />
+          <Route path="/privacidad" element={<Privacidad />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

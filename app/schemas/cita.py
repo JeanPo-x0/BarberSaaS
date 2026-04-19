@@ -9,7 +9,7 @@ class CitaBase(BaseModel):
     cliente_id: int
 
 class CitaCreate(CitaBase):
-    pass
+    metodo_pago: Optional[str] = None   # sinpe|efectivo|null
 
 # Modelos anidados para enriquecer la respuesta
 class _ClienteBasico(BaseModel):
@@ -37,6 +37,8 @@ class _ServicioBasico(BaseModel):
 class CitaResponse(CitaBase):
     id: int
     estado: str
+    estado_pago: str = "exento"
+    metodo_pago: Optional[str] = None
     cliente: Optional[_ClienteBasico] = None
     barbero: Optional[_BarberoBasico] = None
     servicio: Optional[_ServicioBasico] = None

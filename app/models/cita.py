@@ -8,6 +8,8 @@ class Cita(Base):
     id = Column(Integer, primary_key=True, index=True)
     fecha_hora = Column(DateTime, nullable=False)
     estado = Column(String, default="pendiente")
+    estado_pago = Column(String, default="exento")   # exento|pendiente|confirmado|rechazado
+    metodo_pago = Column(String, nullable=True)       # sinpe|efectivo|null
     barbero_id = Column(Integer, ForeignKey("barberos.id"))
     servicio_id = Column(Integer, ForeignKey("servicios.id"))
     cliente_id = Column(Integer, ForeignKey("clientes.id"))

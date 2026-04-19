@@ -14,7 +14,10 @@ from app.services.whatsapp import (
     confirmar_cita, notificar_cancelacion,
     notificar_barbero_nueva_cita, notificar_barbero_cancelacion,
     notificar_lista_espera, notificar_completada_cliente,
+    notificar_pago_pendiente_barbero, notificar_cita_confirmada_pago,
+    notificar_pago_rechazado,
 )
+from app.models.configuracion_pagos import ConfiguracionPagos
 from app.core.deps import get_usuario_actual
 from app.core.config import settings
 from app.models.lista_espera import ListaEspera
@@ -41,7 +44,20 @@ def crear_cita(cita: CitaCreate, db: Session = Depends(get_db)):
     if conflicto:
         raise HTTPException(status_code=400, detail="El barbero ya tiene una cita en ese horario")
 
-    nueva = Cita(**cita.model_dump())
+    # Determinar estado_pago según configuración de la barbería
+    barberia_id = barbero.barberia_id
+    config_pagos = db.query(ConfiguracionPagos).filter(
+        ConfiguracionPagos.barberia_id == barberia_id
+    ).first()
+
+    metodo = cita.metodo_pago
+    estado_pago = "exento"
+    if config_pagos and config_pagos.deposito_requerido and metodo in ("sinpe", "efectivo"):
+        estado_pago = "pendiente"
+
+    datos = cita.model_dump()
+    datos["estado_pago"] = estado_pago
+    nueva = Cita(**datos)
     db.add(nueva)
     db.commit()
     db.refresh(nueva)
@@ -67,6 +83,17 @@ def crear_cita(cita: CitaCreate, db: Session = Depends(get_db)):
                 servicio=servicio.nombre if servicio else "Servicio",
                 fecha_hora=fecha_hora_str
             )
+            # Notificar al barbero que hay un pago pendiente de verificar
+            if estado_pago == "pendiente" and metodo and servicio:
+                notificar_pago_pendiente_barbero(
+                    telefono=barbero.telefono,
+                    nombre_barbero=barbero.nombre,
+                    cliente=cliente.nombre if cliente else "Cliente",
+                    servicio=servicio.nombre,
+                    metodo=metodo,
+                    fecha_hora=fecha_hora_str,
+                    monto=servicio.precio,
+                )
         else:
             print(f"[WhatsApp] Barbero {barbero.id} ({barbero.nombre}) no tiene telefono guardado")
     except Exception as e:
@@ -171,6 +198,57 @@ def obtener_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), d
     if not barbero or barbero.barberia_id != usuario.barberia_id:
         raise HTTPException(status_code=403, detail="No tienes permiso sobre esta cita")
     return cita
+
+@router.patch("/{cita_id}/confirmar-pago", response_model=CitaResponse)
+def confirmar_pago(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
+    cita = db.query(Cita).filter(Cita.id == cita_id).first()
+    if not cita:
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+    barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
+    if not barbero or barbero.barberia_id != usuario.barberia_id:
+        raise HTTPException(status_code=403, detail="No tienes permiso sobre esta cita")
+    if cita.estado_pago != "pendiente":
+        raise HTTPException(status_code=400, detail="Esta cita no tiene un pago pendiente")
+    cita.estado_pago = "confirmado"
+    db.commit()
+    db.refresh(cita)
+    try:
+        cliente = db.query(Cliente).filter(Cliente.id == cita.cliente_id).first()
+        servicio = db.query(Servicio).filter(Servicio.id == cita.servicio_id).first()
+        if cliente and cliente.telefono:
+            notificar_cita_confirmada_pago(
+                telefono=cliente.telefono,
+                nombre=cliente.nombre,
+                servicio=servicio.nombre if servicio else "Servicio",
+                fecha_hora=cita.fecha_hora.strftime("%d/%m/%y a las %H:%M"),
+            )
+    except Exception as e:
+        print(f"[WhatsApp] ERROR confirmar pago: {e}")
+    return cita
+
+
+@router.patch("/{cita_id}/rechazar-pago", response_model=CitaResponse)
+def rechazar_pago(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
+    cita = db.query(Cita).filter(Cita.id == cita_id).first()
+    if not cita:
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+    barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
+    if not barbero or barbero.barberia_id != usuario.barberia_id:
+        raise HTTPException(status_code=403, detail="No tienes permiso sobre esta cita")
+    if cita.estado_pago != "pendiente":
+        raise HTTPException(status_code=400, detail="Esta cita no tiene un pago pendiente")
+    cita.estado_pago = "rechazado"
+    cita.estado = "cancelada"
+    db.commit()
+    db.refresh(cita)
+    try:
+        cliente = db.query(Cliente).filter(Cliente.id == cita.cliente_id).first()
+        if cliente and cliente.telefono:
+            notificar_pago_rechazado(telefono=cliente.telefono, nombre=cliente.nombre)
+    except Exception as e:
+        print(f"[WhatsApp] ERROR rechazar pago: {e}")
+    return cita
+
 
 @router.patch("/{cita_id}/cancelar", response_model=CitaResponse)
 def cancelar_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
