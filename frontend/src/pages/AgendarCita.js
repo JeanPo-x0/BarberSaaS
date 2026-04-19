@@ -666,28 +666,38 @@ function AgendarCita() {
                             onClick={() => slot.disponible && setHoraSeleccionada(slot.hora)}
                             disabled={!slot.disponible}
                             style={{
-                              padding: '11px 4px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                              padding: '10px 4px', borderRadius: 10,
                               cursor: slot.disponible ? 'pointer' : 'not-allowed',
                               border: sel
                                 ? '1px solid #C9A84C'
                                 : slot.disponible
                                   ? '1px solid var(--border)'
-                                  : '1px solid rgba(230,57,70,0.35)',
+                                  : '1px solid rgba(230,57,70,0.25)',
                               background: sel
                                 ? '#C9A84C'
                                 : slot.disponible
                                   ? 'rgba(255,255,255,0.02)'
-                                  : 'rgba(230,57,70,0.07)',
-                              color: sel
-                                ? '#0A0A0A'
-                                : slot.disponible
-                                  ? 'var(--text-primary)'
-                                  : '#E63946',
-                              textDecoration: !slot.disponible ? 'line-through' : 'none',
-                              opacity: !slot.disponible ? 0.7 : 1,
+                                  : 'rgba(230,57,70,0.06)',
                               transition: 'all 0.15s', fontFamily: "'DM Sans'",
+                              display: 'flex', flexDirection: 'column',
+                              alignItems: 'center', justifyContent: 'center', gap: 2,
                             }}>
-                            {slot.hora}
+                            <span style={{
+                              fontSize: 13, fontWeight: 700,
+                              color: sel ? '#0A0A0A' : slot.disponible ? 'var(--text-primary)' : '#E63946',
+                              textDecoration: !slot.disponible ? 'line-through' : 'none',
+                            }}>
+                              {slot.hora}
+                            </span>
+                            {!slot.disponible && (
+                              <span style={{
+                                fontSize: 9, fontWeight: 600, letterSpacing: '0.06em',
+                                color: 'rgba(230,57,70,0.6)', textTransform: 'uppercase',
+                                textDecoration: 'none',
+                              }}>
+                                Ocupado
+                              </span>
+                            )}
                           </button>
                         );
                       })}
