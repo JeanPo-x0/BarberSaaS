@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 // Rutas públicas donde no se bloquea con el modal
-const RUTAS_PUBLICAS = ['/', '/terminos', '/privacidad', '/planes'];
+const RUTAS_PUBLICAS = ['/login', '/terminos', '/privacidad', '/planes'];
 
 export default function BannerTC() {
   const [visible, setVisible] = useState(false);
