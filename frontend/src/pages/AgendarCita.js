@@ -204,7 +204,6 @@ function AgendarCita() {
   const [configPagos, setConfigPagos] = useState(null);
   const [metodoPago, setMetodoPago] = useState('');
   const [comprobante, setComprobante] = useState(null);
-  const [citaId, setCitaId] = useState(null);
 
   useEffect(() => {
     const resolveId = slug
@@ -245,7 +244,6 @@ function AgendarCita() {
         cliente_id: cliente.data.id,
         metodo_pago: metodoPago || null,
       });
-      setCitaId(nuevaCita.data.id);
       if (metodoPago === 'sinpe' && comprobante) {
         const fd = new FormData();
         fd.append('file', comprobante);
@@ -263,7 +261,7 @@ function AgendarCita() {
     setConfirmado(false); setPaso(1);
     setBarberoId(''); setServicioId(''); setFecha(''); setHoraSeleccionada('');
     setNombre(''); setTelefono(''); setSlots([]);
-    setComprobante(null); setCitaId(null); setMetodoPago('');
+    setComprobante(null); setMetodoPago('');
   };
 
   const barberoBusqueda = barberos.find(b => String(b.id) === String(barberoId));
