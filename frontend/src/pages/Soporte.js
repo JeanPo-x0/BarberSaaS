@@ -335,6 +335,48 @@ export default function Soporte() {
               />
             </Section>
 
+            <Section titulo="¿Cómo funcionan las notificaciones de WhatsApp?">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.7 }}>
+                <p style={{ margin: 0 }}>
+                  BarberSaaS envía mensajes de WhatsApp automáticamente a tus clientes. <strong style={{ color: '#F5F5F5' }}>No necesitás configurar nada</strong> — el sistema lo maneja por vos.
+                </p>
+
+                <div style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 12, padding: '16px 18px' }}>
+                  <p style={{ margin: '0 0 10px', fontWeight: 700, color: '#F5F5F5' }}>¿Qué mensajes se envían automáticamente?</p>
+                  {[
+                    'Confirmación al cliente cuando se agenda una cita',
+                    'Recordatorio 24 horas antes de la cita',
+                    'Recordatorio 1 hora antes de la cita',
+                    'Notificación al barbero cuando llega una cita nueva',
+                    'Aviso al cliente si hay un lugar disponible en lista de espera',
+                  ].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 8 }}>
+                      <span style={{ color: '#4ade80', flexShrink: 0, marginTop: 1 }}>✓</span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px' }}>
+                  <p style={{ margin: '0 0 10px', fontWeight: 700, color: '#F5F5F5' }}>¿Por qué un cliente no recibió su mensaje?</p>
+                  {[
+                    { t: 'Número mal escrito', d: 'Verificá que el número tenga exactamente 8 dígitos en la cita. El prefijo +506 se agrega automáticamente.' },
+                    { t: 'El cliente bloqueó el número', d: 'Si el cliente bloqueó el número de WhatsApp de BarberSaaS, los mensajes no llegarán. Pedile que lo desbloquee.' },
+                    { t: 'Problema temporal del servicio', d: 'Ocasionalmente puede haber demoras de algunos minutos. Si el mensaje no llega en 10 min, reportanos el caso.' },
+                  ].map((item, i) => (
+                    <div key={i} style={{ marginTop: i > 0 ? 12 : 0 }}>
+                      <p style={{ margin: '0 0 2px', fontWeight: 600, color: '#C9A84C', fontSize: 13 }}>{item.t}</p>
+                      <p style={{ margin: 0, fontSize: 12 }}>{item.d}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <p style={{ margin: 0, fontSize: 12 }}>
+                  Si el problema persiste, usá el formulario <strong style={{ color: '#F5F5F5' }}>"Reportar un Problema"</strong> más abajo con el número del cliente y la fecha de la cita.
+                </p>
+              </div>
+            </Section>
+
             <Section titulo="Contacto Directo">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 12 }}>

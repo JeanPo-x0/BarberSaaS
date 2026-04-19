@@ -156,15 +156,24 @@ Stripe maneja el cobro. El webhook de Stripe actualiza el campo `plan` en la tab
 | 1 | `8fd8c6d` | Fix login cold start + formato WhatsApp + auto-prefijo +506 |
 | 2 | `d881cd1` | Agenda rediseñada — datos anidados, acción Completar |
 | 3 | `f203484` | Responsive mobile completo — viewport, Historial, Panel, Ingresos |
+| 4 | `2abf966` | Modal T&C bloqueante con checkbox, animaciones, orbes dorados, botón No acepto |
+| 5 | `6aa98ea` | Panel de Soporte (/soporte) — FAQ, reembolso, reporte, estado servidor, suscripción |
+| 6 | `a8a78e2` | Cancelación al final del período (cancel_at_period_end) — endpoints cancelar/reactivar |
+| 7 | `457a5d0` | Sección Tu Suscripción en Soporte con cancelar, reactivar y gestionar pago |
+| 8 | `5b33f38` | Trial requiere tarjeta — básico removido del onboarding, siempre redirige a Stripe |
+| 9 | `0a2c23b` | Fix planes→registro, formularios soporte envían email real, FAQs corregidos |
+| 10 | `ef49106` | Guía WhatsApp en Soporte, Privacidad y T&C actualizados con correo y plazos correctos |
 
 ---
 
 ## Bugs conocidos / resueltos
 
-- **Cold start Render:** El backend tarda ~30s en arrancar si estuvo inactivo. `App.js` hace un health check polling al inicio para avisar al usuario en lugar de mostrar error. El login tiene retry automático.
-- **CORS:** Configurado como wildcard (`*`) — intentar restringirlo a la URL de Vercel causó fallos en preflight. No cambiar sin probar primero.
+- **Cold start Render:** El backend tarda ~30s en arrancar si estuvo inactivo. `App.js` hace un health check polling al inicio para avisar al usuario en lugar de mostrar error. El login tiene retry automático + 3s de espera extra para que la DB conecte.
+- **CORS:** Configurado como wildcard (`*`) en Render — la URL de Vercel cambia con cada deploy (phi→qlay). No restringir sin probar.
 - **Migraciones automáticas:** `main.py` corre `alembic upgrade head` al arrancar para que Render aplique migraciones sin paso manual.
-- **Import useEffect:** Login.js tenía un import no usado que rompía el build de Vercel — ya corregido.
+- **Email:** Usar `saascompany.cr@gmail.com` con contraseña de aplicación de Google (no la contraseña normal). Configurar en Render: EMAIL_USER, EMAIL_PASSWORD, EMAIL_HOST=smtp.gmail.com, EMAIL_PORT=587.
+- **Modal T&C:** Aparece en `/` y `/registro`, NO en `/login`. `localStorage` key: `tc_aceptado`. Al rechazar redirige a `/`.
+- **Trial:** Siempre requiere tarjeta (Stripe Checkout). Básico removido del onboarding. Cancel at period end habilitado.
 
 ---
 

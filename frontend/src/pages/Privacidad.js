@@ -49,7 +49,7 @@ En caso de requerimiento legal o judicial por parte de autoridades competentes d
 - Oposición: oponerse al tratamiento de sus datos en los supuestos legalmente establecidos.
 - Limitación del tratamiento: solicitar que sus datos no sean utilizados para determinados fines mientras se resuelve una reclamación.
 
-Para ejercer cualquiera de estos derechos, envíe una solicitud escrita con su nombre completo y número de teléfono al correo soporte@barbersaas.com. Atenderemos su solicitud en un plazo máximo de 10 días hábiles, conforme lo establece la ley.
+Para ejercer cualquiera de estos derechos, envíe una solicitud escrita con su nombre completo y número de teléfono al correo saascompany.cr@gmail.com. Atenderemos su solicitud en un plazo máximo de 5 días hábiles, conforme lo establece la ley.
 
 Si considera que sus derechos han sido vulnerados, puede presentar una denuncia ante la Agencia de Protección de Datos de los Habitantes (PRODHAB) de Costa Rica.`,
   },
@@ -77,7 +77,7 @@ Los clientes individuales que deseen eliminar sus datos pueden solicitarlo direc
     title: '7. Contacto',
     content: `Para consultas, solicitudes o reclamos relacionados con el tratamiento de sus datos personales, puede comunicarse con nosotros a través de:
 
-Correo electrónico: soporte@barbersaas.com
+Correo electrónico: saascompany.cr@gmail.com
 Responsable del tratamiento: BarberSaaS, operado desde Costa Rica.
 
 Esta Política de Privacidad puede ser actualizada periódicamente. Le notificaremos cambios relevantes a través del correo registrado o mediante un aviso visible en la plataforma.
@@ -285,10 +285,10 @@ export default function Privacidad() {
             </Link>
             {' '}o escríbanos a{' '}
             <a
-              href="mailto:soporte@barbersaas.com"
+              href="mailto:saascompany.cr@gmail.com"
               style={{ color: '#C9A84C', textDecoration: 'none', fontWeight: 600 }}
             >
-              soporte@barbersaas.com
+              saascompany.cr@gmail.com
             </a>
             .
           </p>
