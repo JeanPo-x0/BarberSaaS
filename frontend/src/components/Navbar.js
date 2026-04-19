@@ -13,7 +13,7 @@ const NAV_LINKS = [
     ),
   },
   {
-    label: 'Panel', to: '/panel',
+    label: 'Gestión', to: '/panel',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7" rx="1"/>
