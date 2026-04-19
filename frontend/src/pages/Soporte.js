@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
+import { getEstadoSuscripcion, cancelarSuscripcion, reactivarSuscripcion } from '../services/api';
 
 const FAQS = [
   {
@@ -174,6 +175,117 @@ function FormularioEmail({ asunto, campos, placeholder }) {
   );
 }
 
+function GestionSuscripcion() {
+  const [sus, setSus] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [accion, setAccion] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => {
+    getEstadoSuscripcion()
+      .then(r => setSus(r.data))
+      .catch(() => setSus(null))
+      .finally(() => setCargando(false));
+  }, []);
+
+  const handleCancelar = async () => {
+    if (!window.confirm('¿Confirmás que querés cancelar? Seguís con acceso hasta que venza el período actual.')) return;
+    setAccion(true);
+    try {
+      await cancelarSuscripcion();
+      setSus(s => ({ ...s, estado: 'cancelacion_pendiente' }));
+      setMsg('Suscripción cancelada. Seguís con acceso hasta el fin del período.');
+    } catch (e) {
+      setMsg(e.response?.data?.detail || 'Error al cancelar. Intentá de nuevo.');
+    } finally { setAccion(false); }
+  };
+
+  const handleReactivar = async () => {
+    setAccion(true);
+    try {
+      await reactivarSuscripcion();
+      setSus(s => ({ ...s, estado: 'activa' }));
+      setMsg('¡Suscripción reactivada correctamente!');
+    } catch (e) {
+      setMsg(e.response?.data?.detail || 'Error al reactivar. Intentá de nuevo.');
+    } finally { setAccion(false); }
+  };
+
+  if (cargando) return <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Cargando...</div>;
+  if (!sus) return <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No se pudo cargar la suscripción.</div>;
+
+  const ESTADO_CONFIG = {
+    activa:               { color: '#4ade80', texto: 'Activa' },
+    trial:                { color: '#C9A84C', texto: 'Trial (14 días gratis)' },
+    cancelacion_pendiente:{ color: '#fbbf24', texto: 'Cancelada — acceso hasta fin del período' },
+    suspendida:           { color: '#E63946', texto: 'Suspendida' },
+    cancelada:            { color: '#8A8A8A', texto: 'Cancelada' },
+  };
+  const cfg = ESTADO_CONFIG[sus.estado] || { color: '#8A8A8A', texto: sus.estado };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Info del plan */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ flex: 1, minWidth: 140, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: 1 }}>Plan actual</p>
+          <p style={{ fontSize: 16, fontWeight: 700, color: '#F5F5F5', margin: 0, textTransform: 'capitalize' }}>{sus.plan || 'Básico'}</p>
+        </div>
+        <div style={{ flex: 1, minWidth: 140, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: 1 }}>Estado</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: cfg.color, margin: 0 }}>{cfg.texto}</p>
+        </div>
+        {sus.fecha_renovacion && (
+          <div style={{ flex: 1, minWidth: 140, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: 1 }}>
+              {sus.estado === 'cancelacion_pendiente' ? 'Acceso hasta' : 'Próximo cobro'}
+            </p>
+            <p style={{ fontSize: 14, fontWeight: 600, color: '#F5F5F5', margin: 0 }}>
+              {new Date(sus.fecha_renovacion).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: 'numeric' })}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Mensaje de resultado */}
+      {msg && (
+        <div style={{ padding: '10px 14px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 8, fontSize: 13, color: '#C9A84C' }}>
+          {msg}
+        </div>
+      )}
+
+      {/* Botones */}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        {sus.estado === 'activa' && sus.stripe_subscription_id && (
+          <button onClick={handleCancelar} disabled={accion} style={{
+            padding: '10px 20px', fontSize: 13, fontWeight: 600,
+            background: 'transparent', border: '1px solid rgba(230,57,70,0.3)',
+            borderRadius: 10, color: '#E63946', cursor: accion ? 'not-allowed' : 'pointer',
+            opacity: accion ? 0.5 : 1, transition: 'all 0.2s',
+            fontFamily: "'DM Sans', sans-serif",
+          }}>
+            {accion ? 'Procesando...' : 'Cancelar suscripción'}
+          </button>
+        )}
+        {sus.estado === 'cancelacion_pendiente' && (
+          <button onClick={handleReactivar} disabled={accion} className="btn-gold" style={{
+            padding: '10px 20px', fontSize: 13, fontWeight: 600,
+            opacity: accion ? 0.5 : 1, cursor: accion ? 'not-allowed' : 'pointer',
+          }}>
+            {accion ? 'Procesando...' : 'Reactivar suscripción'}
+          </button>
+        )}
+        {(sus.estado === 'activa' || sus.estado === 'cancelacion_pendiente') && (
+          <a href="#" onClick={async e => { e.preventDefault(); const r = await import('../services/api').then(m => m.getPortalBilling()); window.location.href = r.data.portal_url; }}
+            style={{ padding: '10px 20px', fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 10, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+            Gestionar método de pago
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Section({ titulo, children }) {
   return (
     <div style={{
@@ -212,6 +324,11 @@ export default function Soporte() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+            {/* Suscripción */}
+            <Section titulo="Tu Suscripción">
+              <GestionSuscripcion />
+            </Section>
 
             {/* Estado del servidor */}
             <Section titulo="Estado del Servicio">

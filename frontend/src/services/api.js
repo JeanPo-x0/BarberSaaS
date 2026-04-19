@@ -94,6 +94,8 @@ export const getEstadoSuscripcion = () => API.get('/suscripcion/estado');
 export const crearCheckout = (data) => API.post('/suscripcion/checkout', data);
 export const getPortalBilling = () => API.get('/suscripcion/portal');
 export const getCouponActivo = () => API.get('/suscripcion/coupon-earlyaccess');
+export const cancelarSuscripcion = () => API.post('/suscripcion/cancelar');
+export const reactivarSuscripcion = () => API.post('/suscripcion/reactivar');
 
 // Stats
 export const getIngresos = () => API.get('/stats/ingresos');
