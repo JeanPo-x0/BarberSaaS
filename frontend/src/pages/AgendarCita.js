@@ -497,10 +497,10 @@ function AgendarCita() {
               Lee las condiciones antes de agendar tu cita.
             </p>
 
-            {/* Políticas de pago */}
+            {/* Métodos de pago */}
             <div style={{
               background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.2)',
-              borderRadius: 14, padding: '18px 20px', marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 12,
+              borderRadius: 14, padding: '18px 20px', marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12,
             }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#C9A84C', letterSpacing: '0.08em', margin: 0, textTransform: 'uppercase' }}>
                 Métodos de pago aceptados
@@ -521,50 +521,106 @@ function AgendarCita() {
               )}
             </div>
 
-            {/* Adelanto */}
-            {configPagos.adelanto_porcentaje > 0 && (
-              <div style={{
-                background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.25)',
-                borderRadius: 14, padding: '14px 18px', marginBottom: 16,
-                display: 'flex', alignItems: 'flex-start', gap: 12,
-              }}>
+            {/* Adelanto — siempre visible */}
+            <div style={{
+              background: configPagos.adelanto_porcentaje > 0 ? 'rgba(251,191,36,0.06)' : 'rgba(74,222,128,0.04)',
+              border: `1px solid ${configPagos.adelanto_porcentaje > 0 ? 'rgba(251,191,36,0.25)' : 'rgba(74,222,128,0.2)'}`,
+              borderRadius: 14, padding: '14px 18px', marginBottom: 12,
+              display: 'flex', alignItems: 'flex-start', gap: 12,
+            }}>
+              {configPagos.adelanto_porcentaje > 0 ? (
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
                   <circle cx="10" cy="10" r="8" stroke="#fbbf24" strokeWidth="1.5"/>
                   <path d="M10 6v5" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round"/>
                   <circle cx="10" cy="14" r="0.8" fill="#fbbf24"/>
                 </svg>
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#fbbf24', margin: '0 0 2px 0' }}>
-                    Se requiere adelanto del {configPagos.adelanto_porcentaje}%
-                  </p>
-                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
-                    Debes enviar el comprobante de SINPE al confirmar tu cita. El barbero verificará el pago antes de confirmar la cita definitivamente.
-                  </p>
-                </div>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+                  <circle cx="10" cy="10" r="8" stroke="#4ade80" strokeWidth="1.5"/>
+                  <path d="M6.5 10l2.5 2.5 4.5-5" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: configPagos.adelanto_porcentaje > 0 ? '#fbbf24' : '#4ade80', margin: '0 0 2px 0' }}>
+                  {configPagos.adelanto_porcentaje > 0
+                    ? `Adelanto del ${configPagos.adelanto_porcentaje}% requerido al reservar`
+                    : 'Sin adelanto requerido'}
+                </p>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                  {configPagos.adelanto_porcentaje > 0
+                    ? `Debés enviar el comprobante de SINPE al confirmar. El barbero verificará el pago antes de confirmar tu cita.`
+                    : 'No tenés que pagar nada por adelantado para reservar tu cita.'}
+                </p>
               </div>
-            )}
+            </div>
 
-            {/* Cancelación */}
-            {configPagos.cancelacion_porcentaje > 0 && (
-              <div style={{
-                background: 'rgba(230,57,70,0.06)', border: '1px solid rgba(230,57,70,0.25)',
-                borderRadius: 14, padding: '14px 18px', marginBottom: 24,
-                display: 'flex', alignItems: 'flex-start', gap: 12,
-              }}>
+            {/* Cancelación — siempre visible */}
+            <div style={{
+              background: configPagos.cancelacion_porcentaje > 0 ? 'rgba(230,57,70,0.06)' : 'rgba(74,222,128,0.04)',
+              border: `1px solid ${configPagos.cancelacion_porcentaje > 0 ? 'rgba(230,57,70,0.25)' : 'rgba(74,222,128,0.2)'}`,
+              borderRadius: 14, padding: '14px 18px', marginBottom: 12,
+              display: 'flex', alignItems: 'flex-start', gap: 12,
+            }}>
+              {configPagos.cancelacion_porcentaje > 0 ? (
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
                   <circle cx="10" cy="10" r="8" stroke="#E63946" strokeWidth="1.5"/>
                   <path d="M7 7l6 6M13 7l-6 6" stroke="#E63946" strokeWidth="1.8" strokeLinecap="round"/>
                 </svg>
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#E63946', margin: '0 0 2px 0' }}>
-                    Cargo del {configPagos.cancelacion_porcentaje}% por cancelación tardía
-                  </p>
-                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
-                    Si cancelas con poco tiempo de anticipación se aplicará este cargo sobre el valor del servicio.
-                  </p>
-                </div>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+                  <circle cx="10" cy="10" r="8" stroke="#4ade80" strokeWidth="1.5"/>
+                  <path d="M6.5 10l2.5 2.5 4.5-5" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: configPagos.cancelacion_porcentaje > 0 ? '#E63946' : '#4ade80', margin: '0 0 2px 0' }}>
+                  {configPagos.cancelacion_porcentaje > 0
+                    ? `Cargo del ${configPagos.cancelacion_porcentaje}% del servicio por cancelación tardía`
+                    : 'Cancelación gratuita'}
+                </p>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                  {configPagos.cancelacion_porcentaje > 0
+                    ? 'Si cancelás con poco tiempo de anticipación se aplicará este cargo sobre el precio del servicio.'
+                    : 'Podés cancelar tu cita sin ningún costo escribiendo CANCELAR por WhatsApp.'}
+                </p>
               </div>
-            )}
+            </div>
+
+            {/* Puntualidad — fija */}
+            <div style={{
+              background: 'rgba(148,163,184,0.05)', border: '1px solid rgba(148,163,184,0.15)',
+              borderRadius: 14, padding: '14px 18px', marginBottom: 12,
+              display: 'flex', alignItems: 'flex-start', gap: 12,
+            }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+                <circle cx="10" cy="10" r="8" stroke="#94a3b8" strokeWidth="1.5"/>
+                <path d="M10 6v5l3 2" stroke="#94a3b8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', margin: '0 0 2px 0' }}>Puntualidad</p>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                  Si llegás con más de 15 minutos de retraso, tu cita podría cancelarse para no afectar a otros clientes.
+                </p>
+              </div>
+            </div>
+
+            {/* Cómo cancelar */}
+            <div style={{
+              background: 'rgba(148,163,184,0.05)', border: '1px solid rgba(148,163,184,0.15)',
+              borderRadius: 14, padding: '14px 18px', marginBottom: 24,
+              display: 'flex', alignItems: 'flex-start', gap: 12,
+            }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+                <path d="M17 12.5c0 .3-.1.6-.2.9l-1 1.7c-.2.3-.5.4-.8.4H5a3 3 0 01-3-3v-5a3 3 0 013-3h10c1.7 0 3 1.3 3 3v3.2z" stroke="#94a3b8" strokeWidth="1.4"/>
+                <path d="M7 9h6M7 12h4" stroke="#94a3b8" strokeWidth="1.4" strokeLinecap="round"/>
+              </svg>
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', margin: '0 0 2px 0' }}>¿Cómo cancelar?</p>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                  Escribí <strong style={{ color: '#F5F5F5' }}>CANCELAR</strong> por WhatsApp al número de la barbería y tu cita quedará cancelada automáticamente.
+                </p>
+              </div>
+            </div>
 
             {/* Botones */}
             <div style={{ display: 'flex', gap: 12 }}>
