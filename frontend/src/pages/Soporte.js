@@ -130,7 +130,7 @@ function FormularioContacto({ tipo, titulo, descripcion, campos, botonTexto }) {
         </div>
         <div>
           <p style={{ fontSize: 15, fontWeight: 700, color: '#F5F5F5', margin: '0 0 6px' }}>¡Mensaje enviado!</p>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>Te respondemos en 1-2 días hábiles. Revisá tu correo para la confirmación.</p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>Te respondemos en un plazo de 5 días hábiles. Revisá tu correo para la confirmación.</p>
         </div>
         <button onClick={() => setEstado('idle')} style={{ fontSize: 12, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
           Enviar otro mensaje
