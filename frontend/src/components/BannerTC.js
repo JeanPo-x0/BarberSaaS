@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+
+// Rutas públicas donde no se bloquea con el modal
+const RUTAS_PUBLICAS = ['/', '/terminos', '/privacidad', '/planes'];
 
 export default function BannerTC() {
   const [visible, setVisible] = useState(false);
@@ -7,10 +10,14 @@ export default function BannerTC() {
   const [aceptado, setAceptado] = useState(false);
   const scrollRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    if (!localStorage.getItem('tc_aceptado')) setVisible(true);
-  }, []);
+    const yaAceptado = localStorage.getItem('tc_aceptado');
+    const esPublica = RUTAS_PUBLICAS.includes(location.pathname);
+    if (!yaAceptado && !esPublica) setVisible(true);
+    else setVisible(false);
+  }, [location.pathname]);
 
   // Detecta cuando el usuario llega al fondo del scroll
   const handleScroll = () => {
