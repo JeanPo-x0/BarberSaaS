@@ -39,9 +39,13 @@ BarberSaaS actúa únicamente como intermediario tecnológico. La aplicación o 
     title: '4. Pagos y Reembolsos',
     content: `Las suscripciones a los planes de BarberSaaS se cobran de forma mensual o anual, según la elección del dueño de la barbería al momento del registro. Los pagos se procesan a través de pasarelas de pago seguras de terceros.
 
-Período de prueba: Los nuevos usuarios tienen acceso a un período de prueba gratuito (actualmente 14 días) sin necesidad de proporcionar información de pago. Al finalizar el período de prueba, se requerirá la suscripción a un plan pago para continuar usando las funcionalidades completas.
+Período de prueba: Los nuevos usuarios tienen acceso a un período de prueba gratuito de 14 días al registrar un método de pago válido. Al finalizar el período de prueba, se cobra automáticamente el plan seleccionado a la tarjeta registrada.
 
-Reembolsos: No se realizan reembolsos por períodos ya facturados, salvo que exista un fallo técnico grave atribuible directamente a BarberSaaS que haya impedido el uso del servicio por un período prolongado. Cualquier solicitud de reembolso debe enviarse a nuestro correo de contacto dentro de los 7 días calendario posteriores al cobro.
+Cancelación durante el trial: Si cancelás tu suscripción antes de que terminen los 14 días de prueba, no se realizará ningún cobro. Podrás continuar usando la plataforma con acceso completo hasta que se cumpla el plazo del trial. Una vez vencido, la cuenta pasará al plan básico sin funcionalidades premium.
+
+Cancelación de plan activo: Si cancelás un plan ya cobrado, la suscripción permanece activa hasta el final del período ya pagado. No se realizan cobros adicionales, pero tampoco se reembolsa el período en curso.
+
+Reembolsos: No se realizan reembolsos por períodos ya facturados, salvo que exista un fallo técnico grave atribuible directamente a BarberSaaS que haya impedido el uso del servicio. Cualquier solicitud debe enviarse a saascompany.cr@gmail.com dentro de los 7 días calendario posteriores al cobro.
 
 Precios: BarberSaaS se reserva el derecho de modificar los precios de los planes con un aviso previo de al menos 30 días a los usuarios activos.`,
   },

@@ -87,6 +87,34 @@ def crear_checkout(
     return {"checkout_url": url}
 
 
+@router.post("/cancelar")
+def cancelar_suscripcion(
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    sus = _get_suscripcion(usuario.barberia_id, db)
+    if not sus.stripe_subscription_id:
+        raise HTTPException(status_code=400, detail="No hay suscripcion activa para cancelar")
+    stripe_service.cancelar_suscripcion(sus.stripe_subscription_id)
+    sus.estado = "cancelacion_pendiente"
+    db.commit()
+    return {"ok": True, "mensaje": "Suscripcion programada para cancelar al final del periodo. Podés seguir usando la plataforma hasta esa fecha."}
+
+
+@router.post("/reactivar")
+def reactivar_suscripcion(
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    sus = _get_suscripcion(usuario.barberia_id, db)
+    if sus.estado != "cancelacion_pendiente" or not sus.stripe_subscription_id:
+        raise HTTPException(status_code=400, detail="No hay cancelacion pendiente para revertir")
+    stripe_service.reactivar_suscripcion(sus.stripe_subscription_id)
+    sus.estado = "activa"
+    db.commit()
+    return {"ok": True, "mensaje": "Suscripcion reactivada correctamente."}
+
+
 @router.get("/portal")
 def portal_billing(
     usuario: Usuario = Depends(get_usuario_actual),
@@ -124,7 +152,10 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             sus.stripe_subscription_id = sub_id
             sus.stripe_price_id = data["items"]["data"][0]["price"]["id"]
             sus.plan = plan
-            if status == "active":
+            cancel_at_end = data.get("cancel_at_period_end", False)
+            if status == "active" and cancel_at_end:
+                sus.estado = "cancelacion_pendiente"
+            elif status == "active":
                 sus.estado = "activa"
                 barberia = db.query(Barberia).filter(Barberia.id == barberia_id).first()
                 if barberia:

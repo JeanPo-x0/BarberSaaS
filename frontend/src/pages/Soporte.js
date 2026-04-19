@@ -34,6 +34,14 @@ const FAQS = [
     q: '¿Qué pasa cuando termina el período de prueba?',
     a: 'Al finalizar los 14 días de prueba, se cobra automáticamente el plan seleccionado a la tarjeta registrada. Si no querés continuar, debés cancelar antes de que venza el trial.',
   },
+  {
+    q: '¿Si cancelo durante el trial me cobran algo?',
+    a: 'No. Si cancelás antes de que terminen los 14 días, no se realiza ningún cobro. Podés seguir usando la plataforma con acceso completo hasta que se cumpla el plazo del trial. Al vencer, la cuenta queda en plan básico.',
+  },
+  {
+    q: '¿Si cancelo un plan ya pagado pierdo acceso de inmediato?',
+    a: 'No. Al cancelar, la suscripción se mantiene activa hasta el final del período ya pagado. Por ejemplo, si pagaste el mes y cancelás a mitad, seguís con acceso hasta fin de mes. Sin cobros adicionales.',
+  },
 ];
 
 function EstadoServidor() {

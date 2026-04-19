@@ -56,7 +56,12 @@ def crear_portal_session(customer_id: str, barberia_id: int) -> str:
 
 
 def cancelar_suscripcion(stripe_subscription_id: str) -> None:
-    stripe.Subscription.cancel(stripe_subscription_id)
+    # cancel_at_period_end=True: sigue activo hasta que vence el período, sin cobrar
+    stripe.Subscription.modify(stripe_subscription_id, cancel_at_period_end=True)
+
+
+def reactivar_suscripcion(stripe_subscription_id: str) -> None:
+    stripe.Subscription.modify(stripe_subscription_id, cancel_at_period_end=False)
 
 
 def construir_evento_webhook(payload: bytes, sig_header: str):
