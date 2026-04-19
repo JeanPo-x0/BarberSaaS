@@ -519,16 +519,22 @@ function AgendarCita() {
                   <span style={{ fontSize: 14, color: 'var(--text-primary)' }}>Efectivo al llegar</span>
                 </div>
               )}
+              {configPagos.tarjeta_habilitado && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="1.5" stroke="#a78bfa" strokeWidth="1.3"/><path d="M1 8h16" stroke="#a78bfa" strokeWidth="1.3"/><rect x="3" y="10.5" width="4" height="1.5" rx="0.5" fill="#a78bfa"/></svg>
+                  <span style={{ fontSize: 14, color: 'var(--text-primary)' }}>Tarjeta de crédito / débito</span>
+                </div>
+              )}
             </div>
 
             {/* Adelanto — siempre visible */}
             <div style={{
-              background: configPagos.adelanto_porcentaje > 0 ? 'rgba(251,191,36,0.06)' : 'rgba(74,222,128,0.04)',
-              border: `1px solid ${configPagos.adelanto_porcentaje > 0 ? 'rgba(251,191,36,0.25)' : 'rgba(74,222,128,0.2)'}`,
+              background: configPagos.deposito_porcentaje > 0 ? 'rgba(251,191,36,0.06)' : 'rgba(74,222,128,0.04)',
+              border: `1px solid ${configPagos.deposito_porcentaje > 0 ? 'rgba(251,191,36,0.25)' : 'rgba(74,222,128,0.2)'}`,
               borderRadius: 14, padding: '14px 18px', marginBottom: 12,
               display: 'flex', alignItems: 'flex-start', gap: 12,
             }}>
-              {configPagos.adelanto_porcentaje > 0 ? (
+              {configPagos.deposito_porcentaje > 0 ? (
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
                   <circle cx="10" cy="10" r="8" stroke="#fbbf24" strokeWidth="1.5"/>
                   <path d="M10 6v5" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round"/>
@@ -541,13 +547,13 @@ function AgendarCita() {
                 </svg>
               )}
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: configPagos.adelanto_porcentaje > 0 ? '#fbbf24' : '#4ade80', margin: '0 0 2px 0' }}>
-                  {configPagos.adelanto_porcentaje > 0
-                    ? `Adelanto del ${configPagos.adelanto_porcentaje}% requerido al reservar`
-                    : 'Sin adelanto requerido'}
+                <p style={{ fontSize: 13, fontWeight: 700, color: configPagos.deposito_porcentaje > 0 ? '#fbbf24' : '#4ade80', margin: '0 0 2px 0' }}>
+                  {configPagos.deposito_porcentaje > 0
+                    ? `Depósito del ${configPagos.deposito_porcentaje}% requerido al reservar`
+                    : 'Sin depósito requerido'}
                 </p>
                 <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
-                  {configPagos.adelanto_porcentaje > 0
+                  {configPagos.deposito_porcentaje > 0
                     ? `Debés enviar el comprobante de SINPE al confirmar. El barbero verificará el pago antes de confirmar tu cita.`
                     : 'No tenés que pagar nada por adelantado para reservar tu cita.'}
                 </p>

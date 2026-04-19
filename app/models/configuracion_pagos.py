@@ -11,6 +11,7 @@ class ConfiguracionPagos(Base):
     sinpe_numero             = Column(String, nullable=True)
     sinpe_nombre             = Column(String, nullable=True)
     efectivo_habilitado      = Column(Boolean, default=True)
+    tarjeta_habilitado       = Column(Boolean, default=False)
     deposito_requerido       = Column(Boolean, default=False)
     deposito_porcentaje      = Column(Integer, default=50)
     cancelacion_porcentaje   = Column(Integer, default=0)

@@ -6,6 +6,7 @@ class ConfiguracionPagosBase(BaseModel):
     sinpe_numero:             Optional[str] = None
     sinpe_nombre:             Optional[str] = None
     efectivo_habilitado:      bool = True
+    tarjeta_habilitado:       bool = False
     deposito_requerido:       bool = False
     deposito_porcentaje:      int  = 50
     cancelacion_porcentaje:   int  = 0
@@ -21,11 +22,13 @@ class ConfiguracionPagosResponse(ConfiguracionPagosBase):
         from_attributes = True
 
 class ConfiguracionPagosPublica(BaseModel):
-    sinpe_habilitado:    bool
-    sinpe_numero:        Optional[str] = None
-    sinpe_nombre:        Optional[str] = None
-    efectivo_habilitado: bool
-    deposito_requerido:  bool
-    deposito_porcentaje: int
+    sinpe_habilitado:       bool
+    sinpe_numero:           Optional[str] = None
+    sinpe_nombre:           Optional[str] = None
+    efectivo_habilitado:    bool
+    tarjeta_habilitado:     bool
+    deposito_requerido:     bool
+    deposito_porcentaje:    int
+    cancelacion_porcentaje: int
     class Config:
         from_attributes = True
