@@ -204,6 +204,8 @@ function AgendarCita() {
   const [configPagos, setConfigPagos] = useState(null);
   const [metodoPago, setMetodoPago] = useState('');
   const [comprobante, setComprobante] = useState(null);
+  const [tcAceptado, setTcAceptado] = useState(false);
+  const [tcRechazado, setTcRechazado] = useState(false);
 
   useEffect(() => {
     const resolveId = slug
@@ -216,6 +218,8 @@ function AgendarCita() {
       getBarberosPorBarberia(id).then(r => setBarberos(r.data));
       getServiciosPorBarberia(id).then(r => setServicios(r.data));
       getConfigPagosPublica(id).then(r => setConfigPagos(r.data)).catch(() => {});
+      const yaAcepto = localStorage.getItem(`tc_barberia_${id}`) === 'aceptado';
+      setTcAceptado(yaAcepto);
     }).catch(() => {});
   }, [barberia_id, slug]);
 
@@ -422,9 +426,172 @@ function AgendarCita() {
     );
   }
 
+  /* ── T&C rechazado ───────────────────── */
+  if (tcRechazado) {
+    return (
+      <div className="bg-orbs bg-grid-dots" style={{ ...pageWrap, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div className="anim-scalein" style={{
+          background: 'var(--bg-card)', border: '1px solid var(--border)',
+          borderRadius: 20, padding: '52px 40px', maxWidth: 420, width: '100%', textAlign: 'center',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+        }}>
+          <div style={{
+            width: 60, height: 60, borderRadius: '50%',
+            background: 'rgba(230,57,70,0.1)', border: '1px solid rgba(230,57,70,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px',
+          }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="#E63946" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 28, letterSpacing: '0.08em', color: '#E63946', margin: '0 0 8px 0' }}>
+            Políticas no aceptadas
+          </h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: '0 0 24px 0' }}>
+            Para agendar una cita debes aceptar las políticas de la barbería.
+          </p>
+          <button onClick={() => setTcRechazado(false)} className="btn-gold" style={{ width: '100%' }}>
+            Revisar políticas
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Modal T&C ───────────────────── */
+  const mostrarTC = barberia && configPagos && !tcAceptado;
+
   /* ── Main form ───────────────────── */
   return (
     <div className="bg-orbs bg-grid-dots" style={pageWrap}>
+
+      {/* Modal T&C políticas de la barbería */}
+      {mostrarTC && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(0,0,0,0.82)',
+          backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          padding: '0 0 0 0',
+        }}>
+          <div className="anim-slideup" style={{
+            background: 'var(--bg-card)',
+            border: '1px solid rgba(201,168,76,0.35)',
+            borderRadius: '24px 24px 0 0',
+            padding: '32px 28px 40px',
+            maxWidth: 520, width: '100%',
+            boxShadow: '0 -24px 80px rgba(0,0,0,0.7)',
+            maxHeight: '90vh', overflowY: 'auto',
+          }}>
+            {/* Pill */}
+            <div style={{ width: 36, height: 4, background: 'rgba(201,168,76,0.3)', borderRadius: 99, margin: '0 auto 24px' }} />
+
+            {/* Título */}
+            <h2 style={{
+              fontFamily: "'Bebas Neue'", fontSize: 28, letterSpacing: '0.08em',
+              color: '#C9A84C', margin: '0 0 4px 0', textAlign: 'center',
+            }}>
+              Políticas de {barberia.nombre}
+            </h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', margin: '0 0 24px 0' }}>
+              Lee las condiciones antes de agendar tu cita.
+            </p>
+
+            {/* Políticas de pago */}
+            <div style={{
+              background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.2)',
+              borderRadius: 14, padding: '18px 20px', marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 12,
+            }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#C9A84C', letterSpacing: '0.08em', margin: 0, textTransform: 'uppercase' }}>
+                Métodos de pago aceptados
+              </p>
+              {configPagos.sinpe_habilitado && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="5" y="1" width="8" height="14" rx="1.5" stroke="#C9A84C" strokeWidth="1.4"/><circle cx="9" cy="13" r="0.8" fill="#C9A84C"/></svg>
+                  <span style={{ fontSize: 14, color: 'var(--text-primary)' }}>
+                    SINPE Móvil{configPagos.sinpe_numero ? ` — ${configPagos.sinpe_numero}` : ''}{configPagos.sinpe_nombre ? ` (${configPagos.sinpe_nombre})` : ''}
+                  </span>
+                </div>
+              )}
+              {configPagos.efectivo_habilitado && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="5" width="16" height="9" rx="1.5" stroke="#4ade80" strokeWidth="1.3"/><circle cx="9" cy="9.5" r="2" stroke="#4ade80" strokeWidth="1.3"/></svg>
+                  <span style={{ fontSize: 14, color: 'var(--text-primary)' }}>Efectivo al llegar</span>
+                </div>
+              )}
+            </div>
+
+            {/* Adelanto */}
+            {configPagos.adelanto_porcentaje > 0 && (
+              <div style={{
+                background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.25)',
+                borderRadius: 14, padding: '14px 18px', marginBottom: 16,
+                display: 'flex', alignItems: 'flex-start', gap: 12,
+              }}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+                  <circle cx="10" cy="10" r="8" stroke="#fbbf24" strokeWidth="1.5"/>
+                  <path d="M10 6v5" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round"/>
+                  <circle cx="10" cy="14" r="0.8" fill="#fbbf24"/>
+                </svg>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#fbbf24', margin: '0 0 2px 0' }}>
+                    Se requiere adelanto del {configPagos.adelanto_porcentaje}%
+                  </p>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                    Debes enviar el comprobante de SINPE al confirmar tu cita. El barbero verificará el pago antes de confirmar la cita definitivamente.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Cancelación */}
+            {configPagos.cancelacion_porcentaje > 0 && (
+              <div style={{
+                background: 'rgba(230,57,70,0.06)', border: '1px solid rgba(230,57,70,0.25)',
+                borderRadius: 14, padding: '14px 18px', marginBottom: 24,
+                display: 'flex', alignItems: 'flex-start', gap: 12,
+              }}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+                  <circle cx="10" cy="10" r="8" stroke="#E63946" strokeWidth="1.5"/>
+                  <path d="M7 7l6 6M13 7l-6 6" stroke="#E63946" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#E63946', margin: '0 0 2px 0' }}>
+                    Cargo del {configPagos.cancelacion_porcentaje}% por cancelación tardía
+                  </p>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                    Si cancelas con poco tiempo de anticipación se aplicará este cargo sobre el valor del servicio.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Botones */}
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                onClick={() => setTcRechazado(true)}
+                style={{
+                  flex: 1, padding: '14px 0', borderRadius: 12, fontSize: 14, fontWeight: 600,
+                  background: 'transparent', border: '1px solid var(--border)',
+                  color: 'var(--text-muted)', cursor: 'pointer',
+                }}
+              >
+                Rechazar
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.setItem(`tc_barberia_${barberia.id}`, 'aceptado');
+                  setTcAceptado(true);
+                }}
+                className="btn-gold"
+                style={{ flex: 2, padding: '14px 0' }}
+              >
+                Acepto las políticas
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <header style={{
