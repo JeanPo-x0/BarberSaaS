@@ -519,12 +519,11 @@ function AgendarCita() {
                   <span style={{ fontSize: 14, color: 'var(--text-primary)' }}>Efectivo al llegar</span>
                 </div>
               )}
-              {configPagos.tarjeta_habilitado && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="1.5" stroke="#a78bfa" strokeWidth="1.3"/><path d="M1 8h16" stroke="#a78bfa" strokeWidth="1.3"/><rect x="3" y="10.5" width="4" height="1.5" rx="0.5" fill="#a78bfa"/></svg>
-                  <span style={{ fontSize: 14, color: 'var(--text-primary)' }}>Tarjeta de crédito / débito</span>
-                </div>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, opacity: 0.5 }}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="1.5" stroke="#a78bfa" strokeWidth="1.3"/><path d="M1 8h16" stroke="#a78bfa" strokeWidth="1.3"/><rect x="3" y="10.5" width="4" height="1.5" rx="0.5" fill="#a78bfa"/></svg>
+                <span style={{ fontSize: 14, color: 'var(--text-primary)' }}>Tarjeta de crédito / débito</span>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 100, background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.25)', color: '#a78bfa', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Próximamente</span>
+              </div>
             </div>
 
             {/* Adelanto — siempre visible */}
