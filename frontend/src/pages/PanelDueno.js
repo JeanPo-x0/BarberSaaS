@@ -80,7 +80,7 @@ function PanelDueno() {
   const [barberiaCargando, setBarberiaCargando] = useState(false);
 
   // Pagos
-  const [configPagos, setConfigPagos] = useState(null);
+  const [, setConfigPagos] = useState(null);
   const [guardandoPagos, setGuardandoPagos] = useState(false);
   const [configPagosForm, setConfigPagosForm] = useState({
     sinpe_habilitado: true,
