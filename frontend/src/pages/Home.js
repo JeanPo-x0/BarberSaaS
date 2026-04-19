@@ -34,17 +34,6 @@ const IconCheck = () => (
   </svg>
 );
 
-const IconMenu = () => (
-  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-    <path d="M3 6h16M3 11h16M3 16h16" stroke="#F5F5F5" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
-
-const IconX = () => (
-  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-    <path d="M5 5l12 12M17 5L5 17" stroke="#F5F5F5" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
 
 /* ── Feature cards SVG animations ───────────────────── */
 function AnalyticsIcon() {
@@ -195,7 +184,6 @@ function DashboardCard() {
 export default function Home() {
   const [anual, setAnual] = useState(false);
   const [couponActivo, setCouponActivo] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
 
@@ -261,68 +249,33 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          style={{
-            background: menuOpen ? 'rgba(255,255,255,0.06)' : 'none',
-            border: '1px solid ' + (menuOpen ? 'rgba(255,255,255,0.1)' : 'transparent'),
-            cursor: 'pointer', padding: '6px 8px', display: 'flex',
-            borderRadius: 8, transition: 'all 0.2s',
-          }}
-          className="flex md:hidden"
-        >
-          {menuOpen ? <IconX /> : <IconMenu />}
-        </button>
-      </nav>
-
-      {/* Mobile menu — pantalla completa */}
-      {menuOpen && (
-        <div className="anim-fadeup" style={{
-          position: 'fixed', inset: 0, zIndex: 98,
-          background: 'rgba(8,8,8,0.97)', backdropFilter: 'blur(24px)',
-          display: 'flex', flexDirection: 'column',
-          paddingTop: 80,
-        }}>
-          {/* Links de navegación */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 32px', gap: 4 }}>
-            {[
-              { label: 'Inicio', action: () => { window.scrollTo({ top: 0, behavior: 'smooth' }); setMenuOpen(false); } },
-              { label: 'Planes y precios', action: scrollToPlanes },
-            ].map(({ label, action }) => (
-              <button key={label} onClick={action} style={{
-                background: 'none', border: 'none',
-                fontFamily: "'Bebas Neue'", fontSize: 42, letterSpacing: '0.08em',
-                color: 'var(--text-primary)', cursor: 'pointer',
-                textAlign: 'left', padding: '12px 0',
-                borderBottom: '1px solid rgba(255,255,255,0.05)',
-                transition: 'color 0.2s',
-              }}
-                onMouseEnter={e => e.currentTarget.style.color = '#C9A84C'}
-                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-primary)'}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Acciones */}
-          <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <Link to="/login" onClick={() => setMenuOpen(false)} style={{
-              display: 'block', textAlign: 'center', padding: '14px',
-              borderRadius: 14, fontSize: 15, fontWeight: 600,
-              border: '1px solid rgba(255,255,255,0.12)', color: 'var(--text-primary)',
-              textDecoration: 'none', fontFamily: "'DM Sans'",
-              transition: 'border-color 0.2s',
-            }}>
-              Iniciar sesión
-            </Link>
-            <Link to="/registro" onClick={() => setMenuOpen(false)} className="btn-gold" style={{ width: '100%', textAlign: 'center', fontSize: 15, padding: '14px' }}>
-              Empezar gratis — 14 días
-            </Link>
-          </div>
+        {/* Mobile — links directos, sin hamburguesa */}
+        <div className="flex md:hidden" style={{ alignItems: 'center', gap: 6 }}>
+          <button onClick={scrollToPlanes} style={{
+            background: 'none', border: 'none',
+            color: 'var(--text-muted)', fontFamily: "'DM Sans'",
+            fontSize: 13, fontWeight: 500, cursor: 'pointer',
+            padding: '6px 10px', borderRadius: 8,
+          }}>
+            Planes
+          </button>
+          <Link to="/login" style={{
+            color: 'var(--text-muted)', fontSize: 13, fontWeight: 500,
+            padding: '6px 10px', borderRadius: 8, textDecoration: 'none',
+            fontFamily: "'DM Sans'",
+          }}>
+            Entrar
+          </Link>
+          <Link to="/registro" style={{
+            background: '#C9A84C', color: '#0A0A0A',
+            fontSize: 12, fontWeight: 700, padding: '7px 13px',
+            borderRadius: 8, textDecoration: 'none',
+            fontFamily: "'DM Sans'", whiteSpace: 'nowrap',
+          }}>
+            Gratis
+          </Link>
         </div>
-      )}
+      </nav>
 
       {/* ── Hero ── */}
       <section style={{
