@@ -39,7 +39,6 @@ def enviar_contacto(datos: ContactoRequest):
 
     try:
         enviar_email(settings.SUPERADMIN_EMAIL, asunto, cuerpo)
-        # También confirmar al usuario
         confirmacion = f"""
         <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#111;color:#fff;padding:32px;border-radius:12px;">
           <h2 style="color:#C9A84C;margin:0 0 8px;">Recibimos tu solicitud</h2>
@@ -49,10 +48,11 @@ def enviar_contacto(datos: ContactoRequest):
         </div>
         """
         try:
-            enviar_email(datos.correo, f"Recibimos tu solicitud — BarberSaaS", confirmacion)
+            enviar_email(datos.correo, "Recibimos tu solicitud — BarberSaaS", confirmacion)
         except Exception:
-            pass  # La confirmación al usuario no es crítica
+            pass
     except Exception as e:
-        raise HTTPException(status_code=500, detail="No se pudo enviar el mensaje. Intenta de nuevo.")
+        print(f"[soporte/contacto] Error enviando email: {e}")
+        raise HTTPException(status_code=500, detail=f"Error al enviar: {str(e)}")
 
     return {"ok": True}
