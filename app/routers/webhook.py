@@ -23,15 +23,26 @@ async def webhook_whatsapp(request: Request, background_tasks: BackgroundTasks, 
         if not validator.validate(url, form_dict, signature):
             return Response(content="Forbidden", status_code=403)
 
-    from_number = form_dict.get("From", "").replace("whatsapp:", "")
-    to_number = form_dict.get("To", "").replace("whatsapp:", "")
     body = form_dict.get("Body", "").strip()
 
-    respuesta, tarea_background = procesar_mensaje(db, from_number, to_number, body)
+    # Si el cliente escribe CANCELAR, procesarlo — es la única acción entrante activa
+    if body.upper().startswith("CANCELAR"):
+        from_number = form_dict.get("From", "").replace("whatsapp:", "")
+        to_number = form_dict.get("To", "").replace("whatsapp:", "")
+        respuesta, tarea_background = procesar_mensaje(db, from_number, to_number, body)
+        if tarea_background:
+            background_tasks.add_task(tarea_background)
+        twiml = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            f"<Response><Message>{respuesta}</Message></Response>"
+        )
+        return Response(content=twiml, media_type="application/xml")
 
-    if tarea_background:
-        background_tasks.add_task(tarea_background)
-
+    # Para cualquier otro mensaje entrante, redirigir al link web
+    respuesta = (
+        "Hola! Para agendar tu cita usá el link que te compartió tu barbería. "
+        "Por este medio solo podés cancelar escribiendo CANCELAR."
+    )
     twiml = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         f"<Response><Message>{respuesta}</Message></Response>"
