@@ -610,12 +610,18 @@ function PanelDueno() {
                     style={{ width: 16, height: 16, accentColor: '#C9A84C' }} />
                   <span style={{ fontWeight: 600, fontSize: 14 }}>Efectivo (paga en el local)</span>
                 </label>
-                {/* Toggle tarjeta */}
-                <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={configPagosForm.tarjeta_habilitado ?? false}
-                    onChange={e => setConfigPagosForm(f => ({ ...f, tarjeta_habilitado: e.target.checked }))}
-                    style={{ width: 16, height: 16, accentColor: '#C9A84C' }} />
-                  <span style={{ fontWeight: 600, fontSize: 14 }}>Tarjeta de crédito / débito</span>
+                {/* Tarjeta — próximamente */}
+                <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'not-allowed', opacity: 0.45 }}>
+                  <input type="checkbox" disabled style={{ width: 16, height: 16 }} />
+                  <div>
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>Tarjeta de crédito / débito</span>
+                    <span style={{
+                      marginLeft: 8, fontSize: 10, fontWeight: 700, padding: '2px 7px',
+                      borderRadius: 100, background: 'rgba(201,168,76,0.1)',
+                      border: '1px solid rgba(201,168,76,0.25)', color: '#C9A84C',
+                      letterSpacing: '0.06em', textTransform: 'uppercase',
+                    }}>Próximamente</span>
+                  </div>
                 </label>
               </div>
             </div>
