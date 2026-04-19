@@ -199,7 +199,6 @@ export default function Home() {
 
   const scrollToPlanes = () => {
     document.getElementById('planes')?.scrollIntoView({ behavior: 'smooth' });
-    setMenuOpen(false);
   };
 
   return (
