@@ -675,11 +675,37 @@ function PanelDueno() {
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
-                    Aviso mínimo para cancelar sin cargo (horas)
+                    ¿Con cuánto tiempo de anticipación puede cancelar el cliente sin cargo?
                   </label>
-                  <input type="number" min="1" max="72" value={configPagosForm.cancelacion_horas_minimo}
-                    onChange={e => setConfigPagosForm(f => ({ ...f, cancelacion_horas_minimo: parseInt(e.target.value) }))}
-                    className="input-dark" style={{ width: 120 }} />
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {[
+                      { label: '1 hora',   value: 1 },
+                      { label: '2 horas',  value: 2 },
+                      { label: '4 horas',  value: 4 },
+                      { label: '12 horas', value: 12 },
+                      { label: '24 horas', value: 24 },
+                      { label: '48 horas', value: 48 },
+                    ].map(op => {
+                      const activo = configPagosForm.cancelacion_horas_minimo === op.value;
+                      return (
+                        <button key={op.value} type="button"
+                          onClick={() => setConfigPagosForm(f => ({ ...f, cancelacion_horas_minimo: op.value }))}
+                          style={{
+                            padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                            cursor: 'pointer', fontFamily: "'DM Sans'",
+                            border: `1px solid ${activo ? '#C9A84C' : 'var(--border)'}`,
+                            background: activo ? 'rgba(201,168,76,0.12)' : 'var(--bg-secondary)',
+                            color: activo ? '#C9A84C' : 'var(--text-muted)',
+                            transition: 'all 0.15s',
+                          }}>
+                          {op.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '8px 0 0 0' }}>
+                    Si cancela después de ese límite, se aplica el cargo de cancelación.
+                  </p>
                 </div>
               </div>
             </div>
