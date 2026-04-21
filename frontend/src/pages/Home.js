@@ -1,16 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { NavLogo, FullLogo } from '../components/LogoLink';
-import { getCouponActivo } from '../services/api';
+import { getCouponActivo, enviarContactoSoporte } from '../services/api';
 
 /* ── Data ───────────────────────────────────────────── */
 const PLANES = [
-  {
-    id: 'basico', nombre: 'Basico',
-    precio_mensual: 0, precio_anual: 0, ahorro: 0, equiv_mensual: 0,
-    badge: '14 dias gratis',
-    features: ['1 barbero', 'Agenda basica', 'Link de agendamiento', 'Recordatorios WhatsApp'],
-  },
   {
     id: 'pro', nombre: 'Pro',
     precio_mensual: 29, precio_anual: 232, ahorro: 116, equiv_mensual: 19.33,
@@ -26,6 +20,99 @@ const PLANES = [
       'WhatsApp de reenganche', 'Exportar PDF', 'Subdominio propio', 'Soporte prioritario'],
   },
 ];
+
+function ModalEnterprise({ onClose }) {
+  const [form, setForm] = useState({ nombre: '', email: '', mensaje: '' });
+  const [enviando, setEnviando] = useState(false);
+  const [enviado, setEnviado] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleEnviar = async () => {
+    if (!form.nombre.trim() || !form.email.trim() || !form.mensaje.trim()) {
+      setError('Completá todos los campos'); return;
+    }
+    if (!form.email.includes('@')) { setError('Email inválido'); return; }
+    setEnviando(true); setError('');
+    try {
+      await enviarContactoSoporte({
+        tipo: 'enterprise',
+        correo: form.email,
+        campos: { 'Nombre / Empresa': form.nombre, 'Email': form.email, 'Mensaje': form.mensaje },
+      });
+      setEnviado(true);
+    } catch {
+      setError('Error al enviar. Intentá de nuevo.');
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 999,
+      background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+    }} onClick={onClose}>
+      <div style={{
+        background: '#1A1A1A', border: '1px solid rgba(201,168,76,0.3)',
+        borderRadius: 18, padding: '32px 28px', width: '100%', maxWidth: 440,
+        boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+      }} onClick={e => e.stopPropagation()}>
+        {enviado ? (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{
+              width: 52, height: 52, borderRadius: '50%',
+              background: 'rgba(201,168,76,0.15)', border: '1px solid #C9A84C',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12l5 5L20 7" stroke="#C9A84C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <h3 style={{ fontFamily: "'Bebas Neue'", fontSize: 26, color: '#C9A84C', margin: '0 0 8px' }}>Mensaje enviado</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: '0 0 24px' }}>
+              Te contactamos en menos de 24 horas para coordinar tu plan Enterprise.
+            </p>
+            <button onClick={onClose} className="btn-gold" style={{ width: '100%' }}>Cerrar</button>
+          </div>
+        ) : (
+          <>
+            <h3 style={{ fontFamily: "'Bebas Neue'", fontSize: 26, color: '#C9A84C', margin: '0 0 6px' }}>Plan Enterprise</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '0 0 22px' }}>
+              Para cadenas o múltiples locales. Precio personalizado según tu operación.
+            </p>
+            {error && (
+              <div style={{
+                background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.25)',
+                borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#E63946', marginBottom: 14,
+              }}>{error}</div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <input placeholder="Nombre o empresa *" value={form.nombre}
+                onChange={e => { setForm({ ...form, nombre: e.target.value }); setError(''); }}
+                className="input-dark" />
+              <input type="email" placeholder="Email de contacto *" value={form.email}
+                onChange={e => { setForm({ ...form, email: e.target.value }); setError(''); }}
+                className="input-dark" />
+              <textarea placeholder="Contanos sobre tu operación: ¿cuántos locales? ¿cuántos barberos? *"
+                value={form.mensaje}
+                onChange={e => { setForm({ ...form, mensaje: e.target.value }); setError(''); }}
+                className="input-dark" rows={4} style={{ resize: 'none', lineHeight: 1.5 }} />
+              <button onClick={handleEnviar} disabled={enviando} className="btn-gold"
+                style={{ width: '100%', opacity: enviando ? 0.7 : 1 }}>
+                {enviando ? 'Enviando...' : 'Enviar consulta'}
+              </button>
+              <button onClick={onClose} style={{
+                background: 'none', border: 'none', color: 'var(--text-muted)',
+                fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans'",
+              }}>Cancelar</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /* ── SVG icons ───────────────────────────────────────── */
 const IconCheck = () => (
@@ -184,6 +271,7 @@ function DashboardCard() {
 export default function Home() {
   const [anual, setAnual] = useState(false);
   const [couponActivo, setCouponActivo] = useState(false);
+  const [showEnterprise, setShowEnterprise] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
 
@@ -386,6 +474,8 @@ export default function Home() {
         </div>
       </section>
 
+      {showEnterprise && <ModalEnterprise onClose={() => setShowEnterprise(false)} />}
+
       {/* ── Planes ── */}
       <section id="planes" style={{ padding: 'clamp(48px, 8vw, 80px) 24px clamp(56px, 8vw, 100px)', scrollMarginTop: 64 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
@@ -448,98 +538,132 @@ export default function Home() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: 20, alignItems: 'start',
           }}>
-            {PLANES.map((plan) => {
-              const esGratis = plan.precio_mensual === 0;
-              return (
-                <div key={plan.id} style={{
-                  background: 'var(--bg-card)',
-                  border: `1px solid ${plan.popular ? '#C9A84C' : 'var(--border)'}`,
-                  borderRadius: 16, padding: '28px 24px',
-                  position: 'relative',
-                  boxShadow: plan.popular ? '0 0 0 1px rgba(201,168,76,0.15), 0 12px 40px rgba(201,168,76,0.08)' : 'none',
+            {PLANES.map((plan) => (
+              <div key={plan.id} style={{
+                background: 'var(--bg-card)',
+                border: `1px solid ${plan.popular ? '#C9A84C' : 'var(--border)'}`,
+                borderRadius: 16, padding: '28px 24px', position: 'relative',
+                boxShadow: plan.popular ? '0 0 0 1px rgba(201,168,76,0.15), 0 12px 40px rgba(201,168,76,0.08)' : 'none',
+              }}>
+                <span style={{
+                  position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
+                  fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+                  padding: '4px 14px', borderRadius: 100,
+                  background: plan.popular ? '#C9A84C' : 'var(--bg-secondary)',
+                  color: plan.popular ? '#0A0A0A' : 'var(--text-muted)',
+                  border: plan.popular ? 'none' : '1px solid var(--border)',
+                  whiteSpace: 'nowrap',
                 }}>
-                  <span style={{
-                    position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
-                    fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-                    padding: '4px 14px', borderRadius: 100,
-                    background: plan.popular ? '#C9A84C' : 'var(--bg-secondary)',
-                    color: plan.popular ? '#0A0A0A' : 'var(--text-muted)',
-                    border: plan.popular ? 'none' : '1px solid var(--border)',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {plan.badge}
-                  </span>
-
-                  <h3 style={{
-                    fontFamily: "'Bebas Neue'", fontSize: 26,
-                    letterSpacing: '0.08em', margin: '12px 0 16px 0',
-                    color: plan.popular ? '#C9A84C' : 'var(--text-primary)',
-                  }}>
-                    {plan.nombre}
-                  </h3>
-
-                  <div style={{ marginBottom: 24, minHeight: 68 }}>
-                    {esGratis ? (
-                      <>
+                  {plan.badge}
+                </span>
+                <h3 style={{
+                  fontFamily: "'Bebas Neue'", fontSize: 26,
+                  letterSpacing: '0.08em', margin: '12px 0 16px 0',
+                  color: plan.popular ? '#C9A84C' : 'var(--text-primary)',
+                }}>
+                  {plan.nombre}
+                </h3>
+                <div style={{ marginBottom: 24, minHeight: 68 }}>
+                  {anual ? (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                         <span style={{ fontFamily: "'Bebas Neue'", fontSize: 42, color: '#C9A84C', letterSpacing: '0.05em' }}>
-                          Gratis
+                          ${plan.precio_anual}
                         </span>
-                        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
-                          14 dias de prueba, sin tarjeta
-                        </p>
-                      </>
-                    ) : anual ? (
-                      <>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                          <span style={{ fontFamily: "'Bebas Neue'", fontSize: 42, color: '#C9A84C', letterSpacing: '0.05em' }}>
-                            ${plan.precio_anual}
-                          </span>
-                          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/año</span>
-                          <span style={{
-                            fontSize: 10, fontWeight: 800,
-                            background: 'rgba(74,222,128,0.12)', color: '#4ade80',
-                            border: '1px solid rgba(74,222,128,0.25)',
-                            borderRadius: 100, padding: '2px 7px',
-                          }}>
-                            AHORRÁ ${plan.ahorro}
-                          </span>
-                        </div>
-                        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
-                          Equivale a <strong style={{ color: '#F5F5F5' }}>${plan.equiv_mensual}/mes</strong>
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <span style={{ fontFamily: "'Bebas Neue'", fontSize: 42, color: '#C9A84C', letterSpacing: '0.05em' }}>
-                          ${plan.precio_mensual}
+                        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/año</span>
+                        <span style={{
+                          fontSize: 10, fontWeight: 800,
+                          background: 'rgba(74,222,128,0.12)', color: '#4ade80',
+                          border: '1px solid rgba(74,222,128,0.25)',
+                          borderRadius: 100, padding: '2px 7px',
+                        }}>
+                          AHORRÁ ${plan.ahorro}
                         </span>
-                        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/mes</span>
-                        <p style={{ fontSize: 12, color: 'rgba(251,146,60,0.7)', margin: '4px 0 0 0', fontWeight: 600 }}>
-                          Cambia a anual y ahorrá ${plan.ahorro}/año
-                        </p>
-                      </>
-                    )}
-                  </div>
-
-                  <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {plan.features.map(f => (
-                      <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: 'var(--text-muted)' }}>
-                        <span style={{ flexShrink: 0, marginTop: 1 }}><IconCheck /></span>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <button
-                    onClick={() => navigate(esGratis ? '/registro' : '/registro', { state: { plan: plan.id } })}
-                    className={plan.popular ? 'btn-gold' : 'btn-outline'}
-                    style={{ width: '100%' }}
-                  >
-                    {esGratis ? 'Empezar gratis' : `Elegir ${plan.nombre}`}
-                  </button>
+                      </div>
+                      <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                        Equivale a <strong style={{ color: '#F5F5F5' }}>${plan.equiv_mensual}/mes</strong>
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <span style={{ fontFamily: "'Bebas Neue'", fontSize: 42, color: '#C9A84C', letterSpacing: '0.05em' }}>
+                        ${plan.precio_mensual}
+                      </span>
+                      <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/mes</span>
+                      <p style={{ fontSize: 12, color: 'rgba(251,146,60,0.7)', margin: '4px 0 0 0', fontWeight: 600 }}>
+                        Cambia a anual y ahorrá ${plan.ahorro}/año
+                      </p>
+                    </>
+                  )}
                 </div>
-              );
-            })}
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {plan.features.map(f => (
+                    <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: 'var(--text-muted)' }}>
+                      <span style={{ flexShrink: 0, marginTop: 1 }}><IconCheck /></span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={() => navigate('/registro', { state: { plan: plan.id } })}
+                  className={plan.popular ? 'btn-gold' : 'btn-outline'}
+                  style={{ width: '100%' }}
+                >
+                  Empezar con {plan.nombre}
+                </button>
+              </div>
+            ))}
+
+            {/* Enterprise */}
+            <div style={{
+              background: 'var(--bg-card)', border: '1px solid rgba(167,139,250,0.3)',
+              borderRadius: 16, padding: '28px 24px', position: 'relative',
+            }}>
+              <span style={{
+                position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+                padding: '4px 14px', borderRadius: 100,
+                background: 'var(--bg-secondary)', color: '#a78bfa',
+                border: '1px solid rgba(167,139,250,0.3)', whiteSpace: 'nowrap',
+              }}>
+                Para cadenas
+              </span>
+              <h3 style={{ fontFamily: "'Bebas Neue'", fontSize: 26, letterSpacing: '0.08em', margin: '12px 0 16px 0', color: '#a78bfa' }}>
+                Enterprise
+              </h3>
+              <div style={{ marginBottom: 24, minHeight: 68 }}>
+                <span style={{ fontFamily: "'Bebas Neue'", fontSize: 36, color: '#a78bfa', letterSpacing: '0.05em' }}>
+                  A medida
+                </span>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '6px 0 0 0' }}>
+                  Precio personalizado según tu operación
+                </p>
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {['Locales ilimitados', 'Todo lo del plan Premium', 'Onboarding personalizado',
+                  'SLA y soporte dedicado', 'Integraciones a medida', 'Facturación centralizada'].map(f => (
+                  <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: 'var(--text-muted)' }}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+                      <path d="M2 7l3.5 3.5L12 4" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => setShowEnterprise(true)}
+                style={{
+                  width: '100%', padding: '11px 0', borderRadius: 10,
+                  background: 'transparent', border: '1px solid rgba(167,139,250,0.5)',
+                  color: '#a78bfa', fontSize: 14, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: "'DM Sans'", transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(167,139,250,0.1)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                Contactar ventas
+              </button>
+            </div>
           </div>
 
           {/* Early access */}
