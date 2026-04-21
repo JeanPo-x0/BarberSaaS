@@ -1,17 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getCouponActivo, crearCheckout } from '../services/api';
+import { getCouponActivo, crearCheckout, enviarContactoSoporte } from '../services/api';
 import { NavLogo } from '../components/LogoLink';
 
 /* ── Data ───────────────────────────────────────────── */
 const PLANES = [
-  {
-    id: 'basico', nombre: 'Basico',
-    precio_mensual: 0, precio_anual: 0, ahorro: 0, equiv_mensual: 0,
-    badge: '14 dias gratis',
-    features: ['1 barbero', 'Agenda basica', 'Link de agendamiento', 'Recordatorios WhatsApp'],
-  },
   {
     id: 'pro', nombre: 'Pro',
     precio_mensual: 29, precio_anual: 232, ahorro: 116, equiv_mensual: 19.33,
@@ -34,11 +28,136 @@ const IconCheck = () => (
   </svg>
 );
 
+/* ── Modal Enterprise ───────────────────────────────── */
+function ModalEnterprise({ onClose }) {
+  const [form, setForm] = useState({ nombre: '', email: '', mensaje: '' });
+  const [enviando, setEnviando] = useState(false);
+  const [enviado, setEnviado] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleEnviar = async () => {
+    if (!form.nombre.trim() || !form.email.trim() || !form.mensaje.trim()) {
+      setError('Completá todos los campos'); return;
+    }
+    if (!form.email.includes('@')) { setError('Email inválido'); return; }
+    setEnviando(true); setError('');
+    try {
+      await enviarContactoSoporte({
+        tipo: 'enterprise',
+        correo: form.email,
+        campos: {
+          'Nombre / Empresa': form.nombre,
+          'Email': form.email,
+          'Mensaje': form.mensaje,
+        },
+      });
+      setEnviado(true);
+    } catch {
+      setError('Error al enviar. Intentá de nuevo.');
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 999,
+      background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 24,
+    }} onClick={onClose}>
+      <div style={{
+        background: '#1A1A1A', border: '1px solid rgba(201,168,76,0.3)',
+        borderRadius: 18, padding: '32px 28px', width: '100%', maxWidth: 440,
+        boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+      }} onClick={e => e.stopPropagation()}>
+
+        {enviado ? (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{
+              width: 52, height: 52, borderRadius: '50%',
+              background: 'rgba(201,168,76,0.15)', border: '1px solid #C9A84C',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 16px',
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12l5 5L20 7" stroke="#C9A84C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <h3 style={{ fontFamily: "'Bebas Neue'", fontSize: 26, color: '#C9A84C', margin: '0 0 8px' }}>
+              Mensaje enviado
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: '0 0 24px' }}>
+              Te contactamos en menos de 24 horas para coordinar tu plan Enterprise.
+            </p>
+            <button onClick={onClose} className="btn-gold" style={{ width: '100%' }}>Cerrar</button>
+          </div>
+        ) : (
+          <>
+            <h3 style={{ fontFamily: "'Bebas Neue'", fontSize: 26, color: '#C9A84C', margin: '0 0 6px' }}>
+              Plan Enterprise
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '0 0 22px' }}>
+              Para cadenas o múltiples locales. Precio personalizado según tu operación.
+            </p>
+
+            {error && (
+              <div style={{
+                background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.25)',
+                borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#E63946', marginBottom: 14,
+              }}>{error}</div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <input
+                placeholder="Nombre o empresa *"
+                value={form.nombre}
+                onChange={e => { setForm({ ...form, nombre: e.target.value }); setError(''); }}
+                className="input-dark"
+              />
+              <input
+                type="email"
+                placeholder="Email de contacto *"
+                value={form.email}
+                onChange={e => { setForm({ ...form, email: e.target.value }); setError(''); }}
+                className="input-dark"
+              />
+              <textarea
+                placeholder="Contanos sobre tu operación: ¿cuántos locales? ¿cuántos barberos? *"
+                value={form.mensaje}
+                onChange={e => { setForm({ ...form, mensaje: e.target.value }); setError(''); }}
+                className="input-dark"
+                rows={4}
+                style={{ resize: 'none', lineHeight: 1.5 }}
+              />
+              <button
+                onClick={handleEnviar}
+                disabled={enviando}
+                className="btn-gold"
+                style={{ width: '100%', opacity: enviando ? 0.7 : 1 }}
+              >
+                {enviando ? 'Enviando...' : 'Enviar consulta'}
+              </button>
+              <button onClick={onClose} style={{
+                background: 'none', border: 'none', color: 'var(--text-muted)',
+                fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans'",
+              }}>
+                Cancelar
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ── Component ───────────────────────────────────────── */
 export default function Planes() {
   const [anual, setAnual] = useState(false);
   const [couponActivo, setCouponActivo] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(null);
+  const [showEnterprise, setShowEnterprise] = useState(false);
   const navigate = useNavigate();
   const { token } = useAuth();
 
@@ -47,15 +166,11 @@ export default function Planes() {
   }, []);
 
   const handleElegirPlan = async (planId) => {
-    if (planId === 'basico') {
-      navigate(token ? '/panel' : '/registro');
-      return;
-    }
+    if (planId === 'enterprise') { setShowEnterprise(true); return; }
     if (!token) {
       navigate('/registro', { state: { plan: planId } });
       return;
     }
-    // Usuario ya logueado → ir directo al checkout de Stripe
     setLoadingPlan(planId);
     try {
       const res = await crearCheckout({ plan: planId, periodo: anual ? 'anual' : 'mensual' });
@@ -68,6 +183,8 @@ export default function Planes() {
 
   return (
     <div className="bg-panel" style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+
+      {showEnterprise && <ModalEnterprise onClose={() => setShowEnterprise(false)} />}
 
       {/* Navbar */}
       <nav style={{
@@ -90,9 +207,7 @@ export default function Planes() {
             ← Volver al panel
           </Link>
         ) : (
-          <Link to="/login" style={{
-            fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none',
-          }}>
+          <Link to="/login" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
             Iniciar sesion
           </Link>
         )}
@@ -109,7 +224,7 @@ export default function Planes() {
             Planes y Precios
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 16, margin: '0 0 10px 0' }}>
-            Empieza gratis. Crece cuando quieras.
+            14 días gratis con cualquier plan. Sin cobros hasta que termine el trial.
           </p>
           {anual && (
             <p style={{ fontSize: 13, color: '#FB923C', fontWeight: 600, margin: 0 }}>
@@ -122,21 +237,16 @@ export default function Planes() {
             display: 'inline-flex', alignItems: 'center', gap: 10, marginTop: 28,
             flexWrap: 'wrap', justifyContent: 'center',
             background: 'var(--bg-card)', border: '1px solid var(--border)',
-            borderRadius: 100, padding: '8px 20px',
-            maxWidth: '100%',
+            borderRadius: 100, padding: '8px 20px', maxWidth: '100%',
           }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: !anual ? '#F5F5F5' : 'var(--text-muted)', transition: 'color 0.2s' }}>
               Mensual
             </span>
-
-            <div
-              onClick={() => setAnual(!anual)}
-              style={{
-                width: 50, height: 27, borderRadius: 14,
-                background: anual ? '#C9A84C' : 'rgba(255,255,255,0.1)',
-                position: 'relative', cursor: 'pointer', transition: 'background 0.3s',
-              }}
-            >
+            <div onClick={() => setAnual(!anual)} style={{
+              width: 50, height: 27, borderRadius: 14,
+              background: anual ? '#C9A84C' : 'rgba(255,255,255,0.1)',
+              position: 'relative', cursor: 'pointer', transition: 'background 0.3s',
+            }}>
               <div style={{
                 position: 'absolute', top: 3, left: anual ? 26 : 3,
                 width: 21, height: 21, borderRadius: '50%',
@@ -144,18 +254,14 @@ export default function Planes() {
                 boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
               }} />
             </div>
-
             <span style={{ fontSize: 14, fontWeight: 600, color: anual ? '#F5F5F5' : 'var(--text-muted)', transition: 'color 0.2s' }}>
               Anual
             </span>
-
-            {/* Badge dinámico */}
             <span style={{
               fontSize: 11, fontWeight: 800, letterSpacing: '0.04em',
               background: anual ? '#C9A84C' : 'rgba(201,168,76,0.15)',
               color: anual ? '#0A0A0A' : '#C9A84C',
-              borderRadius: 100, padding: '3px 10px',
-              transition: 'all 0.3s',
+              borderRadius: 100, padding: '3px 10px', transition: 'all 0.3s',
               border: anual ? 'none' : '1px solid rgba(201,168,76,0.3)',
             }}>
               2 MESES GRATIS
@@ -169,17 +275,15 @@ export default function Planes() {
           gridTemplateColumns: 'repeat(auto-fit, minmax(288px, 1fr))',
           gap: 20, alignItems: 'start',
         }}>
+          {/* Pro y Premium */}
           {PLANES.map((plan) => {
-            const esGratis = plan.precio_mensual === 0;
             const cargando = loadingPlan === plan.id;
-
             return (
               <div key={plan.id} className="anim-item" style={{
                 position: 'relative',
                 background: 'var(--bg-card)',
                 border: `1px solid ${plan.popular ? '#C9A84C' : 'var(--border)'}`,
-                borderRadius: 18,
-                padding: '28px 24px',
+                borderRadius: 18, padding: '28px 24px',
                 boxShadow: plan.popular
                   ? '0 0 0 1px rgba(201,168,76,0.15), 0 16px 48px rgba(201,168,76,0.08)'
                   : 'none',
@@ -188,7 +292,6 @@ export default function Planes() {
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
               >
-                {/* Badge superior */}
                 <span style={{
                   position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
                   fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', whiteSpace: 'nowrap',
@@ -200,7 +303,6 @@ export default function Planes() {
                   {plan.badge}
                 </span>
 
-                {/* Nombre */}
                 <h2 style={{
                   fontFamily: "'Bebas Neue'", fontSize: 28, letterSpacing: '0.08em',
                   margin: '10px 0 18px 0',
@@ -209,25 +311,14 @@ export default function Planes() {
                   {plan.nombre}
                 </h2>
 
-                {/* Precio */}
                 <div style={{ marginBottom: 22, minHeight: 70 }}>
-                  {esGratis ? (
-                    <>
-                      <span style={{ fontFamily: "'Bebas Neue'", fontSize: 44, color: '#C9A84C', letterSpacing: '0.04em' }}>
-                        Gratis
-                      </span>
-                      <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
-                        14 dias de prueba, sin tarjeta
-                      </p>
-                    </>
-                  ) : anual ? (
+                  {anual ? (
                     <>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                         <span style={{ fontFamily: "'Bebas Neue'", fontSize: 44, color: '#C9A84C', letterSpacing: '0.04em' }}>
                           ${plan.precio_anual}
                         </span>
                         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/año</span>
-                        {/* Badge ahorro */}
                         <span style={{
                           fontSize: 10, fontWeight: 800, letterSpacing: '0.03em',
                           background: 'rgba(74,222,128,0.12)', color: '#4ade80',
@@ -257,7 +348,6 @@ export default function Planes() {
                   )}
                 </div>
 
-                {/* Features */}
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 9 }}>
                   {plan.features.map(f => (
                     <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--text-muted)' }}>
@@ -267,32 +357,89 @@ export default function Planes() {
                   ))}
                 </ul>
 
-                {/* CTA */}
                 <button
                   onClick={() => handleElegirPlan(plan.id)}
                   disabled={cargando}
                   className={plan.popular ? 'btn-gold' : 'btn-outline'}
-                  style={{
-                    width: '100%', opacity: cargando ? 0.7 : 1,
-                    cursor: cargando ? 'wait' : 'pointer',
-                  }}
+                  style={{ width: '100%', opacity: cargando ? 0.7 : 1, cursor: cargando ? 'wait' : 'pointer' }}
                 >
-                  {cargando ? 'Procesando...' : esGratis
-                    ? (token ? 'Ir al panel' : 'Empezar gratis')
-                    : (token ? `Mejorar a ${plan.nombre}` : `Elegir ${plan.nombre}`)}
+                  {cargando ? 'Procesando...' : token ? `Mejorar a ${plan.nombre}` : `Empezar con ${plan.nombre}`}
                 </button>
               </div>
             );
           })}
+
+          {/* Enterprise */}
+          <div className="anim-item" style={{
+            position: 'relative',
+            background: 'var(--bg-card)',
+            border: '1px solid rgba(167,139,250,0.3)',
+            borderRadius: 18, padding: '28px 24px',
+            transition: 'transform 0.2s',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
+          >
+            <span style={{
+              position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
+              fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', whiteSpace: 'nowrap',
+              padding: '4px 14px', borderRadius: 100,
+              background: 'var(--bg-secondary)', color: '#a78bfa',
+              border: '1px solid rgba(167,139,250,0.3)',
+            }}>
+              Para cadenas
+            </span>
+
+            <h2 style={{
+              fontFamily: "'Bebas Neue'", fontSize: 28, letterSpacing: '0.08em',
+              margin: '10px 0 18px 0', color: '#a78bfa',
+            }}>
+              Enterprise
+            </h2>
+
+            <div style={{ marginBottom: 22, minHeight: 70 }}>
+              <span style={{ fontFamily: "'Bebas Neue'", fontSize: 36, color: '#a78bfa', letterSpacing: '0.04em' }}>
+                A medida
+              </span>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '6px 0 0 0' }}>
+                Precio personalizado según tu operación
+              </p>
+            </div>
+
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 9 }}>
+              {['Locales ilimitados', 'Todo lo del plan Premium', 'Onboarding personalizado',
+                'SLA y soporte dedicado', 'Integraciones a medida', 'Facturación centralizada'].map(f => (
+                <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--text-muted)' }}>
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+                    <path d="M2 7l3.5 3.5L12 4" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+
+            <button
+              onClick={() => handleElegirPlan('enterprise')}
+              style={{
+                width: '100%', padding: '11px 0', borderRadius: 10,
+                background: 'transparent', border: '1px solid rgba(167,139,250,0.5)',
+                color: '#a78bfa', fontSize: 14, fontWeight: 700,
+                cursor: 'pointer', fontFamily: "'DM Sans'",
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(167,139,250,0.1)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              Contactar ventas
+            </button>
+          </div>
         </div>
 
         {/* Urgencia anual */}
         {anual && (
           <div style={{
-            marginTop: 28, textAlign: 'center',
-            padding: '14px 20px',
-            background: 'rgba(201,168,76,0.05)',
-            border: '1px solid rgba(201,168,76,0.15)',
+            marginTop: 28, textAlign: 'center', padding: '14px 20px',
+            background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.15)',
             borderRadius: 12,
           }}>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
@@ -305,8 +452,7 @@ export default function Planes() {
         {/* Banner Early Access */}
         {couponActivo && (
           <div style={{
-            marginTop: 32,
-            background: 'rgba(201,168,76,0.06)',
+            marginTop: 32, background: 'rgba(201,168,76,0.06)',
             border: '1px solid rgba(201,168,76,0.25)',
             borderRadius: 16, padding: '28px 32px', textAlign: 'center',
           }}>

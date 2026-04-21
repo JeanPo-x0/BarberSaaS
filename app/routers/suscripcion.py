@@ -216,6 +216,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             barberia = db.query(Barberia).filter(Barberia.id == sus.barberia_id).first()
             if barberia:
                 barberia.plan = "basico"
+                barberia.activa = False
             db.commit()
 
     return {"ok": True}
