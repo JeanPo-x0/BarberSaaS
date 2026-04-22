@@ -4,6 +4,14 @@ import { getEstadoSuscripcion, cancelarSuscripcion, reactivarSuscripcion, enviar
 
 const FAQS = [
   {
+    q: '¿Cómo comparto el link de reservas con mis clientes?',
+    a: 'En la sección "Gestión" (tu panel), buscá la tarjeta de tu barbería. Ahí encontrás dos opciones:\n\n1. Link por defecto: algo como barbersas.com/agendar/1 — siempre está disponible.\n2. Link personalizado: podés configurar uno más fácil de recordar, por ejemplo barbersas.com/b/tu-barberia.\n\nPara compartirlo: copiá el link con el botón "Copiar" y pegalo donde quieras — WhatsApp, Instagram, Facebook, historia, bio, etc. Tus clientes solo tienen que abrirlo, elegir el barbero, el servicio y el horario. Sin app, sin cuenta, sin complicaciones.',
+  },
+  {
+    q: '¿Por qué solo funciona el link corto de Google Maps y no el del navegador?',
+    a: 'Ambos formatos funcionan ahora. Podés pegar el link que aparece en la barra del navegador (el largo con todos los datos de ubicación) o el link corto que obtenés al dar "Compartir → Copiar link" en Google Maps. Ambos son válidos. También aceptamos links de Waze y Apple Maps.',
+  },
+  {
     q: '¿Cómo agendo una cita para mi cliente?',
     a: 'Desde la pantalla de Agenda, usá el botón "Nueva cita" en la parte superior. Completá los datos del cliente, elegí el barbero, servicio y horario disponible.',
   },
@@ -93,7 +101,7 @@ function FaqItem({ q, a }) {
         <span style={{ color: '#C9A84C', fontSize: 20, lineHeight: 1, flexShrink: 0, transform: open ? 'rotate(45deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>+</span>
       </button>
       {open && (
-        <div style={{ padding: '14px 20px 16px', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.7, borderTop: '1px solid var(--border)' }}>
+        <div style={{ padding: '14px 20px 16px', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.7, borderTop: '1px solid var(--border)', whiteSpace: 'pre-line' }}>
           {a}
         </div>
       )}
@@ -284,7 +292,7 @@ function Section({ titulo, children }) {
 
 export default function Soporte() {
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="sidebar-page" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
       <Navbar />
       <div className="main-content">
         <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 24px 100px' }}>
