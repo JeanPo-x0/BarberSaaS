@@ -204,6 +204,15 @@ function Login() {
               Registra tu barberia
             </Link>
           </p>
+          <Link to="/barbero/login" style={{
+            fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none',
+            transition: 'color 0.2s',
+          }}
+            onMouseEnter={e => e.target.style.color = '#C9A84C'}
+            onMouseLeave={e => e.target.style.color = 'var(--text-muted)'}
+          >
+            Ingresar como barbero
+          </Link>
         </div>
       </div>
     </div>
