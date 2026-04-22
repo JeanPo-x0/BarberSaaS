@@ -17,7 +17,7 @@ function calcularFortaleza(pwd) {
   const checks = [
     { ok: pwd.length >= 8,                          texto: 'Al menos 8 caracteres' },
     { ok: /[A-Z]/.test(pwd),                        texto: '1 letra mayúscula' },
-    { ok: /[!@#$%^&*()\-_=+\[\]{}|;:\'",.<>?/\\]/.test(pwd), texto: '1 carácter especial (!@#...)' },
+    { ok: /[!@#$%^&*()\-_=+{}|;:",.<>?/\\]/.test(pwd), texto: '1 carácter especial (!@#...)' },
     { ok: /[0-9]/.test(pwd),                        texto: '1 número' },
   ];
   const ok = checks.filter(c => c.ok).length;
