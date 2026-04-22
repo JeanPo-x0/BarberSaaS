@@ -83,12 +83,18 @@ function PlanSticker({ planId, anual }) {
   );
 
   if (planId === 'pro' && anual) return badge(7,
-    <path d="M45 38V26M40 31L45 26L50 31" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sticker-bounce"/>,
+    <polygon points="45,21 47.5,28.5 55,31 47.5,33.5 45,41 42.5,33.5 35,31 42.5,28.5"
+      fill="white" className="sticker-sparkle"/>,
     '2 MESES', 'FREE'
   );
 
   if (planId === 'premium' && anual) return badge(-6,
-    <path d="M45 26v12M40 33L45 38L50 33" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sticker-drop"/>,
+    <>
+      <path d="M45 41C40 37 36 31 39 25C40 30 43 28 43 25C46 30 49 27 47 22C52 27 55 34 51 39C50 36 47 37 45 41Z"
+        fill="rgba(255,255,255,0.92)" className="sticker-flame"/>
+      <path d="M45 39C43 36 41 32 43 28C44 31 46 29 46 27C48 31 49 33 47 37C46 35 45 36 45 39Z"
+        fill="rgba(255,220,100,0.55)" className="sticker-flame"/>
+    </>,
     'AHORRÁS', '$236'
   );
 

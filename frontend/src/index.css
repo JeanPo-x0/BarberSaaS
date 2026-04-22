@@ -36,6 +36,32 @@
 .sticker-bounce { animation: sticker-bounce-up 1s ease-in-out infinite; }
 .sticker-drop   { animation: sticker-drop 1.8s ease-in-out infinite; }
 
+@keyframes sparkle-spin {
+  0%   { transform: rotate(0deg)   scale(1); }
+  25%  { transform: rotate(45deg)  scale(1.22); }
+  50%  { transform: rotate(90deg)  scale(1); }
+  75%  { transform: rotate(135deg) scale(1.22); }
+  100% { transform: rotate(180deg) scale(1); }
+}
+.sticker-sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sparkle-spin 1.8s linear infinite;
+}
+
+@keyframes flame-flicker {
+  0%, 100% { transform: scaleX(1)    scaleY(1);    opacity: 1; }
+  15%       { transform: scaleX(0.94) scaleY(1.07); opacity: 0.9; }
+  35%       { transform: scaleX(1.05) scaleY(0.96); opacity: 1; }
+  55%       { transform: scaleX(0.96) scaleY(1.05); opacity: 0.88; }
+  75%       { transform: scaleX(1.03) scaleY(0.97); opacity: 1; }
+}
+.sticker-flame {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: flame-flicker 0.85s ease-in-out infinite;
+}
+
 @keyframes sticker-pulsate {
   0%, 100% { filter: drop-shadow(3px 5px 14px rgba(160,0,20,0.75)); }
   50%       { filter: drop-shadow(3px 7px 22px rgba(220,10,30,1)) brightness(1.1); }
