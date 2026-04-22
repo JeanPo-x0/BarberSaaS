@@ -272,9 +272,11 @@ export default function Planes() {
         {/* Cards */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(288px, 1fr))',
-          gap: 20, alignItems: 'start',
-        }}>
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 20,
+        }}
+          className="planes-grid"
+        >
           {/* Pro y Premium */}
           {PLANES.map((plan) => {
             const cargando = loadingPlan === plan.id;
@@ -288,6 +290,7 @@ export default function Planes() {
                   ? '0 0 0 1px rgba(201,168,76,0.15), 0 16px 48px rgba(201,168,76,0.08)'
                   : 'none',
                 transition: 'transform 0.2s, box-shadow 0.2s',
+                display: 'flex', flexDirection: 'column',
               }}
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
@@ -348,7 +351,7 @@ export default function Planes() {
                   )}
                 </div>
 
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 9 }}>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 9, flex: 1 }}>
                   {plan.features.map(f => (
                     <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--text-muted)' }}>
                       <IconCheck />
@@ -376,6 +379,7 @@ export default function Planes() {
             border: '1px solid rgba(167,139,250,0.3)',
             borderRadius: 18, padding: '28px 24px',
             transition: 'transform 0.2s',
+            display: 'flex', flexDirection: 'column',
           }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
@@ -406,9 +410,9 @@ export default function Planes() {
               </p>
             </div>
 
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 9 }}>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 9, flex: 1 }}>
               {['Locales ilimitados', 'Todo lo del plan Premium', 'Onboarding personalizado',
-                'SLA y soporte dedicado', 'Integraciones a medida', 'Facturación centralizada'].map(f => (
+                'SLA y soporte dedicado', 'Integraciones a medida', 'Facturación centralizada', 'Soporte prioritario 24/7'].map(f => (
                 <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--text-muted)' }}>
                   <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
                     <path d="M2 7l3.5 3.5L12 4" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

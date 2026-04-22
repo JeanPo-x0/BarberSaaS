@@ -214,6 +214,12 @@ select.input-dark option  { background: var(--bg-secondary); }
   }
 }
 
+@media (max-width: 900px) {
+  .planes-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 @media (max-width: 600px) {
   /* Reduce page horizontal padding */
   .mobile-px {
