@@ -197,9 +197,14 @@ function PanelDueno() {
   const sectionCard = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '24px' };
 
   return (
-    <div className="bg-panel" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="bg-panel" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif", display: 'flex', flexDirection: 'column' }}>
       <Navbar />
 
+      <div style={{ display: 'flex', flex: 1 }}>
+        {/* Spacer que ocupa el ancho del sidebar fijo — solo en desktop */}
+        <div className="hidden md:block" style={{ width: 220, flexShrink: 0 }} />
+
+        <div style={{ flex: 1, minWidth: 0 }}>
       <div className="mobile-px" style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
         <div className="anim-fadein" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: plan !== 'premium' ? 12 : 28 }}>
           <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.08em', margin: 0 }}>
@@ -792,6 +797,8 @@ function PanelDueno() {
           </form>
         )}
       </div>
+        </div>{/* flex: 1 minWidth:0 */}
+      </div>{/* flex row */}
     </div>
   );
 }
