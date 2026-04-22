@@ -425,7 +425,6 @@ function Agenda() {
   const totalHoy = hoy.length;
   const proximaCita = activas[0];
   const ingresosHoy = hoy.reduce((sum, c) => sum + (c.servicio?.precio || 0), 0);
-  const hoyStr = new Date().toISOString().split('T')[0];
 
   return (
     <div className="bg-panel sidebar-page" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>

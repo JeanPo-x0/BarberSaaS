@@ -329,7 +329,8 @@ function PanelDueno() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {barberos.map(b => (
-                <div key={b.id} className="anim-item panel-item-card" style={{
+                <div key={b.id}>
+                <div className="anim-item panel-item-card" style={{
                   background: 'var(--bg-card)', border: '1px solid var(--border)',
                   borderRadius: 12, padding: '14px 16px',
                   display: 'flex', alignItems: 'center', gap: 14,
@@ -397,6 +398,7 @@ function PanelDueno() {
                     </div>
                   </div>
                 )}
+                </div>
               ))}
               {barberos.length === 0 && (
                 <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>No hay barberos registrados.</p>
