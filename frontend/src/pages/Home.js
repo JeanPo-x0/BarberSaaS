@@ -466,7 +466,7 @@ export default function Home() {
             fontSize: 'clamp(15px, 4vw, 18px)', color: 'var(--text-muted)', lineHeight: 1.7,
             margin: '0 0 32px 0', maxWidth: 460,
           }}>
-            Tus clientes agendan por WhatsApp. Sin llamadas, sin grupos, sin estar pendiente del telefono.
+            Tus clientes agendan desde un link. Vos recibís confirmación y recordatorios automáticos por WhatsApp — sin llamadas, sin grupos.
           </p>
 
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -481,7 +481,7 @@ export default function Home() {
           </div>
 
           <p style={{ marginTop: 20, fontSize: 12, color: 'var(--text-muted)' }}>
-            Sin tarjeta de credito &middot; Sin compromiso
+            14 días gratis &middot; Cancela cuando quieras
           </p>
         </div>
 
