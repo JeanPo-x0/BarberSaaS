@@ -114,6 +114,41 @@ function ModalEnterprise({ onClose }) {
   );
 }
 
+/* ── Plan sticker ────────────────────────────────────── */
+function PlanSticker({ planId, anual }) {
+  const base = {
+    display: 'inline-flex', alignItems: 'center', gap: 6,
+    padding: '5px 13px 5px 9px', borderRadius: 3,
+    boxShadow: '3px 3px 0 rgba(0,0,0,0.55)',
+    transformOrigin: 'left center', marginTop: 10,
+  };
+  if (planId === 'pro' && !anual) return (
+    <div style={{ ...base, background: '#E63946', transform: 'rotate(-3deg)' }}>
+      <svg width="10" height="13" viewBox="0 0 10 13" fill="none">
+        <path d="M6.5 1L1 7.5h4L3.5 12l6.5-6.5H6L6.5 1z" fill="#fff"/>
+      </svg>
+      <span style={{ fontSize: 11, fontWeight: 900, color: '#fff', letterSpacing: '0.07em', textTransform: 'uppercase', fontFamily: "'DM Sans'" }}>14 días gratis</span>
+    </div>
+  );
+  if (planId === 'pro' && anual) return (
+    <div style={{ ...base, background: '#16a34a', transform: 'rotate(2.5deg)' }}>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M6 1l1.3 3.1L10.5 4.5 8 7l.6 3.4L6 9 3.4 10.4 4 7 1.5 4.5l3.2-.4L6 1z" fill="#fff"/>
+      </svg>
+      <span style={{ fontSize: 11, fontWeight: 900, color: '#fff', letterSpacing: '0.07em', textTransform: 'uppercase', fontFamily: "'DM Sans'" }}>2 meses free</span>
+    </div>
+  );
+  if (planId === 'premium' && anual) return (
+    <div style={{ ...base, background: '#7c3aed', transform: 'rotate(-2deg)' }}>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M6 1v8M2.5 6.5L6 10l3.5-3.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+      <span style={{ fontSize: 11, fontWeight: 900, color: '#fff', letterSpacing: '0.07em', textTransform: 'uppercase', fontFamily: "'DM Sans'" }}>Ahorrás $236</span>
+    </div>
+  );
+  return null;
+}
+
 /* ── SVG icons ───────────────────────────────────────── */
 const IconCheck = () => (
   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -533,17 +568,15 @@ export default function Home() {
           </div>
 
           {/* Cards */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: 20, alignItems: 'start',
-          }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center' }}>
             {PLANES.map((plan) => (
               <div key={plan.id} style={{
                 background: 'var(--bg-card)',
                 border: `1px solid ${plan.popular ? '#C9A84C' : 'var(--border)'}`,
                 borderRadius: 16, padding: '28px 24px', position: 'relative',
                 boxShadow: plan.popular ? '0 0 0 1px rgba(201,168,76,0.15), 0 12px 40px rgba(201,168,76,0.08)' : 'none',
+                display: 'flex', flexDirection: 'column',
+                width: 300, flexShrink: 0,
               }}>
                 <span style={{
                   position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
@@ -563,7 +596,7 @@ export default function Home() {
                 }}>
                   {plan.nombre}
                 </h3>
-                <div style={{ marginBottom: 24, minHeight: 68 }}>
+                <div style={{ marginBottom: 24 }}>
                   {anual ? (
                     <>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
@@ -571,14 +604,6 @@ export default function Home() {
                           ${plan.precio_anual}
                         </span>
                         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/año</span>
-                        <span style={{
-                          fontSize: 10, fontWeight: 800,
-                          background: 'rgba(74,222,128,0.12)', color: '#4ade80',
-                          border: '1px solid rgba(74,222,128,0.25)',
-                          borderRadius: 100, padding: '2px 7px',
-                        }}>
-                          AHORRÁ ${plan.ahorro}
-                        </span>
                       </div>
                       <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
                         Equivale a <strong style={{ color: '#F5F5F5' }}>${plan.equiv_mensual}/mes</strong>
@@ -590,13 +615,16 @@ export default function Home() {
                         ${plan.precio_mensual}
                       </span>
                       <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/mes</span>
-                      <p style={{ fontSize: 12, color: 'rgba(251,146,60,0.7)', margin: '4px 0 0 0', fontWeight: 600 }}>
-                        Cambia a anual y ahorrá ${plan.ahorro}/año
-                      </p>
+                      {plan.id === 'pro' && (
+                        <p style={{ fontSize: 11, color: 'rgba(251,146,60,0.7)', margin: '6px 0 0 0', fontWeight: 600 }}>
+                          Cambiá a anual y ahorrá ${plan.ahorro}
+                        </p>
+                      )}
                     </>
                   )}
+                  <PlanSticker planId={plan.id} anual={anual} />
                 </div>
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
                   {plan.features.map(f => (
                     <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: 'var(--text-muted)' }}>
                       <span style={{ flexShrink: 0, marginTop: 1 }}><IconCheck /></span>
@@ -618,6 +646,7 @@ export default function Home() {
             <div style={{
               background: 'var(--bg-card)', border: '1px solid rgba(167,139,250,0.3)',
               borderRadius: 16, padding: '28px 24px', position: 'relative',
+              display: 'flex', flexDirection: 'column', width: 300, flexShrink: 0,
             }}>
               <span style={{
                 position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',

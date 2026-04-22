@@ -28,6 +28,46 @@ const IconCheck = () => (
   </svg>
 );
 
+function PlanSticker({ planId, anual }) {
+  const base = {
+    display: 'inline-flex', alignItems: 'center', gap: 6,
+    padding: '5px 13px 5px 9px', borderRadius: 3,
+    boxShadow: '3px 3px 0 rgba(0,0,0,0.55)',
+    transformOrigin: 'left center', marginTop: 10,
+  };
+  if (planId === 'pro' && !anual) return (
+    <div style={{ ...base, background: '#E63946', transform: 'rotate(-3deg)' }}>
+      <svg width="10" height="13" viewBox="0 0 10 13" fill="none">
+        <path d="M6.5 1L1 7.5h4L3.5 12l6.5-6.5H6L6.5 1z" fill="#fff"/>
+      </svg>
+      <span style={{ fontSize: 11, fontWeight: 900, color: '#fff', letterSpacing: '0.07em', textTransform: 'uppercase', fontFamily: "'DM Sans'" }}>
+        14 días gratis
+      </span>
+    </div>
+  );
+  if (planId === 'pro' && anual) return (
+    <div style={{ ...base, background: '#16a34a', transform: 'rotate(2.5deg)' }}>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M6 1l1.3 3.1L10.5 4.5 8 7l.6 3.4L6 9 3.4 10.4 4 7 1.5 4.5l3.2-.4L6 1z" fill="#fff"/>
+      </svg>
+      <span style={{ fontSize: 11, fontWeight: 900, color: '#fff', letterSpacing: '0.07em', textTransform: 'uppercase', fontFamily: "'DM Sans'" }}>
+        2 meses free
+      </span>
+    </div>
+  );
+  if (planId === 'premium' && anual) return (
+    <div style={{ ...base, background: '#7c3aed', transform: 'rotate(-2deg)' }}>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M6 1v8M2.5 6.5L6 10l3.5-3.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+      <span style={{ fontSize: 11, fontWeight: 900, color: '#fff', letterSpacing: '0.07em', textTransform: 'uppercase', fontFamily: "'DM Sans'" }}>
+        Ahorrás $236
+      </span>
+    </div>
+  );
+  return null;
+}
+
 /* ── Modal Enterprise ───────────────────────────────── */
 function ModalEnterprise({ onClose }) {
   const [form, setForm] = useState({ nombre: '', email: '', mensaje: '' });
@@ -319,32 +359,16 @@ export default function Planes() {
                 <div style={{ marginBottom: 22 }}>
                   {anual ? (
                     <>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                         <span style={{ fontFamily: "'Bebas Neue'", fontSize: 44, color: '#C9A84C', letterSpacing: '0.04em' }}>
                           ${plan.precio_anual}
                         </span>
                         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/año</span>
                       </div>
-                      <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 10px 0' }}>
+                      <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
                         Equivale a <strong style={{ color: '#F5F5F5' }}>${plan.equiv_mensual}/mes</strong>
                         {' '}· antes ${plan.precio_mensual}/mes
                       </p>
-                      {/* Sticker 2 meses gratis */}
-                      <div style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 7,
-                        background: '#4ade80', borderRadius: 6,
-                        padding: '6px 12px',
-                        transform: 'rotate(-2.5deg)',
-                        boxShadow: '2px 3px 0px rgba(0,0,0,0.35)',
-                        transformOrigin: 'left center',
-                      }}>
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <path d="M7 1l1.5 3.5L12 5l-2.5 2.5.6 3.5L7 9.5 3.9 11l.6-3.5L2 5l3.5-.5z" fill="#0A0A0A"/>
-                        </svg>
-                        <span style={{ fontSize: 12, fontWeight: 900, color: '#0A0A0A', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: "'DM Sans'" }}>
-                          2 meses gratis
-                        </span>
-                      </div>
                     </>
                   ) : (
                     <>
@@ -354,28 +378,14 @@ export default function Planes() {
                         </span>
                         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/mes</span>
                       </div>
-                      {/* Sticker 14 días gratis */}
-                      <div style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 7, marginTop: 10,
-                        background: '#C9A84C', borderRadius: 6,
-                        padding: '6px 12px',
-                        transform: 'rotate(-2deg)',
-                        boxShadow: '2px 3px 0px rgba(0,0,0,0.35)',
-                        transformOrigin: 'left center',
-                      }}>
-                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                          <circle cx="6.5" cy="6.5" r="5.5" stroke="#0A0A0A" strokeWidth="1.5"/>
-                          <path d="M6.5 3.5v3l2 1.5" stroke="#0A0A0A" strokeWidth="1.5" strokeLinecap="round"/>
-                        </svg>
-                        <span style={{ fontSize: 12, fontWeight: 900, color: '#0A0A0A', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: "'DM Sans'" }}>
-                          14 días gratis
-                        </span>
-                      </div>
-                      <p style={{ fontSize: 11, color: 'rgba(251,146,60,0.7)', margin: '8px 0 0 0', fontWeight: 600 }}>
-                        ¿Querés más? Cambiá a anual y ahorrá ${plan.ahorro}
-                      </p>
+                      {plan.id === 'pro' && (
+                        <p style={{ fontSize: 11, color: 'rgba(251,146,60,0.7)', margin: '6px 0 0 0', fontWeight: 600 }}>
+                          Cambiá a anual y ahorrá ${plan.ahorro}
+                        </p>
+                      )}
                     </>
                   )}
+                  <PlanSticker planId={plan.id} anual={anual} />
                 </div>
 
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 9, flex: 1 }}>
