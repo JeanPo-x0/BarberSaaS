@@ -401,34 +401,22 @@ export default function Planes() {
                 </h2>
 
                 <div style={{ marginBottom: 22 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                    <span style={{ fontFamily: "'Bebas Neue'", fontSize: 44, color: '#C9A84C', letterSpacing: '0.04em' }}>
+                      ${anual ? plan.precio_anual : plan.precio_mensual}
+                    </span>
+                    <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/{anual ? 'año' : 'mes'}</span>
+                  </div>
                   {anual ? (
-                    <>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                        <span style={{ fontFamily: "'Bebas Neue'", fontSize: 44, color: '#C9A84C', letterSpacing: '0.04em' }}>
-                          ${plan.precio_anual}
-                        </span>
-                        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/año</span>
-                      </div>
-                      <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
-                        Equivale a <strong style={{ color: '#F5F5F5' }}>${plan.equiv_mensual}/mes</strong>
-                        {' '}· antes ${plan.precio_mensual}/mes
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                        <span style={{ fontFamily: "'Bebas Neue'", fontSize: 44, color: '#C9A84C', letterSpacing: '0.04em' }}>
-                          ${plan.precio_mensual}
-                        </span>
-                        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/mes</span>
-                      </div>
-                      {plan.id === 'pro' && (
-                        <p style={{ fontSize: 11, color: 'rgba(251,146,60,0.7)', margin: '6px 0 0 0', fontWeight: 600 }}>
-                          Cambiá a anual y ahorrá ${plan.ahorro}
-                        </p>
-                      )}
-                    </>
-                  )}
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                      Equivale a <strong style={{ color: '#F5F5F5' }}>${plan.equiv_mensual}/mes</strong>
+                      {' '}· antes ${plan.precio_mensual}/mes
+                    </p>
+                  ) : plan.id === 'pro' ? (
+                    <p style={{ fontSize: 11, color: 'rgba(251,146,60,0.7)', margin: '6px 0 0 0', fontWeight: 600 }}>
+                      Cambiá a anual y ahorrá ${plan.ahorro}
+                    </p>
+                  ) : null}
                 </div>
 
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 9, flex: 1 }}>

@@ -23,8 +23,21 @@ import BannerTC from './components/BannerTC';
 import './App.css';
 
 function ProtectedRoute({ children }) {
-  const { token } = useAuth();
+  const { token, cerrarSesion } = useAuth();
   if (!token) return <Navigate to="/login" replace />;
+
+  // Verificar expiración del JWT decodificando el payload (sin necesitar al servidor)
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp && Date.now() / 1000 > payload.exp) {
+      cerrarSesion();
+      return <Navigate to="/login" replace />;
+    }
+  } catch {
+    cerrarSesion();
+    return <Navigate to="/login" replace />;
+  }
+
   return children;
 }
 
