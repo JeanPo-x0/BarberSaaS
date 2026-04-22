@@ -274,6 +274,8 @@ export default function Planes() {
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: 20,
+          maxWidth: 960,
+          margin: '0 auto',
         }}
           className="planes-grid"
         >
