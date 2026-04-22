@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getMisCitas } from '../services/api';
+import { getMisCitas, descompletarCita } from '../services/api';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
@@ -17,7 +17,7 @@ function fmt(fecha_hora) {
   };
 }
 
-function CitaHistorial({ cita }) {
+function CitaHistorial({ cita, onDescompletar }) {
   const est = ESTADO[cita.estado] || ESTADO.completada;
   const { hora, fecha } = fmt(cita.fecha_hora);
 
@@ -92,8 +92,8 @@ function CitaHistorial({ cita }) {
         </div>
       </div>
 
-      {/* Badge estado */}
-      <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+      {/* Badge estado + acción deshacer */}
+      <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
         <span style={{
           background: est.bg, color: est.color,
           border: `1px solid ${est.border}`,
@@ -103,6 +103,23 @@ function CitaHistorial({ cita }) {
         }}>
           {est.label}
         </span>
+        {cita.estado === 'completada' && onDescompletar && (
+          <button
+            onClick={() => onDescompletar(cita.id)}
+            title="Deshacer completado"
+            style={{
+              background: 'none', border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 8, padding: '4px 8px',
+              cursor: 'pointer', color: 'var(--text-muted)',
+              fontSize: 11, fontFamily: "'DM Sans'", fontWeight: 600,
+              transition: 'all 0.15s', whiteSpace: 'nowrap',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(201,168,76,0.4)'; e.currentTarget.style.color = '#C9A84C'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+          >
+            Deshacer
+          </button>
+        )}
       </div>
     </div>
   );
@@ -127,12 +144,22 @@ function Historial() {
     }).finally(() => setLoading(false));
   }, [navigate]);
 
+  const handleDescompletar = async (id) => {
+    if (!window.confirm('¿Revertir esta cita a pendiente?')) return;
+    try {
+      await descompletarCita(id);
+      setCitas(prev => prev.filter(c => c.id !== id));
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Error al revertir la cita');
+    }
+  };
+
   const citasFiltradas = filtro === 'todas' ? citas : citas.filter(c => c.estado === filtro);
   const totalCompletadas = citas.filter(c => c.estado === 'completada').length;
   const totalCanceladas  = citas.filter(c => c.estado === 'cancelada').length;
 
   return (
-    <div className="bg-panel" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="bg-panel sidebar-page" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
       <Navbar />
 
       <div className="mobile-px" style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
@@ -233,7 +260,7 @@ function Historial() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {citasFiltradas.map(cita => (
-              <CitaHistorial key={cita.id} cita={cita} />
+              <CitaHistorial key={cita.id} cita={cita} onDescompletar={handleDescompletar} />
             ))}
           </div>
         )}

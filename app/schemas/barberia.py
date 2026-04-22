@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 MAPS_ALLOWED_HOSTS = {
     "maps.google.com", "www.maps.google.com",
+    "google.com", "www.google.com",
     "goo.gl", "maps.app.goo.gl",
     "waze.com", "www.waze.com", "ul.waze.com",
     "maps.apple.com",

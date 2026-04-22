@@ -60,6 +60,7 @@ export const registro = (data) => API.post('/auth/registro', data);
 export const onboarding = (data) => API.post('/auth/onboarding', data);
 export const recuperarPassword = (data) => API.post('/auth/recuperar-password', data);
 export const resetPassword = (data) => API.post('/auth/reset-password', data);
+export const cambiarPassword = (data) => API.patch('/auth/cambiar-password', data);
 
 // Barberos
 export const getBarberos = () => API.get('/barberos/');
@@ -87,6 +88,7 @@ export const getMisCitas = () => API.get('/citas/mias');
 export const crearCita = (data) => API.post('/citas/', data);
 export const cancelarCita = (id) => API.patch(`/citas/${id}/cancelar`);
 export const completarCita = (id) => API.patch(`/citas/${id}/completar`);
+export const descompletarCita = (id) => API.patch(`/citas/${id}/descompletar`);
 export const getDisponibilidad = (barbero_id, fecha) =>
   API.get(`/citas/disponibilidad/${barbero_id}?fecha=${fecha}`);
 export const subirComprobante = (citaId, formData) =>

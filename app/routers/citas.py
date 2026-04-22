@@ -181,6 +181,22 @@ def completar_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual),
 
     return cita
 
+@router.patch("/{cita_id}/descompletar", response_model=CitaResponse)
+def descompletar_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
+    cita = db.query(Cita).filter(Cita.id == cita_id).first()
+    if not cita:
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+    barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
+    if not barbero or barbero.barberia_id != usuario.barberia_id:
+        raise HTTPException(status_code=403, detail="No tienes permiso sobre esta cita")
+    if cita.estado != "completada":
+        raise HTTPException(status_code=400, detail="Solo se pueden revertir citas completadas")
+    cita.estado = "pendiente"
+    db.commit()
+    db.refresh(cita)
+    return cita
+
+
 @router.get("/", response_model=List[CitaResponse])
 def listar_citas(usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
     return (

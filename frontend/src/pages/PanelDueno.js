@@ -202,7 +202,8 @@ function PanelDueno() {
       getMiBarberia().then(r => setBarberias(r.data));
       setEditandoMaps(null); setMapsInput('');
     } catch (err) {
-      setMapsError(err.response?.data?.detail || 'URL no válida. Usa un link de Google Maps o Waze.');
+      const det = err.response?.data?.detail;
+      setMapsError(Array.isArray(det) ? (det[0]?.msg || 'URL no válida') : (typeof det === 'string' ? det : 'URL no válida. Usa un link de Google Maps o Waze.'));
     } finally {
       setMapsCargando(false);
     }
@@ -452,23 +453,25 @@ function PanelDueno() {
                   </button>
                 </div>
 
-                {/* Link por ID */}
-                <div style={{
-                  background: 'var(--bg-secondary)', border: '1px solid var(--border)',
-                  borderRadius: 8, padding: '8px 12px',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  marginBottom: 8,
-                }}>
-                  <span style={{ color: 'var(--text-muted)', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {window.location.origin}/agendar/{b.id}
-                  </span>
-                  <button
-                    onClick={() => navigator.clipboard.writeText(`${window.location.origin}/agendar/${b.id}`)}
-                    style={{ ...deleteBtn, color: 'var(--text-muted)', background: 'none', border: '1px solid var(--border)', flexShrink: 0 }}
-                  >
-                    Copiar
-                  </button>
-                </div>
+                {/* Link por ID — solo si no tiene slug personalizado */}
+                {!b.subdominio && (
+                  <div style={{
+                    background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                    borderRadius: 8, padding: '8px 12px',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    marginBottom: 8,
+                  }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {window.location.origin}/agendar/{b.id}
+                    </span>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(`${window.location.origin}/agendar/${b.id}`)}
+                      style={{ ...deleteBtn, color: 'var(--text-muted)', background: 'none', border: '1px solid var(--border)', flexShrink: 0 }}
+                    >
+                      Copiar
+                    </button>
+                  </div>
+                )}
 
                 {/* Link slug */}
                 {b.subdominio ? (

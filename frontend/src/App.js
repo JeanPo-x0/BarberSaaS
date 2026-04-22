@@ -19,6 +19,7 @@ import Planes from './pages/Planes';
 import Terminos from './pages/Terminos';
 import Privacidad from './pages/Privacidad';
 import Soporte from './pages/Soporte';
+import Cuenta from './pages/Cuenta';
 import BannerTC from './components/BannerTC';
 import './App.css';
 
@@ -68,6 +69,7 @@ function AppRoutes() {
         <Route path="/historial" element={<ProtectedRoute><Historial /></ProtectedRoute>} />
         <Route path="/ingresos" element={<ProtectedRoute><DashboardIngresos /></ProtectedRoute>} />
         <Route path="/soporte" element={<ProtectedRoute><Soporte /></ProtectedRoute>} />
+        <Route path="/cuenta" element={<ProtectedRoute><Cuenta /></ProtectedRoute>} />
         <Route path="/suscripcion/exito" element={<ProtectedRoute><SuscripcionExito /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
       </Routes>
