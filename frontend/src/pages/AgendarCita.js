@@ -526,40 +526,30 @@ function AgendarCita() {
               </div>
             </div>
 
-            {/* Adelanto — siempre visible */}
-            <div style={{
-              background: (configPagos.deposito_requerido && configPagos.deposito_porcentaje > 0) ? 'rgba(251,191,36,0.06)' : 'rgba(74,222,128,0.04)',
-              border: `1px solid ${(configPagos.deposito_requerido && configPagos.deposito_porcentaje > 0) ? 'rgba(251,191,36,0.25)' : 'rgba(74,222,128,0.2)'}`,
-              borderRadius: 14, padding: '14px 18px', marginBottom: 12,
-              display: 'flex', alignItems: 'flex-start', gap: 12,
-            }}>
-              {(configPagos.deposito_requerido && configPagos.deposito_porcentaje > 0) ? (
+            {/* Adelanto — solo si está requerido */}
+            {configPagos.deposito_requerido && configPagos.deposito_porcentaje > 0 && (
+              <div style={{
+                background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.25)',
+                borderRadius: 14, padding: '14px 18px', marginBottom: 12,
+                display: 'flex', alignItems: 'flex-start', gap: 12,
+              }}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
                   <circle cx="10" cy="10" r="8" stroke="#fbbf24" strokeWidth="1.5"/>
                   <path d="M10 6v5" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round"/>
                   <circle cx="10" cy="14" r="0.8" fill="#fbbf24"/>
                 </svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-                  <circle cx="10" cy="10" r="8" stroke="#4ade80" strokeWidth="1.5"/>
-                  <path d="M6.5 10l2.5 2.5 4.5-5" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              )}
-              <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: (configPagos.deposito_requerido && configPagos.deposito_porcentaje > 0) ? '#fbbf24' : '#4ade80', margin: '0 0 2px 0' }}>
-                  {(configPagos.deposito_requerido && configPagos.deposito_porcentaje > 0)
-                    ? `Depósito del ${configPagos.deposito_porcentaje}% requerido al reservar`
-                    : 'Sin depósito requerido'}
-                </p>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
-                  {(configPagos.deposito_requerido && configPagos.deposito_porcentaje > 0)
-                    ? `Debés enviar el comprobante de SINPE al confirmar. El barbero verificará el pago antes de confirmar tu cita.`
-                    : 'No tenés que pagar nada por adelantado para reservar tu cita.'}
-                </p>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#fbbf24', margin: '0 0 2px 0' }}>
+                    Depósito del {configPagos.deposito_porcentaje}% requerido al reservar
+                  </p>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                    Debés enviar el comprobante de SINPE al confirmar. El barbero verificará el pago antes de confirmar tu cita.
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Cancelación — siempre visible */}
+            {/* Cancelación — siempre visible, con horas */}
             <div style={{
               background: configPagos.cancelacion_porcentaje > 0 ? 'rgba(230,57,70,0.06)' : 'rgba(74,222,128,0.04)',
               border: `1px solid ${configPagos.cancelacion_porcentaje > 0 ? 'rgba(230,57,70,0.25)' : 'rgba(74,222,128,0.2)'}`,
@@ -580,21 +570,21 @@ function AgendarCita() {
               <div>
                 <p style={{ fontSize: 13, fontWeight: 700, color: configPagos.cancelacion_porcentaje > 0 ? '#E63946' : '#4ade80', margin: '0 0 6px 0' }}>
                   {configPagos.cancelacion_porcentaje > 0
-                    ? `Retención del ${configPagos.cancelacion_porcentaje}% en caso de cancelación o no presentación`
-                    : 'Reembolso completo al cancelar'}
+                    ? `Retención del ${configPagos.cancelacion_porcentaje}% por cancelación tardía`
+                    : 'Cancelación gratuita'}
                 </p>
                 {configPagos.cancelacion_porcentaje > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
-                      Al agendar esta cita aceptás que, si la cancelás con menos de <strong style={{ color: '#F5F5F5' }}>{configPagos.cancelacion_horas_minimo} horas</strong> de anticipación o no te presentás, <strong style={{ color: '#F5F5F5' }}>se retendrá el {configPagos.cancelacion_porcentaje}% del monto pagado</strong> y solo se te devolverá el {100 - configPagos.cancelacion_porcentaje}% restante.
+                      Si cancelás con menos de <strong style={{ color: '#F5F5F5' }}>{configPagos.cancelacion_horas_minimo} horas</strong> de anticipación o no te presentás, se retendrá el <strong style={{ color: '#F5F5F5' }}>{configPagos.cancelacion_porcentaje}%</strong> del monto pagado.
                     </p>
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
-                      Ejemplo: si pagaste ₡10,000, recibirías de vuelta ₡{(10000 * (1 - configPagos.cancelacion_porcentaje / 100)).toLocaleString('es-CR')}.
+                      Ejemplo: si pagaste ₡10,000, recibirías ₡{(10000 * (1 - configPagos.cancelacion_porcentaje / 100)).toLocaleString('es-CR')} de vuelta.
                     </p>
                   </div>
                 ) : (
                   <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
-                    Si cancelás, se te devuelve el 100% de lo que pagaste, sin ningún cargo adicional.
+                    Podés cancelar sin costo siempre que avisés con al menos <strong style={{ color: '#F5F5F5' }}>{configPagos.cancelacion_horas_minimo} horas</strong> de anticipación.
                   </p>
                 )}
               </div>
