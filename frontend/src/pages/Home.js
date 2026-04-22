@@ -114,54 +114,59 @@ function ModalEnterprise({ onClose }) {
   );
 }
 
-/* ── Plan sticker ────────────────────────────────────── */
-function PlanSticker({ planId, anual }) {
-  const tag = {
-    position: 'relative',
-    display: 'inline-flex', alignItems: 'center', gap: 8,
-    background: '#E63946',
-    padding: '6px 14px 6px 22px',
-    borderRadius: '2px 4px 4px 2px',
-    filter: 'drop-shadow(3px 3px 0 rgba(0,0,0,0.55))',
-    marginTop: 12,
-  };
-  const hole = {
-    position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
-    width: 7, height: 7, borderRadius: '50%',
-    background: '#1A1A1A', border: '1px solid rgba(0,0,0,0.25)',
-  };
-  const label = { fontSize: 11, fontWeight: 900, color: '#fff', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: "'DM Sans'" };
+/* ── Starburst badge (8 puntas, rojo) ───────────────── */
+const BURST_PTS_H = "45,0 56.5,17.3 76.8,13.2 72.7,33.5 90,45 72.7,56.5 76.8,76.8 56.5,72.7 45,90 33.5,72.7 13.2,76.8 17.3,56.5 0,45 17.3,33.5 13.2,13.2 33.5,17.3";
 
-  if (planId === 'pro' && !anual) return (
-    <div style={{ ...tag, transform: 'rotate(-5deg)', transformOrigin: 'center' }}>
-      <div style={hole} />
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0 }}>
-        <circle cx="6.5" cy="6.5" r="5.2" stroke="#fff" strokeWidth="1.3"/>
-        <line x1="6.5" y1="6.5" x2="6.5" y2="2.8" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" className="sticker-clock-hand"/>
-        <line x1="6.5" y1="6.5" x2="9.2" y2="6.5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
-        <circle cx="6.5" cy="6.5" r="0.9" fill="#fff"/>
+function PlanSticker({ planId, anual }) {
+  const badge = (rotation, icon, line1, line2) => (
+    <div style={{
+      position: 'absolute', right: -10, top: '50%',
+      transform: `translateY(-50%) rotate(${rotation}deg)`,
+      filter: 'drop-shadow(2px 4px 10px rgba(160,0,20,0.7))',
+      pointerEvents: 'none',
+    }}>
+      <svg width="66" height="66" viewBox="0 0 90 90">
+        <defs>
+          <linearGradient id="hsg-red" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ff3a4a"/>
+            <stop offset="100%" stopColor="#9b1520"/>
+          </linearGradient>
+          <linearGradient id="hsg-shine" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.2)"/>
+            <stop offset="100%" stopColor="rgba(255,255,255,0)"/>
+          </linearGradient>
+        </defs>
+        <polygon points={BURST_PTS_H} fill="url(#hsg-red)"/>
+        <polygon points={BURST_PTS_H} fill="url(#hsg-shine)"/>
+        <polygon points={BURST_PTS_H} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.6"
+          transform="translate(45 45) scale(0.84) translate(-45 -45)"/>
+        {icon}
+        <text x="45" y="54" textAnchor="middle" fill="white" fontWeight="900" fontSize="11" fontFamily="DM Sans,sans-serif" letterSpacing="1.5">{line1}</text>
+        <text x="45" y="67" textAnchor="middle" fill="rgba(255,255,255,0.88)" fontWeight="900" fontSize="10" fontFamily="DM Sans,sans-serif" letterSpacing="2">{line2}</text>
       </svg>
-      <span style={label}>14 días gratis</span>
     </div>
   );
-  if (planId === 'pro' && anual) return (
-    <div style={{ ...tag, transform: 'rotate(4deg)', transformOrigin: 'center' }}>
-      <div style={hole} />
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="sticker-bounce" style={{ flexShrink: 0 }}>
-        <path d="M6 10V3M2.5 6.5L6 3l3.5 3.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-      <span style={label}>2 meses free</span>
-    </div>
+
+  if (planId === 'pro' && !anual) return badge(-9,
+    <>
+      <circle cx="45" cy="30" r="8" stroke="rgba(255,255,255,0.8)" strokeWidth="1.3" fill="none"/>
+      <line x1="45" y1="30" x2="45" y2="24.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" className="sticker-clock-hand"/>
+      <line x1="45" y1="30" x2="49" y2="30" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+      <circle cx="45" cy="30" r="1.3" fill="white"/>
+    </>,
+    '14 DÍAS', 'GRATIS'
   );
-  if (planId === 'premium' && anual) return (
-    <div style={{ ...tag, transform: 'rotate(-3deg)', transformOrigin: 'center' }}>
-      <div style={hole} />
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="sticker-drop" style={{ flexShrink: 0 }}>
-        <path d="M6 2v7M2.5 5.5L6 9l3.5-3.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-      <span style={label}>Ahorrás $236</span>
-    </div>
+
+  if (planId === 'pro' && anual) return badge(7,
+    <path d="M45 38V26M40 31L45 26L50 31" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sticker-bounce"/>,
+    '2 MESES', 'FREE'
   );
+
+  if (planId === 'premium' && anual) return badge(-6,
+    <path d="M45 26v12M40 33L45 38L50 33" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sticker-drop"/>,
+    'AHORRÁS', '$236'
+  );
+
   return null;
 }
 
@@ -612,7 +617,7 @@ export default function Home() {
                 }}>
                   {plan.nombre}
                 </h3>
-                <div style={{ marginBottom: 24 }}>
+                <div style={{ marginBottom: 24, position: 'relative', paddingRight: 60 }}>
                   {anual ? (
                     <>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>

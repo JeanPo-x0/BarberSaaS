@@ -36,6 +36,15 @@
 .sticker-bounce { animation: sticker-bounce-up 1s ease-in-out infinite; }
 .sticker-drop   { animation: sticker-drop 1.8s ease-in-out infinite; }
 
+@keyframes lightning-flash {
+  0%, 80%, 100% { opacity: 1; filter: brightness(1); }
+  83%  { opacity: 0.25; filter: brightness(3); }
+  87%  { opacity: 1;    filter: brightness(2); }
+  91%  { opacity: 0.4;  filter: brightness(2.5); }
+  95%  { opacity: 1;    filter: brightness(1); }
+}
+.svg-lightning { animation: lightning-flash 3s ease-in-out infinite; }
+
 /* ── Base ───────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }

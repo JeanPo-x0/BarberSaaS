@@ -28,83 +28,68 @@ const IconCheck = () => (
   </svg>
 );
 
-/* Starburst badge — 8 puntas, estilo sello de producto premium */
+/* ── Lightning bolt SVG animado ─────────────────────── */
+function LightningBolt({ size = 15, style = {} }) {
+  return (
+    <svg width={size} height={Math.round(size * 1.5)} viewBox="0 0 10 15" fill="none"
+      style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }}
+      className="svg-lightning">
+      <path d="M6.5 1L1 8.5h4.2L3.5 14l6.5-8H5.8L7.5 1z" fill="#FB923C"/>
+    </svg>
+  );
+}
+
+/* ── Starburst badge — 8 puntas, todo rojo ──────────── */
 const BURST_PTS = "45,0 56.5,17.3 76.8,13.2 72.7,33.5 90,45 72.7,56.5 76.8,76.8 56.5,72.7 45,90 33.5,72.7 13.2,76.8 17.3,56.5 0,45 17.3,33.5 13.2,13.2 33.5,17.3";
 
 function PlanSticker({ planId, anual }) {
-  if (planId === 'pro' && !anual) return (
-    <div style={{ display: 'inline-block', marginTop: 14, transform: 'rotate(-8deg)', filter: 'drop-shadow(2px 5px 14px rgba(180,0,30,0.65))' }}>
-      <svg width="92" height="92" viewBox="0 0 90 90">
+  const badge = (rotation, icon, line1, line2, animClass) => (
+    <div style={{
+      position: 'absolute', right: -10, top: '50%',
+      transform: `translateY(-50%) rotate(${rotation}deg)`,
+      filter: 'drop-shadow(2px 4px 10px rgba(160,0,20,0.7))',
+      pointerEvents: 'none',
+    }}>
+      <svg width="66" height="66" viewBox="0 0 90 90">
         <defs>
-          <linearGradient id="sg-trial" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="sg-red" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#ff3a4a"/>
             <stop offset="100%" stopColor="#9b1520"/>
           </linearGradient>
-          <linearGradient id="sg-trial-shine" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.18)"/>
-            <stop offset="100%" stopColor="rgba(255,255,255,0)"/>
-          </linearGradient>
-        </defs>
-        <polygon points={BURST_PTS} fill="url(#sg-trial)"/>
-        <polygon points={BURST_PTS} fill="url(#sg-trial-shine)"/>
-        <polygon points={BURST_PTS} fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="1.4"
-          transform="translate(45 45) scale(0.84) translate(-45 -45)"/>
-        <circle cx="45" cy="30" r="7.5" stroke="rgba(255,255,255,0.8)" strokeWidth="1.3" fill="none"/>
-        <line x1="45" y1="30" x2="45" y2="25" stroke="white" strokeWidth="1.5" strokeLinecap="round" className="sticker-clock-hand"/>
-        <line x1="45" y1="30" x2="48.5" y2="30" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
-        <circle cx="45" cy="30" r="1.2" fill="white"/>
-        <text x="45" y="50" textAnchor="middle" fill="white" fontWeight="900" fontSize="10.5" fontFamily="DM Sans,sans-serif" letterSpacing="1.5">14 DÍAS</text>
-        <text x="45" y="63" textAnchor="middle" fill="rgba(255,255,255,0.88)" fontWeight="900" fontSize="9.5" fontFamily="DM Sans,sans-serif" letterSpacing="2.5">GRATIS</text>
-      </svg>
-    </div>
-  );
-
-  if (planId === 'pro' && anual) return (
-    <div style={{ display: 'inline-block', marginTop: 14, transform: 'rotate(6deg)', filter: 'drop-shadow(2px 5px 14px rgba(150,90,0,0.65))' }}>
-      <svg width="92" height="92" viewBox="0 0 90 90">
-        <defs>
-          <linearGradient id="sg-annpro" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#d4952b"/>
-            <stop offset="100%" stopColor="#7a4d08"/>
-          </linearGradient>
-          <linearGradient id="sg-annpro-shine" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="sg-red-shine" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="rgba(255,255,255,0.2)"/>
             <stop offset="100%" stopColor="rgba(255,255,255,0)"/>
           </linearGradient>
         </defs>
-        <polygon points={BURST_PTS} fill="url(#sg-annpro)"/>
-        <polygon points={BURST_PTS} fill="url(#sg-annpro-shine)"/>
-        <polygon points={BURST_PTS} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.4"
+        <polygon points={BURST_PTS} fill="url(#sg-red)"/>
+        <polygon points={BURST_PTS} fill="url(#sg-red-shine)"/>
+        <polygon points={BURST_PTS} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.6"
           transform="translate(45 45) scale(0.84) translate(-45 -45)"/>
-        <path d="M45 37V25M40 30L45 25L50 30" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="sticker-bounce"/>
-        <text x="45" y="52" textAnchor="middle" fill="white" fontWeight="900" fontSize="10.5" fontFamily="DM Sans,sans-serif" letterSpacing="1">2 MESES</text>
-        <text x="45" y="65" textAnchor="middle" fill="rgba(255,255,255,0.88)" fontWeight="900" fontSize="9.5" fontFamily="DM Sans,sans-serif" letterSpacing="2.5">FREE</text>
+        {icon}
+        <text x="45" y="54" textAnchor="middle" fill="white" fontWeight="900" fontSize="11" fontFamily="DM Sans,sans-serif" letterSpacing="1.5">{line1}</text>
+        <text x="45" y="67" textAnchor="middle" fill="rgba(255,255,255,0.88)" fontWeight="900" fontSize="10" fontFamily="DM Sans,sans-serif" letterSpacing="2">{line2}</text>
       </svg>
     </div>
   );
 
-  if (planId === 'premium' && anual) return (
-    <div style={{ display: 'inline-block', marginTop: 14, transform: 'rotate(-5deg)', filter: 'drop-shadow(2px 5px 14px rgba(0,110,60,0.65))' }}>
-      <svg width="92" height="92" viewBox="0 0 90 90">
-        <defs>
-          <linearGradient id="sg-annprem" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1ba870"/>
-            <stop offset="100%" stopColor="#0a5c3c"/>
-          </linearGradient>
-          <linearGradient id="sg-annprem-shine" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.2)"/>
-            <stop offset="100%" stopColor="rgba(255,255,255,0)"/>
-          </linearGradient>
-        </defs>
-        <polygon points={BURST_PTS} fill="url(#sg-annprem)"/>
-        <polygon points={BURST_PTS} fill="url(#sg-annprem-shine)"/>
-        <polygon points={BURST_PTS} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.4"
-          transform="translate(45 45) scale(0.84) translate(-45 -45)"/>
-        <path d="M45 25v13M40 33L45 38L50 33" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="sticker-drop"/>
-        <text x="45" y="52" textAnchor="middle" fill="white" fontWeight="900" fontSize="9" fontFamily="DM Sans,sans-serif" letterSpacing="1">AHORRÁS</text>
-        <text x="45" y="66" textAnchor="middle" fill="rgba(255,255,255,0.88)" fontWeight="900" fontSize="14" fontFamily="DM Sans,sans-serif" letterSpacing="0.5">$236</text>
-      </svg>
-    </div>
+  if (planId === 'pro' && !anual) return badge(-9,
+    <>
+      <circle cx="45" cy="30" r="8" stroke="rgba(255,255,255,0.8)" strokeWidth="1.3" fill="none"/>
+      <line x1="45" y1="30" x2="45" y2="24.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" className="sticker-clock-hand"/>
+      <line x1="45" y1="30" x2="49" y2="30" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+      <circle cx="45" cy="30" r="1.3" fill="white"/>
+    </>,
+    '14 DÍAS', 'GRATIS'
+  );
+
+  if (planId === 'pro' && anual) return badge(7,
+    <path d="M45 38V26M40 31L45 26L50 31" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sticker-bounce"/>,
+    '2 MESES', 'FREE'
+  );
+
+  if (planId === 'premium' && anual) return badge(-6,
+    <path d="M45 26v12M40 33L45 38L50 33" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sticker-drop"/>,
+    'AHORRÁS', '$236'
   );
 
   return null;
@@ -318,8 +303,8 @@ export default function Planes() {
             14 días gratis con cualquier plan. Sin cobros hasta que termine el trial.
           </p>
           {anual && (
-            <p style={{ fontSize: 13, color: '#FB923C', fontWeight: 600, margin: 0 }}>
-              ⚡ Precio especial por tiempo limitado
+            <p style={{ fontSize: 13, color: '#FB923C', fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+              <LightningBolt size={13} /> Precio especial por tiempo limitado
             </p>
           )}
 
@@ -407,7 +392,7 @@ export default function Planes() {
                   {plan.nombre}
                 </h2>
 
-                <div style={{ marginBottom: 22 }}>
+                <div style={{ marginBottom: 22, position: 'relative', paddingRight: 60 }}>
                   {anual ? (
                     <>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
@@ -536,7 +521,7 @@ export default function Planes() {
             borderRadius: 12,
           }}>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
-              <span style={{ color: '#C9A84C', fontWeight: 700 }}>⚡ Precio especial por tiempo limitado.</span>
+              <span style={{ color: '#C9A84C', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 5 }}><LightningBolt size={13} style={{ filter: 'hue-rotate(30deg)' }} /> Precio especial por tiempo limitado.</span>
               {' '}El plan anual se puede cancelar en cualquier momento desde el portal de facturacion.
             </p>
           </div>
