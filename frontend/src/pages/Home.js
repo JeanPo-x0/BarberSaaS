@@ -119,29 +119,35 @@ function PlanSticker({ planId, anual }) {
   const base = {
     display: 'inline-flex', alignItems: 'center', gap: 7,
     padding: '5px 13px 5px 10px', borderRadius: 3,
+    background: '#E63946',
     boxShadow: '3px 3px 0 rgba(0,0,0,0.55)',
     transformOrigin: 'left center', marginTop: 10,
   };
   const label = { fontSize: 11, fontWeight: 900, color: '#fff', letterSpacing: '0.07em', textTransform: 'uppercase', fontFamily: "'DM Sans'" };
 
   if (planId === 'pro' && !anual) return (
-    <div style={{ ...base, background: '#E63946', transform: 'rotate(-3deg)' }}>
-      <span className="sticker-dot" style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff', flexShrink: 0, display: 'block' }} />
+    <div style={{ ...base, transform: 'rotate(-3deg)' }}>
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0 }}>
+        <circle cx="6.5" cy="6.5" r="5.2" stroke="#fff" strokeWidth="1.3"/>
+        <line x1="6.5" y1="6.5" x2="6.5" y2="2.8" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" className="sticker-clock-hand"/>
+        <line x1="6.5" y1="6.5" x2="9.2" y2="6.5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
+        <circle cx="6.5" cy="6.5" r="0.9" fill="#fff"/>
+      </svg>
       <span style={label}>14 días gratis</span>
     </div>
   );
   if (planId === 'pro' && anual) return (
-    <div style={{ ...base, background: '#16a34a', transform: 'rotate(2.5deg)' }}>
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
-        <polygon points="6,1 7.4,4.3 11,4.6 8.4,7 9.2,10.5 6,8.7 2.8,10.5 3.6,7 1,4.6 4.6,4.3" fill="#fff"/>
+    <div style={{ ...base, transform: 'rotate(2.5deg)' }}>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="sticker-bounce" style={{ flexShrink: 0 }}>
+        <path d="M6 10V3M2.5 6.5L6 3l3.5 3.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
       <span style={label}>2 meses free</span>
     </div>
   );
   if (planId === 'premium' && anual) return (
-    <div style={{ ...base, background: '#7c3aed', transform: 'rotate(-2deg)' }}>
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="sticker-ring" style={{ flexShrink: 0 }}>
-        <circle cx="6" cy="6" r="4.5" stroke="#fff" strokeWidth="1.5" strokeDasharray="8 4"/>
+    <div style={{ ...base, transform: 'rotate(-2deg)' }}>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="sticker-drop" style={{ flexShrink: 0 }}>
+        <path d="M6 2v7M2.5 5.5L6 9l3.5-3.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
       <span style={label}>Ahorrás $236</span>
     </div>

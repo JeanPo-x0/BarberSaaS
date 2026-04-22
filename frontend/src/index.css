@@ -16,16 +16,25 @@
 }
 
 /* ── Sticker animations ─────────────────────────────── */
-@keyframes sticker-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.4; transform: scale(0.65); }
-}
-@keyframes sticker-spin {
+@keyframes sticker-clock {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
-.sticker-dot { animation: sticker-pulse 1.4s ease-in-out infinite; }
-.sticker-ring { animation: sticker-spin 3s linear infinite; }
+@keyframes sticker-bounce-up {
+  0%, 100% { transform: translateY(0); }
+  45%       { transform: translateY(-3px); }
+}
+@keyframes sticker-drop {
+  0%, 60%, 100% { transform: translateY(0); opacity: 1; }
+  30%            { transform: translateY(3px); opacity: 0.4; }
+}
+.sticker-clock-hand {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sticker-clock 3s linear infinite;
+}
+.sticker-bounce { animation: sticker-bounce-up 1s ease-in-out infinite; }
+.sticker-drop   { animation: sticker-drop 1.8s ease-in-out infinite; }
 
 /* ── Base ───────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
