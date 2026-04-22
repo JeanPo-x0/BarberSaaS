@@ -218,7 +218,7 @@ function AgendarCita() {
       getBarberosPorBarberia(id).then(r => setBarberos(r.data));
       getServiciosPorBarberia(id).then(r => setServicios(r.data));
       getConfigPagosPublica(id).then(r => setConfigPagos(r.data)).catch(() => {});
-      const yaAcepto = localStorage.getItem(`tc_barberia_${id}`) === 'aceptado';
+      const yaAcepto = sessionStorage.getItem(`tc_barberia_${id}`) === 'aceptado';
       setTcAceptado(yaAcepto);
     }).catch(() => {});
   }, [barberia_id, slug]);
@@ -650,7 +650,7 @@ function AgendarCita() {
               </button>
               <button
                 onClick={() => {
-                  localStorage.setItem(`tc_barberia_${barberia.id}`, 'aceptado');
+                  sessionStorage.setItem(`tc_barberia_${barberia.id}`, 'aceptado');
                   setTcAceptado(true);
                 }}
                 className="btn-gold"

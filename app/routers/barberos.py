@@ -1,12 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.barbero import Barbero
 from app.models.usuario import Usuario
 from app.schemas import BarberoCreate, BarberoResponse
-from app.core.deps import get_usuario_actual
+from app.schemas.barbero import InvitarBarberoRequest, ActivarBarberoRequest, LoginBarberoRequest
+from app.core.deps import get_usuario_actual, get_barbero_actual
+from app.core.security import hash_password, verify_password, crear_token
 from app.utils.phone import formatear_telefono
+from app.services.email import enviar_invitacion_barbero
+from app.core.config import settings
 from typing import List
+import hashlib, secrets
+from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/barberos", tags=["Barberos"])
 
@@ -96,3 +102,115 @@ def obtener_barbero(barbero_id: int, db: Session = Depends(get_db)):
     if not barbero:
         raise HTTPException(status_code=404, detail="Barbero no encontrado")
     return barbero
+
+
+@router.post("/{barbero_id}/invitar")
+def invitar_barbero(
+    barbero_id: int,
+    datos: InvitarBarberoRequest,
+    request: Request,
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    barbero = db.query(Barbero).filter(
+        Barbero.id == barbero_id,
+        Barbero.barberia_id == usuario.barberia_id,
+    ).first()
+    if not barbero:
+        raise HTTPException(status_code=404, detail="Barbero no encontrado")
+
+    email = datos.email.lower().strip()
+    conflicto = db.query(Barbero).filter(
+        Barbero.email == email,
+        Barbero.id != barbero_id,
+    ).first()
+    if conflicto:
+        raise HTTPException(status_code=400, detail="Ese email ya está en uso por otro barbero")
+
+    token_raw = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(token_raw.encode()).hexdigest()
+
+    barbero.email = email
+    barbero.inv_token_hash = token_hash
+    barbero.inv_token_expires = datetime.utcnow() + timedelta(hours=48)
+    barbero.cuenta_activa = False
+    db.commit()
+
+    from app.models.barberia import Barberia
+    barberia = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first()
+    base_url = settings.FRONTEND_URL
+    try:
+        enviar_invitacion_barbero(email, barbero.nombre, barberia.nombre if barberia else "tu barbería", token_raw, base_url)
+    except Exception as e:
+        print(f"[Email] ERROR enviando invitación: {e}")
+
+    return {"ok": True, "mensaje": f"Invitación enviada a {email}"}
+
+
+@router.post("/activar")
+def activar_cuenta_barbero(datos: ActivarBarberoRequest, db: Session = Depends(get_db)):
+    from app.routers.auth import validar_password
+    token_hash = hashlib.sha256(datos.token.encode()).hexdigest()
+    barbero = db.query(Barbero).filter(Barbero.inv_token_hash == token_hash).first()
+    if not barbero:
+        raise HTTPException(status_code=400, detail="Link inválido o expirado")
+    if barbero.inv_token_expires and datetime.utcnow() > barbero.inv_token_expires:
+        raise HTTPException(status_code=400, detail="El link expiró. Pedile al dueño que te reenvíe la invitación.")
+    validar_password(datos.nueva_password)
+    barbero.password_hash = hash_password(datos.nueva_password)
+    barbero.cuenta_activa = True
+    barbero.inv_token_hash = None
+    barbero.inv_token_expires = None
+    db.commit()
+    return {"ok": True, "mensaje": "Cuenta activada. Ya podés iniciar sesión."}
+
+
+@router.post("/login")
+def login_barbero(datos: LoginBarberoRequest, db: Session = Depends(get_db)):
+    email = datos.email.lower().strip()
+    barbero = db.query(Barbero).filter(Barbero.email == email).first()
+    if not barbero or not barbero.password_hash or not verify_password(datos.password, barbero.password_hash):
+        raise HTTPException(status_code=401, detail="Credenciales inválidas")
+    if not barbero.cuenta_activa:
+        raise HTTPException(status_code=403, detail="Cuenta no activada. Revisá tu email.")
+    payload = {"sub": barbero.email, "rol": "barbero", "barbero_id": barbero.id, "barberia_id": barbero.barberia_id}
+    token = crear_token(payload)
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "barbero": {"id": barbero.id, "nombre": barbero.nombre, "email": barbero.email, "barberia_id": barbero.barberia_id},
+    }
+
+
+@router.get("/me/agenda")
+def agenda_barbero(barbero: Barbero = Depends(get_barbero_actual), db: Session = Depends(get_db)):
+    from app.models.cita import Cita
+    from app.models.cliente import Cliente
+    from app.models.servicio import Servicio
+    from datetime import timezone
+    ahora = datetime.utcnow()
+    inicio_hoy = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
+    fin_semana = inicio_hoy + timedelta(days=7)
+    citas = (
+        db.query(Cita)
+        .filter(
+            Cita.barbero_id == barbero.id,
+            Cita.fecha_hora >= inicio_hoy,
+            Cita.fecha_hora < fin_semana,
+            Cita.estado != "cancelada",
+        )
+        .order_by(Cita.fecha_hora)
+        .all()
+    )
+    resultado = []
+    for c in citas:
+        cliente = db.query(Cliente).filter(Cliente.id == c.cliente_id).first()
+        servicio = db.query(Servicio).filter(Servicio.id == c.servicio_id).first()
+        resultado.append({
+            "id": c.id,
+            "fecha_hora": c.fecha_hora.isoformat(),
+            "estado": c.estado,
+            "cliente": {"nombre": cliente.nombre, "telefono": cliente.telefono} if cliente else None,
+            "servicio": {"nombre": servicio.nombre, "precio": servicio.precio} if servicio else None,
+        })
+    return resultado

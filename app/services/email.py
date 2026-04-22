@@ -81,6 +81,20 @@ def enviar_aviso_suspension(email: str, nombre_barberia: str):
     enviar_email(email, "Tu cuenta BarberSaaS fue suspendida — actualiza tu pago", cuerpo)
 
 
+def enviar_invitacion_barbero(email: str, nombre_barbero: str, nombre_barberia: str, token: str, base_url: str):
+    link = f"{base_url}/activar-barbero?token={token}"
+    cuerpo = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; background:#111; color:#fff; padding:32px; border-radius:12px;">
+        <h2 style="color:#C9A84C; margin-bottom:4px;">¡Te invitaron a BarberSaaS!</h2>
+        <p style="color:#ccc;">Hola <strong style="color:#fff;">{nombre_barbero}</strong>, <strong style="color:#fff;">{nombre_barberia}</strong> te agregó como barbero en BarberSaaS.</p>
+        <p style="color:#ccc;">Activá tu cuenta para ver tu agenda de citas:</p>
+        <a href="{link}" style="display:inline-block;background:#C9A84C;color:#111;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px;margin:16px 0;">Activar mi cuenta</a>
+        <p style="color:#888; font-size:12px; margin-top:24px;">Este link expira en 48 horas. Si no esperabas este email, podés ignorarlo.</p>
+    </div>
+    """
+    enviar_email(email, f"Activá tu cuenta en BarberSaaS — {nombre_barberia}", cuerpo)
+
+
 def enviar_reset_password(email: str, token: str, base_url: str):
     link = f"{base_url}/reset-password?token={token}"
     cuerpo = f"""

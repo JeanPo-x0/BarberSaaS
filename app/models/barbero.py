@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -12,5 +12,12 @@ class Barbero(Base):
     foto = Column(String)
     activo = Column(Boolean, default=True)
     barberia_id = Column(Integer, ForeignKey("barberias.id"))
+
+    # Login propio del barbero
+    email = Column(String, nullable=True, unique=True, index=True)
+    password_hash = Column(String, nullable=True)
+    inv_token_hash = Column(String, nullable=True)
+    inv_token_expires = Column(DateTime, nullable=True)
+    cuenta_activa = Column(Boolean, default=False)
 
     barberia = relationship("Barberia", back_populates="barberos")

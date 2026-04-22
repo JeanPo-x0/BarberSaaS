@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { formatearInput, formatearTelefono } from '../utils/phone';
 import {
-  getMisBarberos, crearBarbero, toggleBarbero, eliminarBarbero,
+  getMisBarberos, crearBarbero, toggleBarbero, eliminarBarbero, invitarBarbero,
   getMisServicios, crearServicio, toggleServicio, eliminarServicio,
   getMiBarberia, toggleBarberia, crearBarberiaAdicional,
   getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio, actualizarMapsLink,
@@ -108,6 +108,13 @@ function PanelDueno() {
   const [mapsError, setMapsError] = useState('');
   const [mapsCargando, setMapsCargando] = useState(false);
 
+  // Invitar barbero
+  const [invitandoBarbero, setInvitandoBarbero] = useState(null);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteError, setInviteError] = useState('');
+  const [inviteCargando, setInviteCargando] = useState(false);
+  const [inviteExito, setInviteExito] = useState('');
+
   const cargarDatos = () => {
     getMisBarberos().then(r => setBarberos(r.data)).catch(() => {});
     getMisServicios().then(r => setServicios(r.data)).catch(() => {});
@@ -206,6 +213,21 @@ function PanelDueno() {
       setMapsError(Array.isArray(det) ? (det[0]?.msg || 'URL no válida') : (typeof det === 'string' ? det : 'URL no válida. Usa un link de Google Maps o Waze.'));
     } finally {
       setMapsCargando(false);
+    }
+  };
+
+  const handleInvitar = async (barberoId) => {
+    setInviteError(''); setInviteCargando(true);
+    try {
+      await invitarBarbero(barberoId, inviteEmail.trim().toLowerCase());
+      setInviteExito(`Invitación enviada a ${inviteEmail}`);
+      setInvitandoBarbero(null); setInviteEmail('');
+      setTimeout(() => setInviteExito(''), 5000);
+    } catch (err) {
+      const det = err.response?.data?.detail;
+      setInviteError(typeof det === 'string' ? det : 'Error al enviar la invitación');
+    } finally {
+      setInviteCargando(false);
     }
   };
 
@@ -322,10 +344,18 @@ function PanelDueno() {
                       {b.nombre}
                     </p>
                     <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {[b.especialidad, b.telefono].filter(Boolean).join(' · ')}
+                      {b.email
+                        ? (b.cuenta_activa ? `✓ ${b.email}` : `⏳ Invitación pendiente`)
+                        : [b.especialidad, b.telefono].filter(Boolean).join(' · ')}
                     </p>
                   </div>
                   <div className="panel-item-actions" style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                    <button
+                      onClick={() => { setInvitandoBarbero(b.id); setInviteEmail(b.email || ''); setInviteError(''); }}
+                      style={{ padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: "'DM Sans'", background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)', color: '#C9A84C', transition: 'all 0.2s' }}
+                    >
+                      {b.email ? 'Reenviar' : 'Invitar'}
+                    </button>
                     <button onClick={() => toggleBarbero(b.id).then(() => getMisBarberos().then(r => setBarberos(r.data)))}
                       style={toggleBtn(b.activo)}>
                       {b.activo ? 'Activo' : 'Inactivo'}
@@ -340,6 +370,33 @@ function PanelDueno() {
                     </button>
                   </div>
                 </div>
+
+                {/* Panel invitar */}
+                {invitandoBarbero === b.id && (
+                  <div style={{ marginTop: 10, background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 10, padding: 14 }}>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+                      El barbero recibirá un email para activar su cuenta y ver su agenda.
+                    </p>
+                    <input
+                      type="email"
+                      value={inviteEmail}
+                      onChange={e => { setInviteEmail(e.target.value); setInviteError(''); }}
+                      placeholder="Email del barbero"
+                      className="input-dark"
+                      style={{ marginBottom: 8 }}
+                      autoFocus
+                    />
+                    {inviteError && <p style={{ color: '#E63946', fontSize: 12, margin: '0 0 8px 0' }}>{inviteError}</p>}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => { setInvitandoBarbero(null); setInviteError(''); }} className="btn-outline" style={{ flex: 1, padding: '8px', fontSize: 13 }}>
+                        Cancelar
+                      </button>
+                      <button onClick={() => handleInvitar(b.id)} disabled={inviteCargando || !inviteEmail.trim()} className="btn-gold" style={{ flex: 1, padding: '8px', fontSize: 13, opacity: (inviteCargando || !inviteEmail.trim()) ? 0.7 : 1 }}>
+                        {inviteCargando ? 'Enviando...' : 'Enviar invitación'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               ))}
               {barberos.length === 0 && (
                 <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>No hay barberos registrados.</p>
@@ -890,6 +947,18 @@ function PanelDueno() {
       </div>
         </div>{/* flex: 1 minWidth:0 */}
       </div>{/* flex row */}
+
+      {/* Toast invitación */}
+      {inviteExito && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          background: '#4ade80', color: '#0A0A0A', borderRadius: 100,
+          padding: '10px 20px', fontSize: 13, fontWeight: 700, zIndex: 9999,
+          whiteSpace: 'nowrap',
+        }}>
+          ✓ {inviteExito}
+        </div>
+      )}
     </div>
   );
 }

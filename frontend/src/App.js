@@ -20,6 +20,9 @@ import Terminos from './pages/Terminos';
 import Privacidad from './pages/Privacidad';
 import Soporte from './pages/Soporte';
 import Cuenta from './pages/Cuenta';
+import ActivarBarbero from './pages/ActivarBarbero';
+import LoginBarbero from './pages/LoginBarbero';
+import DashboardBarbero from './pages/DashboardBarbero';
 import BannerTC from './components/BannerTC';
 import './App.css';
 
@@ -61,6 +64,9 @@ function AppRoutes() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/terminos" element={<Terminos />} />
         <Route path="/privacidad" element={<Privacidad />} />
+        <Route path="/activar-barbero" element={<ActivarBarbero />} />
+        <Route path="/barbero/login" element={<LoginBarbero />} />
+        <Route path="/barbero/agenda" element={<DashboardBarbero />} />
 
         {/* Privadas — requieren login */}
         <Route path="/barberias" element={<ProtectedRoute><Barberias /></ProtectedRoute>} />

@@ -14,6 +14,19 @@ class BarberoCreate(BarberoBase):
 class BarberoResponse(BarberoBase):
     id: int
     activo: bool
+    email: Optional[str] = None
+    cuenta_activa: bool = False
 
     class Config:
         from_attributes = True
+
+class InvitarBarberoRequest(BaseModel):
+    email: str
+
+class ActivarBarberoRequest(BaseModel):
+    token: str
+    nueva_password: str
+
+class LoginBarberoRequest(BaseModel):
+    email: str
+    password: str

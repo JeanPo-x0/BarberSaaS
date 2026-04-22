@@ -20,7 +20,7 @@ from app.services.whatsapp import (
 )
 from app.models.configuracion_pagos import ConfiguracionPagos
 from app.models.barberia import Barberia
-from app.core.deps import get_usuario_actual
+from app.core.deps import get_usuario_actual, get_barbero_actual
 from app.core.config import settings
 from app.models.lista_espera import ListaEspera
 
@@ -195,6 +195,23 @@ def descompletar_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actua
     db.commit()
     db.refresh(cita)
     return cita
+
+
+@router.patch("/{cita_id}/completar-barbero")
+def completar_cita_barbero(
+    cita_id: int,
+    barbero: Barbero = Depends(get_barbero_actual),
+    db: Session = Depends(get_db),
+):
+    cita = db.query(Cita).filter(Cita.id == cita_id, Cita.barbero_id == barbero.id).first()
+    if not cita:
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+    if cita.estado != "pendiente":
+        raise HTTPException(status_code=400, detail="Solo se pueden completar citas pendientes")
+    cita.estado = "completada"
+    db.commit()
+    db.refresh(cita)
+    return {"ok": True}
 
 
 @router.get("/", response_model=List[CitaResponse])

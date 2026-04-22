@@ -69,6 +69,11 @@ export const getBarberosPorBarberia = (id) => API.get(`/barberos/barberia/${id}`
 export const crearBarbero = (data) => API.post('/barberos/', data);
 export const toggleBarbero = (id) => API.patch(`/barberos/${id}/toggle`);
 export const eliminarBarbero = (id) => API.delete(`/barberos/${id}`);
+export const invitarBarbero = (id, email) => API.post(`/barberos/${id}/invitar`, { email });
+export const activarBarbero = (data) => API.post('/barberos/activar', data);
+export const loginBarbero = (data) => API.post('/barberos/login', data);
+export const getAgendaBarbero = () => API.get('/barberos/me/agenda');
+export const completarCitaBarbero = (id) => API.patch(`/citas/${id}/completar-barbero`);
 
 // Servicios
 export const getServicios = () => API.get('/servicios/');

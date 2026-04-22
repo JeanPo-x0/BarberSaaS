@@ -23,3 +23,14 @@ def solo_dueno(usuario: Usuario = Depends(get_usuario_actual)):
     if usuario.rol != "dueno":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo el dueno puede hacer esto")
     return usuario
+
+
+def get_barbero_actual(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    from app.models.barbero import Barbero
+    payload = verificar_token(token)
+    if not payload or payload.get("rol") != "barbero":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
+    barbero = db.query(Barbero).filter(Barbero.id == payload.get("barbero_id")).first()
+    if not barbero or not barbero.cuenta_activa:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
+    return barbero

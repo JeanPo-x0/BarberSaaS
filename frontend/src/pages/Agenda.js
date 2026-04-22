@@ -410,11 +410,16 @@ function Agenda() {
     setClienteNombre(''); setClienteTelefono(''); setSlots([]);
   };
 
-  // Agrupar citas activas
+  // Agrupar citas activas — excluir fechas pasadas de "Próximas"
+  const ahora = new Date();
+  const hoyStr = ahora.toISOString().split('T')[0];
   const activas = citas.filter(c => c.estado !== 'cancelada' && c.estado !== 'completada');
   const hoy     = activas.filter(c => esHoy(c.fecha_hora));
   const manana  = activas.filter(c => esMañana(c.fecha_hora));
-  const futuras = activas.filter(c => !esHoy(c.fecha_hora) && !esMañana(c.fecha_hora));
+  const futuras = activas.filter(c => {
+    const fechaStr = new Date(c.fecha_hora).toISOString().split('T')[0];
+    return fechaStr > hoyStr && !esMañana(c.fecha_hora);
+  });
 
   // Stats
   const totalHoy = hoy.length;
@@ -423,7 +428,7 @@ function Agenda() {
   const hoyStr = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="bg-panel" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="bg-panel sidebar-page" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
 
       {/* Toast WhatsApp enviado */}
       {toastMsg && (
