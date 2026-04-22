@@ -225,7 +225,7 @@ export default function Planes() {
   };
 
   return (
-    <div className="bg-panel" style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: "'DM Sans', sans-serif", width: '100%', overflowX: 'hidden' }}>
+    <div className="bg-panel" style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: "'DM Sans', sans-serif" }}>
 
       {showEnterprise && <ModalEnterprise onClose={() => setShowEnterprise(false)} />}
 
@@ -256,7 +256,7 @@ export default function Planes() {
         )}
       </nav>
 
-      <div style={{ maxWidth: 1060, margin: '0 auto', padding: '56px 32px 80px', width: '100%', boxSizing: 'border-box' }}>
+      <div style={{ maxWidth: 1060, margin: '0 auto', padding: '56px 24px 80px' }}>
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
