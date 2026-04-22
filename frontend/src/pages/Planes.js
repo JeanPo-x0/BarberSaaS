@@ -271,11 +271,10 @@ export default function Planes() {
 
         {/* Cards */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
+          display: 'flex',
+          flexWrap: 'wrap',
           gap: 20,
-          maxWidth: 960,
-          margin: '0 auto',
+          justifyContent: 'center',
         }}
           className="planes-grid"
         >
@@ -293,6 +292,7 @@ export default function Planes() {
                   : 'none',
                 transition: 'transform 0.2s, box-shadow 0.2s',
                 display: 'flex', flexDirection: 'column',
+                width: 300, flexShrink: 0,
               }}
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
@@ -325,22 +325,25 @@ export default function Planes() {
                         </span>
                         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/año</span>
                       </div>
-                      <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 8px 0' }}>
+                      <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 10px 0' }}>
                         Equivale a <strong style={{ color: '#F5F5F5' }}>${plan.equiv_mensual}/mes</strong>
                         {' '}· antes ${plan.precio_mensual}/mes
                       </p>
-                      {/* Banner 2 meses gratis */}
+                      {/* Sticker 2 meses gratis */}
                       <div style={{
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        background: 'rgba(74,222,128,0.08)',
-                        border: '1px solid rgba(74,222,128,0.25)',
-                        borderRadius: 10, padding: '8px 12px',
+                        display: 'inline-flex', alignItems: 'center', gap: 7,
+                        background: '#4ade80', borderRadius: 6,
+                        padding: '6px 12px',
+                        transform: 'rotate(-2.5deg)',
+                        boxShadow: '2px 3px 0px rgba(0,0,0,0.35)',
+                        transformOrigin: 'left center',
                       }}>
-                        <span style={{ fontSize: 18 }}>🎁</span>
-                        <div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: '#4ade80' }}>2 meses gratis incluidos</div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Ahorrás ${plan.ahorro} vs pagar mensual</div>
-                        </div>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <path d="M7 1l1.5 3.5L12 5l-2.5 2.5.6 3.5L7 9.5 3.9 11l.6-3.5L2 5l3.5-.5z" fill="#0A0A0A"/>
+                        </svg>
+                        <span style={{ fontSize: 12, fontWeight: 900, color: '#0A0A0A', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: "'DM Sans'" }}>
+                          2 meses gratis
+                        </span>
                       </div>
                     </>
                   ) : (
@@ -351,20 +354,24 @@ export default function Planes() {
                         </span>
                         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/mes</span>
                       </div>
-                      {/* Banner 14 días gratis */}
+                      {/* Sticker 14 días gratis */}
                       <div style={{
-                        display: 'flex', alignItems: 'center', gap: 8, marginTop: 8,
-                        background: 'rgba(201,168,76,0.08)',
-                        border: '1px solid rgba(201,168,76,0.3)',
-                        borderRadius: 10, padding: '8px 12px',
+                        display: 'inline-flex', alignItems: 'center', gap: 7, marginTop: 10,
+                        background: '#C9A84C', borderRadius: 6,
+                        padding: '6px 12px',
+                        transform: 'rotate(-2deg)',
+                        boxShadow: '2px 3px 0px rgba(0,0,0,0.35)',
+                        transformOrigin: 'left center',
                       }}>
-                        <span style={{ fontSize: 18 }}>⚡</span>
-                        <div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: '#C9A84C' }}>14 días gratis</div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Sin cobros hasta que termine el trial</div>
-                        </div>
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                          <circle cx="6.5" cy="6.5" r="5.5" stroke="#0A0A0A" strokeWidth="1.5"/>
+                          <path d="M6.5 3.5v3l2 1.5" stroke="#0A0A0A" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                        <span style={{ fontSize: 12, fontWeight: 900, color: '#0A0A0A', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: "'DM Sans'" }}>
+                          14 días gratis
+                        </span>
                       </div>
-                      <p style={{ fontSize: 11, color: 'rgba(251,146,60,0.7)', margin: '6px 0 0 0', fontWeight: 600 }}>
+                      <p style={{ fontSize: 11, color: 'rgba(251,146,60,0.7)', margin: '8px 0 0 0', fontWeight: 600 }}>
                         ¿Querés más? Cambiá a anual y ahorrá ${plan.ahorro}
                       </p>
                     </>
@@ -400,6 +407,7 @@ export default function Planes() {
             borderRadius: 18, padding: '28px 24px',
             transition: 'transform 0.2s',
             display: 'flex', flexDirection: 'column',
+            width: 300, flexShrink: 0,
           }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}

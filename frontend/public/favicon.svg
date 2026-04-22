@@ -1,5 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#0A0A0A"/>
-  <rect width="64" height="64" rx="14" fill="none" stroke="#C9A84C" stroke-width="2.5"/>
-  <text x="32" y="44" font-family="Georgia, serif" font-size="28" font-weight="700" fill="#C9A84C" text-anchor="middle" letter-spacing="1">BS</text>
+  <rect width="64" height="64" rx="10" fill="#0A0A0A"/>
+  <!-- outer gold frame -->
+  <rect x="3" y="3" width="58" height="58" rx="8" fill="none" stroke="#C9A84C" stroke-width="2.5"/>
+  <!-- inner thin line accent -->
+  <rect x="7" y="7" width="50" height="50" rx="6" fill="none" stroke="#C9A84C" stroke-width="0.8" opacity="0.35"/>
+  <!-- BS text bold -->
+  <text x="32" y="44" font-family="Impact, Arial Black, sans-serif" font-size="34" font-weight="900" fill="#C9A84C" text-anchor="middle" letter-spacing="2">BS</text>
+  <!-- bottom accent bar -->
+  <rect x="16" y="50" width="32" height="2.5" rx="1.2" fill="#C9A84C" opacity="0.6"/>
 </svg>

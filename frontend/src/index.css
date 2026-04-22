@@ -214,9 +214,9 @@ select.input-dark option  { background: var(--bg-secondary); }
   }
 }
 
-@media (max-width: 900px) {
-  .planes-grid {
-    grid-template-columns: 1fr !important;
+@media (max-width: 700px) {
+  .planes-grid > div {
+    width: 100% !important;
   }
 }
 
