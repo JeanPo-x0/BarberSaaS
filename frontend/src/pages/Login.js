@@ -22,7 +22,8 @@ function Login() {
 
     const intentarLogin = async () => {
       const res = await login({ email, password });
-      iniciarSesion(res.data.access_token, { email });
+      const payload = JSON.parse(atob(res.data.access_token.split('.')[1]));
+      iniciarSesion(res.data.access_token, { email, rol: payload.rol });
       navigate('/agenda');
     };
 

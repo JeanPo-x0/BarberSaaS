@@ -210,118 +210,17 @@ export default function Cuenta() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-            {/* 1. Cambiar contraseña — primero */}
-            <Section titulo="Cambiar Contraseña">
-              <form onSubmit={handleCambiarPass} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <InputPassword
-                  label="Contraseña actual"
-                  value={passActual}
-                  onChange={e => { setPassActual(e.target.value); setPassError(''); setPassOk(false); }}
-                  placeholder="Tu contraseña actual"
-                />
-                <InputPassword
-                  label="Nueva contraseña"
-                  value={passNueva}
-                  onChange={e => { setPassNueva(e.target.value); setPassError(''); setPassOk(false); }}
-                  placeholder="Mín. 8 caracteres, 1 mayúscula, 1 símbolo"
-                />
-
-                {/* Barra de fortaleza */}
-                {passNueva.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {/* Barra */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{
-                        flex: 1, height: 5, borderRadius: 99,
-                        background: 'rgba(255,255,255,0.07)',
-                        overflow: 'hidden',
-                      }}>
-                        <div style={{
-                          width: `${fortaleza.pct}%`,
-                          height: '100%',
-                          background: fortaleza.color,
-                          borderRadius: 99,
-                          transition: 'width 0.3s ease, background 0.3s ease',
-                        }} />
-                      </div>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: fortaleza.color, minWidth: 72, textAlign: 'right' }}>
-                        {fortaleza.label}
-                      </span>
-                    </div>
-
-                    {/* Requisitos */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {fortaleza.checks.map(c => (
-                        <div key={c.texto} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          {c.ok ? (
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                              <circle cx="6" cy="6" r="5.5" fill="rgba(74,222,128,0.15)" stroke="#4ade80" strokeWidth="1"/>
-                              <path d="M3.5 6l1.8 1.8 3.2-3.6" stroke="#4ade80" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          ) : (
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                              <circle cx="6" cy="6" r="5.5" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
-                              <circle cx="6" cy="6" r="1.5" fill="rgba(255,255,255,0.2)"/>
-                            </svg>
-                          )}
-                          <span style={{ fontSize: 11, color: c.ok ? '#4ade80' : 'var(--text-muted)' }}>
-                            {c.texto}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <InputPassword
-                  label="Confirmar nueva contraseña"
-                  value={passConfirm}
-                  onChange={e => { setPassConfirm(e.target.value); setPassError(''); setPassOk(false); }}
-                  placeholder="Repetí la nueva contraseña"
-                />
-
-                {/* Aviso coincidencia */}
-                {passConfirm.length > 0 && passNueva !== passConfirm && (
-                  <p style={{ fontSize: 12, color: '#E63946', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    Las contraseñas no coinciden
-                  </p>
-                )}
-
-                {passError && (
-                  <p style={{ fontSize: 13, color: '#E63946', margin: 0 }}>{passError}</p>
-                )}
-                {passOk && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#4ade80' }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                    Contraseña actualizada correctamente
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={passCargando || !passActual || !passNueva || !passConfirm}
-                  className="btn-gold"
-                  style={{ padding: '11px', fontSize: 14, marginTop: 4 }}
-                >
-                  {passCargando ? 'Guardando...' : 'Cambiar contraseña'}
-                </button>
-              </form>
-            </Section>
-
-            {/* 2. Perfil */}
+            {/* 1. Perfil */}
             <Section titulo="Perfil">
               <Row label="Email" value={usuario?.email || '—'} />
               <Row label="Rol">
                 <span style={{ fontSize: 13, color: '#F5F5F5', fontWeight: 600, background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 100, padding: '3px 12px' }}>
-                  {usuario?.rol === 'dueno' ? 'Dueño' : usuario?.rol || '—'}
+                  {usuario?.rol === 'dueno' ? 'Dueño' : usuario?.rol === 'admin' ? 'Admin' : usuario?.rol || 'Dueño'}
                 </span>
               </Row>
             </Section>
 
-            {/* 3. Suscripción */}
+            {/* 2. Suscripción */}
             <Section titulo="Suscripcion">
               {sus ? (
                 <>
@@ -419,6 +318,79 @@ export default function Cuenta() {
               ) : (
                 <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>Cargando...</p>
               )}
+            </Section>
+
+            {/* 3. Cambiar contraseña */}
+            <Section titulo="Cambiar Contraseña">
+              <form onSubmit={handleCambiarPass} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <InputPassword
+                  label="Contraseña actual"
+                  value={passActual}
+                  onChange={e => { setPassActual(e.target.value); setPassError(''); setPassOk(false); }}
+                  placeholder="Tu contraseña actual"
+                />
+                <InputPassword
+                  label="Nueva contraseña"
+                  value={passNueva}
+                  onChange={e => { setPassNueva(e.target.value); setPassError(''); setPassOk(false); }}
+                  placeholder="Mín. 8 caracteres, 1 mayúscula, 1 símbolo"
+                />
+
+                {passNueva.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ flex: 1, height: 5, borderRadius: 99, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+                        <div style={{ width: `${fortaleza.pct}%`, height: '100%', background: fortaleza.color, borderRadius: 99, transition: 'width 0.3s ease, background 0.3s ease' }} />
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: fortaleza.color, minWidth: 72, textAlign: 'right' }}>
+                        {fortaleza.label}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {fortaleza.checks.map(c => (
+                        <div key={c.texto} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          {c.ok ? (
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                              <circle cx="6" cy="6" r="5.5" fill="rgba(74,222,128,0.15)" stroke="#4ade80" strokeWidth="1"/>
+                              <path d="M3.5 6l1.8 1.8 3.2-3.6" stroke="#4ade80" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          ) : (
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                              <circle cx="6" cy="6" r="5.5" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
+                              <circle cx="6" cy="6" r="1.5" fill="rgba(255,255,255,0.2)"/>
+                            </svg>
+                          )}
+                          <span style={{ fontSize: 11, color: c.ok ? '#4ade80' : 'var(--text-muted)' }}>{c.texto}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <InputPassword
+                  label="Confirmar nueva contraseña"
+                  value={passConfirm}
+                  onChange={e => { setPassConfirm(e.target.value); setPassError(''); setPassOk(false); }}
+                  placeholder="Repetí la nueva contraseña"
+                />
+
+                {passConfirm.length > 0 && passNueva !== passConfirm && (
+                  <p style={{ fontSize: 12, color: '#E63946', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Las contraseñas no coinciden
+                  </p>
+                )}
+                {passError && <p style={{ fontSize: 13, color: '#E63946', margin: 0 }}>{passError}</p>}
+                {passOk && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#4ade80' }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Contraseña actualizada correctamente
+                  </div>
+                )}
+                <button type="submit" disabled={passCargando || !passActual || !passNueva || !passConfirm} className="btn-gold" style={{ padding: '11px', fontSize: 14, marginTop: 4 }}>
+                  {passCargando ? 'Guardando...' : 'Cambiar contraseña'}
+                </button>
+              </form>
             </Section>
 
           </div>
