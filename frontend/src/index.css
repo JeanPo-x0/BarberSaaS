@@ -269,8 +269,8 @@ select.input-dark option  { background: var(--bg-secondary); }
   body { padding-bottom: 72px; }
 }
 
-/* Sidebar offset — solo páginas privadas con sidebar Navbar */
-@media (min-width: 769px) {
+/* Sidebar offset — mismo breakpoint que Tailwind md (768px) */
+@media (min-width: 768px) {
   .sidebar-page {
     padding-left: 220px;
   }
