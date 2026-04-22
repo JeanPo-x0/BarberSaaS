@@ -119,13 +119,13 @@ const BURST_PTS_H = "45,0 56.5,17.3 76.8,13.2 72.7,33.5 90,45 72.7,56.5 76.8,76.
 
 function PlanSticker({ planId, anual }) {
   const badge = (rotation, icon, line1, line2) => (
-    <div style={{
-      position: 'absolute', right: -10, top: '50%',
-      transform: `translateY(-50%) rotate(${rotation}deg)`,
-      filter: 'drop-shadow(2px 4px 10px rgba(160,0,20,0.7))',
-      pointerEvents: 'none',
+    <div className="sticker-pulsate" style={{
+      position: 'absolute', right: -22, top: 8,
+      transform: `rotate(${rotation}deg)`,
+      filter: 'drop-shadow(3px 5px 14px rgba(160,0,20,0.75))',
+      pointerEvents: 'none', zIndex: 10,
     }}>
-      <svg width="66" height="66" viewBox="0 0 90 90">
+      <svg width="84" height="84" viewBox="0 0 90 90">
         <defs>
           <linearGradient id="hsg-red" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#ff3a4a"/>
@@ -610,6 +610,7 @@ export default function Home() {
                 }}>
                   {plan.badge}
                 </span>
+                <PlanSticker planId={plan.id} anual={anual} />
                 <h3 style={{
                   fontFamily: "'Bebas Neue'", fontSize: 26,
                   letterSpacing: '0.08em', margin: '12px 0 16px 0',
@@ -617,7 +618,7 @@ export default function Home() {
                 }}>
                   {plan.nombre}
                 </h3>
-                <div style={{ marginBottom: 24, position: 'relative', paddingRight: 60 }}>
+                <div style={{ marginBottom: 24 }}>
                   {anual ? (
                     <>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
@@ -643,7 +644,6 @@ export default function Home() {
                       )}
                     </>
                   )}
-                  <PlanSticker planId={plan.id} anual={anual} />
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
                   {plan.features.map(f => (

@@ -43,14 +43,14 @@ function LightningBolt({ size = 15, style = {} }) {
 const BURST_PTS = "45,0 56.5,17.3 76.8,13.2 72.7,33.5 90,45 72.7,56.5 76.8,76.8 56.5,72.7 45,90 33.5,72.7 13.2,76.8 17.3,56.5 0,45 17.3,33.5 13.2,13.2 33.5,17.3";
 
 function PlanSticker({ planId, anual }) {
-  const badge = (rotation, icon, line1, line2, animClass) => (
-    <div style={{
-      position: 'absolute', right: -10, top: '50%',
-      transform: `translateY(-50%) rotate(${rotation}deg)`,
-      filter: 'drop-shadow(2px 4px 10px rgba(160,0,20,0.7))',
-      pointerEvents: 'none',
+  const badge = (rotation, icon, line1, line2) => (
+    <div className="sticker-pulsate" style={{
+      position: 'absolute', right: -22, top: 8,
+      transform: `rotate(${rotation}deg)`,
+      filter: 'drop-shadow(3px 5px 14px rgba(160,0,20,0.75))',
+      pointerEvents: 'none', zIndex: 10,
     }}>
-      <svg width="66" height="66" viewBox="0 0 90 90">
+      <svg width="84" height="84" viewBox="0 0 90 90">
         <defs>
           <linearGradient id="sg-red" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#ff3a4a"/>
@@ -384,6 +384,8 @@ export default function Planes() {
                   {plan.badge}
                 </span>
 
+                <PlanSticker planId={plan.id} anual={anual} />
+
                 <h2 style={{
                   fontFamily: "'Bebas Neue'", fontSize: 28, letterSpacing: '0.08em',
                   margin: '10px 0 18px 0',
@@ -392,7 +394,7 @@ export default function Planes() {
                   {plan.nombre}
                 </h2>
 
-                <div style={{ marginBottom: 22, position: 'relative', paddingRight: 60 }}>
+                <div style={{ marginBottom: 22 }}>
                   {anual ? (
                     <>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
@@ -421,7 +423,6 @@ export default function Planes() {
                       )}
                     </>
                   )}
-                  <PlanSticker planId={plan.id} anual={anual} />
                 </div>
 
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 9, flex: 1 }}>
