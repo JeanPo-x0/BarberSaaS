@@ -316,27 +316,32 @@ export default function Planes() {
                   {plan.nombre}
                 </h2>
 
-                <div style={{ marginBottom: 22, minHeight: 70 }}>
+                <div style={{ marginBottom: 22 }}>
                   {anual ? (
                     <>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
                         <span style={{ fontFamily: "'Bebas Neue'", fontSize: 44, color: '#C9A84C', letterSpacing: '0.04em' }}>
                           ${plan.precio_anual}
                         </span>
                         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/año</span>
-                        <span style={{
-                          fontSize: 10, fontWeight: 800, letterSpacing: '0.03em',
-                          background: 'rgba(74,222,128,0.12)', color: '#4ade80',
-                          border: '1px solid rgba(74,222,128,0.25)',
-                          borderRadius: 100, padding: '2px 8px',
-                        }}>
-                          AHORRÁ ${plan.ahorro}
-                        </span>
                       </div>
-                      <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                      <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 8px 0' }}>
                         Equivale a <strong style={{ color: '#F5F5F5' }}>${plan.equiv_mensual}/mes</strong>
                         {' '}· antes ${plan.precio_mensual}/mes
                       </p>
+                      {/* Banner 2 meses gratis */}
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        background: 'rgba(74,222,128,0.08)',
+                        border: '1px solid rgba(74,222,128,0.25)',
+                        borderRadius: 10, padding: '8px 12px',
+                      }}>
+                        <span style={{ fontSize: 18 }}>🎁</span>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#4ade80' }}>2 meses gratis incluidos</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Ahorrás ${plan.ahorro} vs pagar mensual</div>
+                        </div>
+                      </div>
                     </>
                   ) : (
                     <>
@@ -346,8 +351,21 @@ export default function Planes() {
                         </span>
                         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/mes</span>
                       </div>
-                      <p style={{ fontSize: 12, color: 'rgba(251,146,60,0.8)', margin: '4px 0 0 0', fontWeight: 600 }}>
-                        Cambia a anual y ahorrá ${plan.ahorro}/año
+                      {/* Banner 14 días gratis */}
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 8, marginTop: 8,
+                        background: 'rgba(201,168,76,0.08)',
+                        border: '1px solid rgba(201,168,76,0.3)',
+                        borderRadius: 10, padding: '8px 12px',
+                      }}>
+                        <span style={{ fontSize: 18 }}>⚡</span>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#C9A84C' }}>14 días gratis</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Sin cobros hasta que termine el trial</div>
+                        </div>
+                      </div>
+                      <p style={{ fontSize: 11, color: 'rgba(251,146,60,0.7)', margin: '6px 0 0 0', fontWeight: 600 }}>
+                        ¿Querés más? Cambiá a anual y ahorrá ${plan.ahorro}
                       </p>
                     </>
                   )}
