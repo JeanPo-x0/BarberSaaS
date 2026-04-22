@@ -240,6 +240,26 @@ def recuperar_password(request: Request, datos: EmailRequest, db: Session = Depe
 
     return {"mensaje": "Si el email existe, recibiras un correo con instrucciones"}
 
+class CambiarPasswordRequest(BaseModel):
+    password_actual: str
+    nueva_password: str
+
+@router.patch("/cambiar-password")
+def cambiar_password(
+    datos: CambiarPasswordRequest,
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    if not verify_password(datos.password_actual, usuario.password_hash):
+        raise HTTPException(status_code=400, detail="La contraseña actual no es correcta")
+    validar_password(datos.nueva_password)
+    if datos.password_actual == datos.nueva_password:
+        raise HTTPException(status_code=400, detail="La nueva contraseña debe ser diferente a la actual")
+    usuario.password_hash = hash_password(datos.nueva_password)
+    db.commit()
+    return {"mensaje": "Contraseña actualizada correctamente"}
+
+
 @router.post("/reset-password")
 def reset_password(datos: ResetPasswordRequest, db: Session = Depends(get_db)):
     token_hash = hashlib.sha256(datos.token.encode()).hexdigest()

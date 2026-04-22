@@ -1,15 +1,31 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { getEstadoSuscripcion, getPortalBilling, cambiarPassword } from '../services/api';
+import { getEstadoSuscripcion, getPortalBilling, cambiarPassword, cancelarSuscripcion, reactivarSuscripcion } from '../services/api';
 
 const PLAN_LABEL = { basico: 'Básico', pro: 'Pro', premium: 'Premium' };
 const ESTADO_META = {
-  trial:      { label: 'Trial activo',   color: '#C9A84C', bg: 'rgba(201,168,76,0.12)'  },
-  activa:     { label: 'Activa',         color: '#4ade80', bg: 'rgba(74,222,128,0.1)'   },
-  suspendida: { label: 'Suspendida',     color: '#E63946', bg: 'rgba(230,57,70,0.12)'   },
-  cancelada:  { label: 'Cancelada',      color: '#8A8A8A', bg: 'rgba(255,255,255,0.06)' },
+  trial:               { label: 'Trial activo',         color: '#C9A84C', bg: 'rgba(201,168,76,0.12)'  },
+  activa:              { label: 'Activa',               color: '#4ade80', bg: 'rgba(74,222,128,0.1)'   },
+  cancelacion_pendiente: { label: 'Cancela al fin del periodo', color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
+  suspendida:          { label: 'Suspendida',           color: '#E63946', bg: 'rgba(230,57,70,0.12)'   },
+  cancelada:           { label: 'Cancelada',            color: '#8A8A8A', bg: 'rgba(255,255,255,0.06)' },
 };
+
+function calcularFortaleza(pwd) {
+  if (!pwd) return { nivel: 0, label: '', color: '', checks: [] };
+  const checks = [
+    { ok: pwd.length >= 8,                          texto: 'Al menos 8 caracteres' },
+    { ok: /[A-Z]/.test(pwd),                        texto: '1 letra mayúscula' },
+    { ok: /[!@#$%^&*()\-_=+\[\]{}|;:\'",.<>?/\\]/.test(pwd), texto: '1 carácter especial (!@#...)' },
+    { ok: /[0-9]/.test(pwd),                        texto: '1 número' },
+  ];
+  const ok = checks.filter(c => c.ok).length;
+  if (ok <= 1) return { nivel: 1, label: 'Muy débil',   color: '#E63946', pct: 25,  checks };
+  if (ok === 2) return { nivel: 2, label: 'Débil',       color: '#f97316', pct: 50,  checks };
+  if (ok === 3) return { nivel: 3, label: 'Intermedia',  color: '#C9A84C', pct: 75,  checks };
+  return         { nivel: 4, label: 'Fuerte',        color: '#4ade80', pct: 100, checks };
+}
 
 function Section({ titulo, children }) {
   return (
@@ -88,6 +104,8 @@ export default function Cuenta() {
 
   const [sus, setSus] = useState(null);
   const [portalCargando, setPortalCargando] = useState(false);
+  const [cancelCargando, setCancelCargando] = useState(false);
+  const [reactivarCargando, setReactivarCargando] = useState(false);
 
   const [passActual, setPassActual] = useState('');
   const [passNueva, setPassNueva] = useState('');
@@ -95,6 +113,8 @@ export default function Cuenta() {
   const [passError, setPassError] = useState('');
   const [passOk, setPassOk] = useState(false);
   const [passCargando, setPassCargando] = useState(false);
+
+  const fortaleza = calcularFortaleza(passNueva);
 
   useEffect(() => {
     getEstadoSuscripcion()
@@ -114,6 +134,33 @@ export default function Cuenta() {
     }
   };
 
+  const handleCancelar = async () => {
+    if (!window.confirm('¿Cancelar tu suscripción? Podés seguir usando la plataforma hasta el final del periodo actual.')) return;
+    setCancelCargando(true);
+    try {
+      await cancelarSuscripcion();
+      const r = await getEstadoSuscripcion();
+      setSus(r.data);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Error al cancelar la suscripción');
+    } finally {
+      setCancelCargando(false);
+    }
+  };
+
+  const handleReactivar = async () => {
+    setReactivarCargando(true);
+    try {
+      await reactivarSuscripcion();
+      const r = await getEstadoSuscripcion();
+      setSus(r.data);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Error al reactivar la suscripción');
+    } finally {
+      setReactivarCargando(false);
+    }
+  };
+
   const handleCambiarPass = async (e) => {
     e.preventDefault();
     setPassError('');
@@ -122,13 +169,18 @@ export default function Cuenta() {
       setPassError('Las contraseñas nuevas no coinciden');
       return;
     }
+    if (fortaleza.nivel < 3) {
+      setPassError('La contraseña es muy débil. Cumplí todos los requisitos de seguridad.');
+      return;
+    }
     setPassCargando(true);
     try {
       await cambiarPassword({ password_actual: passActual, nueva_password: passNueva });
       setPassOk(true);
       setPassActual(''); setPassNueva(''); setPassConfirm('');
     } catch (err) {
-      setPassError(err.response?.data?.detail || 'Error al cambiar la contraseña');
+      const det = err.response?.data?.detail;
+      setPassError(typeof det === 'string' ? det : 'Error al cambiar la contraseña');
     } finally {
       setPassCargando(false);
     }
@@ -158,64 +210,8 @@ export default function Cuenta() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-            {/* Perfil */}
-            <Section titulo="Perfil">
-              <Row label="Email" value={usuario?.email || '—'} />
-              <Row label="Rol">
-                <span style={{ fontSize: 13, color: '#F5F5F5', fontWeight: 600, background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 100, padding: '3px 12px' }}>
-                  {usuario?.rol === 'dueno' ? 'Dueño' : usuario?.rol || '—'}
-                </span>
-              </Row>
-            </Section>
-
-            {/* Suscripción */}
-            <Section titulo="Suscripcion">
-              {sus ? (
-                <>
-                  <Row label="Plan" value={PLAN_LABEL[sus.plan] || sus.plan} />
-                  <Row label="Estado">
-                    <span style={{ fontSize: 12, fontWeight: 700, color: estadoMeta.color, background: estadoMeta.bg, borderRadius: 100, padding: '3px 12px' }}>
-                      {estadoMeta.label}
-                    </span>
-                  </Row>
-                  {sus.estado === 'trial' && diasTrial !== null && (
-                    <Row label="Trial termina en">
-                      <span style={{ fontSize: 14, fontWeight: 600, color: diasTrial <= 3 ? '#E63946' : '#C9A84C' }}>
-                        {diasTrial} {diasTrial === 1 ? 'día' : 'días'}
-                      </span>
-                    </Row>
-                  )}
-                  {sus.fecha_renovacion && sus.estado === 'activa' && (
-                    <Row label="Próxima renovación" value={new Date(sus.fecha_renovacion + 'Z').toLocaleDateString('es-CR')} />
-                  )}
-                  <div style={{ marginTop: 20 }}>
-                    <button
-                      onClick={handlePortal}
-                      disabled={portalCargando}
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 8,
-                        padding: '10px 20px', borderRadius: 10, cursor: portalCargando ? 'not-allowed' : 'pointer',
-                        background: 'none', border: '1px solid rgba(201,168,76,0.35)',
-                        color: '#C9A84C', fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans'",
-                        opacity: portalCargando ? 0.6 : 1, transition: 'background 0.2s',
-                      }}
-                      onMouseEnter={e => { if (!portalCargando) e.currentTarget.style.background = 'rgba(201,168,76,0.08)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
-                      </svg>
-                      {portalCargando ? 'Cargando...' : 'Administrar facturación'}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>Cargando...</p>
-              )}
-            </Section>
-
-            {/* Cambiar contraseña */}
-            <Section titulo="Cambiar Contrasena">
+            {/* 1. Cambiar contraseña — primero */}
+            <Section titulo="Cambiar Contraseña">
               <form onSubmit={handleCambiarPass} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <InputPassword
                   label="Contraseña actual"
@@ -227,14 +223,70 @@ export default function Cuenta() {
                   label="Nueva contraseña"
                   value={passNueva}
                   onChange={e => { setPassNueva(e.target.value); setPassError(''); setPassOk(false); }}
-                  placeholder="Min. 8 chars, 1 mayúscula, 1 símbolo"
+                  placeholder="Mín. 8 caracteres, 1 mayúscula, 1 símbolo"
                 />
+
+                {/* Barra de fortaleza */}
+                {passNueva.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {/* Barra */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{
+                        flex: 1, height: 5, borderRadius: 99,
+                        background: 'rgba(255,255,255,0.07)',
+                        overflow: 'hidden',
+                      }}>
+                        <div style={{
+                          width: `${fortaleza.pct}%`,
+                          height: '100%',
+                          background: fortaleza.color,
+                          borderRadius: 99,
+                          transition: 'width 0.3s ease, background 0.3s ease',
+                        }} />
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: fortaleza.color, minWidth: 72, textAlign: 'right' }}>
+                        {fortaleza.label}
+                      </span>
+                    </div>
+
+                    {/* Requisitos */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {fortaleza.checks.map(c => (
+                        <div key={c.texto} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          {c.ok ? (
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                              <circle cx="6" cy="6" r="5.5" fill="rgba(74,222,128,0.15)" stroke="#4ade80" strokeWidth="1"/>
+                              <path d="M3.5 6l1.8 1.8 3.2-3.6" stroke="#4ade80" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          ) : (
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                              <circle cx="6" cy="6" r="5.5" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
+                              <circle cx="6" cy="6" r="1.5" fill="rgba(255,255,255,0.2)"/>
+                            </svg>
+                          )}
+                          <span style={{ fontSize: 11, color: c.ok ? '#4ade80' : 'var(--text-muted)' }}>
+                            {c.texto}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <InputPassword
                   label="Confirmar nueva contraseña"
                   value={passConfirm}
                   onChange={e => { setPassConfirm(e.target.value); setPassError(''); setPassOk(false); }}
                   placeholder="Repetí la nueva contraseña"
                 />
+
+                {/* Aviso coincidencia */}
+                {passConfirm.length > 0 && passNueva !== passConfirm && (
+                  <p style={{ fontSize: 12, color: '#E63946', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Las contraseñas no coinciden
+                  </p>
+                )}
 
                 {passError && (
                   <p style={{ fontSize: 13, color: '#E63946', margin: 0 }}>{passError}</p>
@@ -257,6 +309,116 @@ export default function Cuenta() {
                   {passCargando ? 'Guardando...' : 'Cambiar contraseña'}
                 </button>
               </form>
+            </Section>
+
+            {/* 2. Perfil */}
+            <Section titulo="Perfil">
+              <Row label="Email" value={usuario?.email || '—'} />
+              <Row label="Rol">
+                <span style={{ fontSize: 13, color: '#F5F5F5', fontWeight: 600, background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 100, padding: '3px 12px' }}>
+                  {usuario?.rol === 'dueno' ? 'Dueño' : usuario?.rol || '—'}
+                </span>
+              </Row>
+            </Section>
+
+            {/* 3. Suscripción */}
+            <Section titulo="Suscripcion">
+              {sus ? (
+                <>
+                  <Row label="Plan" value={PLAN_LABEL[sus.plan] || sus.plan} />
+                  <Row label="Estado">
+                    <span style={{ fontSize: 12, fontWeight: 700, color: estadoMeta.color, background: estadoMeta.bg, borderRadius: 100, padding: '3px 12px' }}>
+                      {estadoMeta.label}
+                    </span>
+                  </Row>
+                  {sus.estado === 'trial' && diasTrial !== null && (
+                    <Row label="Trial termina en">
+                      <span style={{ fontSize: 14, fontWeight: 600, color: diasTrial <= 3 ? '#E63946' : '#C9A84C' }}>
+                        {diasTrial} {diasTrial === 1 ? 'día' : 'días'}
+                      </span>
+                    </Row>
+                  )}
+                  {sus.fecha_renovacion && sus.estado === 'activa' && (
+                    <Row label="Próxima renovación" value={new Date(sus.fecha_renovacion + 'Z').toLocaleDateString('es-CR')} />
+                  )}
+                  <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {/* Portal facturación */}
+                    <button
+                      onClick={handlePortal}
+                      disabled={portalCargando}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 8, width: 'fit-content',
+                        padding: '10px 20px', borderRadius: 10, cursor: portalCargando ? 'not-allowed' : 'pointer',
+                        background: 'none', border: '1px solid rgba(201,168,76,0.35)',
+                        color: '#C9A84C', fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans'",
+                        opacity: portalCargando ? 0.6 : 1, transition: 'background 0.2s',
+                      }}
+                      onMouseEnter={e => { if (!portalCargando) e.currentTarget.style.background = 'rgba(201,168,76,0.08)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                      </svg>
+                      {portalCargando ? 'Cargando...' : 'Administrar facturación'}
+                    </button>
+
+                    {/* Reactivar — si está pendiente de cancelación */}
+                    {sus.estado === 'cancelacion_pendiente' && (
+                      <div style={{
+                        background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.25)',
+                        borderRadius: 12, padding: '14px 16px',
+                      }}>
+                        <p style={{ fontSize: 13, color: '#f97316', margin: '0 0 10px 0', fontWeight: 600 }}>
+                          Tu suscripción se cancelará al final del periodo. Podés seguir usándola hasta entonces.
+                        </p>
+                        <button
+                          onClick={handleReactivar}
+                          disabled={reactivarCargando}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 8,
+                            padding: '8px 16px', borderRadius: 8, cursor: reactivarCargando ? 'not-allowed' : 'pointer',
+                            background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)',
+                            color: '#4ade80', fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans'",
+                            opacity: reactivarCargando ? 0.6 : 1, transition: 'background 0.2s',
+                          }}
+                          onMouseEnter={e => { if (!reactivarCargando) e.currentTarget.style.background = 'rgba(74,222,128,0.18)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(74,222,128,0.1)'; }}
+                        >
+                          {reactivarCargando ? 'Reactivando...' : '↩ Reactivar suscripción'}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Cancelar — solo si está activa */}
+                    {sus.estado === 'activa' && (
+                      <div style={{
+                        borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 4,
+                      }}>
+                        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+                          Al cancelar, tu plan sigue activo hasta el final del periodo pagado.
+                        </p>
+                        <button
+                          onClick={handleCancelar}
+                          disabled={cancelCargando}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 8,
+                            padding: '8px 16px', borderRadius: 8, cursor: cancelCargando ? 'not-allowed' : 'pointer',
+                            background: 'rgba(230,57,70,0.06)', border: '1px solid rgba(230,57,70,0.25)',
+                            color: '#E63946', fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans'",
+                            opacity: cancelCargando ? 0.6 : 1, transition: 'background 0.2s',
+                          }}
+                          onMouseEnter={e => { if (!cancelCargando) e.currentTarget.style.background = 'rgba(230,57,70,0.14)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(230,57,70,0.06)'; }}
+                        >
+                          {cancelCargando ? 'Cancelando...' : 'Cancelar suscripción'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>Cargando...</p>
+              )}
             </Section>
 
           </div>
