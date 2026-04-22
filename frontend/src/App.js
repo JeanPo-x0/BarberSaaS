@@ -1,6 +1,6 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { wakeUpServer } from './services/api';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -22,35 +22,51 @@ import Soporte from './pages/Soporte';
 import BannerTC from './components/BannerTC';
 import './App.css';
 
-function App() {
-  // Despertar el servidor al cargar la app — cubre todas las páginas
+function ProtectedRoute({ children }) {
+  const { token } = useAuth();
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
+}
+
+function AppRoutes() {
   useEffect(() => { wakeUpServer(); }, []);
 
   return (
+    <>
+      <BannerTC />
+      <Routes>
+        {/* Públicas */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Onboarding />} />
+        <Route path="/planes" element={<Planes />} />
+        <Route path="/agendar" element={<AgendarCita />} />
+        <Route path="/agendar/:barberia_id" element={<AgendarCita />} />
+        <Route path="/b/:slug" element={<AgendarCita />} />
+        <Route path="/recuperar-password" element={<RecuperarPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/terminos" element={<Terminos />} />
+        <Route path="/privacidad" element={<Privacidad />} />
+
+        {/* Privadas — requieren login */}
+        <Route path="/barberias" element={<ProtectedRoute><Barberias /></ProtectedRoute>} />
+        <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
+        <Route path="/panel" element={<ProtectedRoute><PanelDueno /></ProtectedRoute>} />
+        <Route path="/historial" element={<ProtectedRoute><Historial /></ProtectedRoute>} />
+        <Route path="/ingresos" element={<ProtectedRoute><DashboardIngresos /></ProtectedRoute>} />
+        <Route path="/soporte" element={<ProtectedRoute><Soporte /></ProtectedRoute>} />
+        <Route path="/suscripcion/exito" element={<ProtectedRoute><SuscripcionExito /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
+      </Routes>
+    </>
+  );
+}
+
+function App() {
+  return (
     <AuthProvider>
       <BrowserRouter>
-        <BannerTC />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/registro" element={<Onboarding />} />
-          <Route path="/planes" element={<Planes />} />
-          <Route path="/barberias" element={<Barberias />} />
-          <Route path="/agenda" element={<Agenda />} />
-          <Route path="/agendar" element={<AgendarCita />} />
-          <Route path="/agendar/:barberia_id" element={<AgendarCita />} />
-          <Route path="/b/:slug" element={<AgendarCita />} />
-          <Route path="/panel" element={<PanelDueno />} />
-          <Route path="/historial" element={<Historial />} />
-          <Route path="/ingresos" element={<DashboardIngresos />} />
-          <Route path="/admin" element={<SuperAdmin />} />
-          <Route path="/suscripcion/exito" element={<SuscripcionExito />} />
-          <Route path="/recuperar-password" element={<RecuperarPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/terminos" element={<Terminos />} />
-          <Route path="/privacidad" element={<Privacidad />} />
-          <Route path="/soporte" element={<Soporte />} />
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
     </AuthProvider>
   );

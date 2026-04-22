@@ -28,19 +28,27 @@ const IconCheck = () => (
   </svg>
 );
 
-function PlanSticker({ planId, anual }) {
-  const base = {
-    display: 'inline-flex', alignItems: 'center', gap: 7,
-    padding: '5px 13px 5px 10px', borderRadius: 3,
+function PlanSticker({ planId, anual, cardBg = '#1A1A1A' }) {
+  const tag = {
+    position: 'relative',
+    display: 'inline-flex', alignItems: 'center', gap: 8,
     background: '#E63946',
-    boxShadow: '3px 3px 0 rgba(0,0,0,0.55)',
-    transformOrigin: 'left center', marginTop: 10,
+    padding: '6px 14px 6px 22px',
+    borderRadius: '2px 4px 4px 2px',
+    filter: 'drop-shadow(3px 3px 0 rgba(0,0,0,0.55))',
+    marginTop: 12,
   };
-  const label = { fontSize: 11, fontWeight: 900, color: '#fff', letterSpacing: '0.07em', textTransform: 'uppercase', fontFamily: "'DM Sans'" };
+  const hole = {
+    position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
+    width: 7, height: 7, borderRadius: '50%',
+    background: cardBg, border: '1px solid rgba(0,0,0,0.25)',
+    flexShrink: 0,
+  };
+  const label = { fontSize: 11, fontWeight: 900, color: '#fff', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: "'DM Sans'" };
 
   if (planId === 'pro' && !anual) return (
-    <div style={{ ...base, transform: 'rotate(-3deg)' }}>
-      {/* Clock — manecilla gira = tiempo */}
+    <div style={{ ...tag, transform: 'rotate(-5deg)', transformOrigin: 'center' }}>
+      <div style={hole} />
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0 }}>
         <circle cx="6.5" cy="6.5" r="5.2" stroke="#fff" strokeWidth="1.3"/>
         <line x1="6.5" y1="6.5" x2="6.5" y2="2.8" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" className="sticker-clock-hand"/>
@@ -51,8 +59,8 @@ function PlanSticker({ planId, anual }) {
     </div>
   );
   if (planId === 'pro' && anual) return (
-    <div style={{ ...base, transform: 'rotate(2.5deg)' }}>
-      {/* Flecha arriba rebotando = más valor */}
+    <div style={{ ...tag, transform: 'rotate(4deg)', transformOrigin: 'center' }}>
+      <div style={hole} />
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="sticker-bounce" style={{ flexShrink: 0 }}>
         <path d="M6 10V3M2.5 6.5L6 3l3.5 3.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
@@ -60,8 +68,8 @@ function PlanSticker({ planId, anual }) {
     </div>
   );
   if (planId === 'premium' && anual) return (
-    <div style={{ ...base, transform: 'rotate(-2deg)' }}>
-      {/* Flecha bajando = precio cae */}
+    <div style={{ ...tag, transform: 'rotate(-3deg)', transformOrigin: 'center' }}>
+      <div style={hole} />
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="sticker-drop" style={{ flexShrink: 0 }}>
         <path d="M6 2v7M2.5 5.5L6 9l3.5-3.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
@@ -240,18 +248,27 @@ export default function Planes() {
         <NavLogo />
         {token ? (
           <Link to="/panel" style={{
-            fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none',
-            display: 'flex', alignItems: 'center', gap: 6,
-            transition: 'color 0.2s',
+            display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none',
+            fontSize: 13, fontWeight: 600, color: 'var(--text-muted)',
+            background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)',
+            borderRadius: 8, padding: '6px 12px',
+            transition: 'all 0.2s',
           }}
-            onMouseEnter={e => e.currentTarget.style.color = '#F5F5F5'}
-            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+            onMouseEnter={e => { e.currentTarget.style.color = '#F5F5F5'; e.currentTarget.style.background = 'rgba(255,255,255,0.09)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
           >
-            ← Volver al panel
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 13L5 8l5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Panel
           </Link>
         ) : (
-          <Link to="/login" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
-            Iniciar sesion
+          <Link to="/login" style={{
+            fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none',
+            background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)',
+            borderRadius: 8, padding: '6px 12px',
+          }}>
+            Iniciar sesión
           </Link>
         )}
       </nav>
