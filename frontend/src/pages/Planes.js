@@ -409,7 +409,7 @@ export default function Planes() {
                   </div>
                   {anual ? (
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
-                      Equivale a <strong style={{ color: '#F5F5F5' }}>${plan.equiv_mensual}/mes</strong>
+                      Equivale a <strong style={{ color: '#C9A84C' }}>${plan.equiv_mensual}/mes</strong>
                       {' '}· antes ${plan.precio_mensual}/mes
                     </p>
                   ) : plan.id === 'pro' ? (
