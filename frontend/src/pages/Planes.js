@@ -28,54 +28,85 @@ const IconCheck = () => (
   </svg>
 );
 
-function PlanSticker({ planId, anual, cardBg = '#1A1A1A' }) {
-  const tag = {
-    position: 'relative',
-    display: 'inline-flex', alignItems: 'center', gap: 8,
-    background: '#E63946',
-    padding: '6px 14px 6px 22px',
-    borderRadius: '2px 4px 4px 2px',
-    filter: 'drop-shadow(3px 3px 0 rgba(0,0,0,0.55))',
-    marginTop: 12,
-  };
-  const hole = {
-    position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
-    width: 7, height: 7, borderRadius: '50%',
-    background: cardBg, border: '1px solid rgba(0,0,0,0.25)',
-    flexShrink: 0,
-  };
-  const label = { fontSize: 11, fontWeight: 900, color: '#fff', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: "'DM Sans'" };
+/* Starburst badge — 8 puntas, estilo sello de producto premium */
+const BURST_PTS = "45,0 56.5,17.3 76.8,13.2 72.7,33.5 90,45 72.7,56.5 76.8,76.8 56.5,72.7 45,90 33.5,72.7 13.2,76.8 17.3,56.5 0,45 17.3,33.5 13.2,13.2 33.5,17.3";
 
+function PlanSticker({ planId, anual }) {
   if (planId === 'pro' && !anual) return (
-    <div style={{ ...tag, transform: 'rotate(-5deg)', transformOrigin: 'center' }}>
-      <div style={hole} />
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0 }}>
-        <circle cx="6.5" cy="6.5" r="5.2" stroke="#fff" strokeWidth="1.3"/>
-        <line x1="6.5" y1="6.5" x2="6.5" y2="2.8" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" className="sticker-clock-hand"/>
-        <line x1="6.5" y1="6.5" x2="9.2" y2="6.5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
-        <circle cx="6.5" cy="6.5" r="0.9" fill="#fff"/>
+    <div style={{ display: 'inline-block', marginTop: 14, transform: 'rotate(-8deg)', filter: 'drop-shadow(2px 5px 14px rgba(180,0,30,0.65))' }}>
+      <svg width="92" height="92" viewBox="0 0 90 90">
+        <defs>
+          <linearGradient id="sg-trial" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ff3a4a"/>
+            <stop offset="100%" stopColor="#9b1520"/>
+          </linearGradient>
+          <linearGradient id="sg-trial-shine" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.18)"/>
+            <stop offset="100%" stopColor="rgba(255,255,255,0)"/>
+          </linearGradient>
+        </defs>
+        <polygon points={BURST_PTS} fill="url(#sg-trial)"/>
+        <polygon points={BURST_PTS} fill="url(#sg-trial-shine)"/>
+        <polygon points={BURST_PTS} fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="1.4"
+          transform="translate(45 45) scale(0.84) translate(-45 -45)"/>
+        <circle cx="45" cy="30" r="7.5" stroke="rgba(255,255,255,0.8)" strokeWidth="1.3" fill="none"/>
+        <line x1="45" y1="30" x2="45" y2="25" stroke="white" strokeWidth="1.5" strokeLinecap="round" className="sticker-clock-hand"/>
+        <line x1="45" y1="30" x2="48.5" y2="30" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+        <circle cx="45" cy="30" r="1.2" fill="white"/>
+        <text x="45" y="50" textAnchor="middle" fill="white" fontWeight="900" fontSize="10.5" fontFamily="DM Sans,sans-serif" letterSpacing="1.5">14 DÍAS</text>
+        <text x="45" y="63" textAnchor="middle" fill="rgba(255,255,255,0.88)" fontWeight="900" fontSize="9.5" fontFamily="DM Sans,sans-serif" letterSpacing="2.5">GRATIS</text>
       </svg>
-      <span style={label}>14 días gratis</span>
     </div>
   );
+
   if (planId === 'pro' && anual) return (
-    <div style={{ ...tag, transform: 'rotate(4deg)', transformOrigin: 'center' }}>
-      <div style={hole} />
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="sticker-bounce" style={{ flexShrink: 0 }}>
-        <path d="M6 10V3M2.5 6.5L6 3l3.5 3.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    <div style={{ display: 'inline-block', marginTop: 14, transform: 'rotate(6deg)', filter: 'drop-shadow(2px 5px 14px rgba(150,90,0,0.65))' }}>
+      <svg width="92" height="92" viewBox="0 0 90 90">
+        <defs>
+          <linearGradient id="sg-annpro" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#d4952b"/>
+            <stop offset="100%" stopColor="#7a4d08"/>
+          </linearGradient>
+          <linearGradient id="sg-annpro-shine" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.2)"/>
+            <stop offset="100%" stopColor="rgba(255,255,255,0)"/>
+          </linearGradient>
+        </defs>
+        <polygon points={BURST_PTS} fill="url(#sg-annpro)"/>
+        <polygon points={BURST_PTS} fill="url(#sg-annpro-shine)"/>
+        <polygon points={BURST_PTS} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.4"
+          transform="translate(45 45) scale(0.84) translate(-45 -45)"/>
+        <path d="M45 37V25M40 30L45 25L50 30" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="sticker-bounce"/>
+        <text x="45" y="52" textAnchor="middle" fill="white" fontWeight="900" fontSize="10.5" fontFamily="DM Sans,sans-serif" letterSpacing="1">2 MESES</text>
+        <text x="45" y="65" textAnchor="middle" fill="rgba(255,255,255,0.88)" fontWeight="900" fontSize="9.5" fontFamily="DM Sans,sans-serif" letterSpacing="2.5">FREE</text>
       </svg>
-      <span style={label}>2 meses free</span>
     </div>
   );
+
   if (planId === 'premium' && anual) return (
-    <div style={{ ...tag, transform: 'rotate(-3deg)', transformOrigin: 'center' }}>
-      <div style={hole} />
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="sticker-drop" style={{ flexShrink: 0 }}>
-        <path d="M6 2v7M2.5 5.5L6 9l3.5-3.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    <div style={{ display: 'inline-block', marginTop: 14, transform: 'rotate(-5deg)', filter: 'drop-shadow(2px 5px 14px rgba(0,110,60,0.65))' }}>
+      <svg width="92" height="92" viewBox="0 0 90 90">
+        <defs>
+          <linearGradient id="sg-annprem" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1ba870"/>
+            <stop offset="100%" stopColor="#0a5c3c"/>
+          </linearGradient>
+          <linearGradient id="sg-annprem-shine" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.2)"/>
+            <stop offset="100%" stopColor="rgba(255,255,255,0)"/>
+          </linearGradient>
+        </defs>
+        <polygon points={BURST_PTS} fill="url(#sg-annprem)"/>
+        <polygon points={BURST_PTS} fill="url(#sg-annprem-shine)"/>
+        <polygon points={BURST_PTS} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.4"
+          transform="translate(45 45) scale(0.84) translate(-45 -45)"/>
+        <path d="M45 25v13M40 33L45 38L50 33" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="sticker-drop"/>
+        <text x="45" y="52" textAnchor="middle" fill="white" fontWeight="900" fontSize="9" fontFamily="DM Sans,sans-serif" letterSpacing="1">AHORRÁS</text>
+        <text x="45" y="66" textAnchor="middle" fill="rgba(255,255,255,0.88)" fontWeight="900" fontSize="14" fontFamily="DM Sans,sans-serif" letterSpacing="0.5">$236</text>
       </svg>
-      <span style={label}>Ahorrás $236</span>
     </div>
   );
+
   return null;
 }
 
@@ -352,7 +383,7 @@ export default function Planes() {
                   : 'none',
                 transition: 'transform 0.2s, box-shadow 0.2s',
                 display: 'flex', flexDirection: 'column',
-                width: 300, flexShrink: 0,
+                flex: '1 1 280px', minWidth: 268, maxWidth: 330,
               }}
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
@@ -437,7 +468,7 @@ export default function Planes() {
             borderRadius: 18, padding: '28px 24px',
             transition: 'transform 0.2s',
             display: 'flex', flexDirection: 'column',
-            width: 300, flexShrink: 0,
+            flex: '1 1 280px', minWidth: 268, maxWidth: 330,
           }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}

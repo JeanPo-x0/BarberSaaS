@@ -228,17 +228,17 @@ select.input-dark option  { background: var(--bg-secondary); }
   body { padding-bottom: 72px; }
 }
 
-/* Sidebar offset en desktop — todas las páginas post-login */
+/* Sidebar offset — solo páginas privadas con sidebar Navbar */
 @media (min-width: 769px) {
-  .bg-panel,
-  .bg-grid-lines {
+  .sidebar-page {
     padding-left: 220px;
   }
 }
 
 @media (max-width: 700px) {
   .planes-grid > div {
-    width: 100% !important;
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
   }
 }
 
