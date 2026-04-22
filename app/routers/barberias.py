@@ -4,6 +4,7 @@ from app.database import get_db
 from app.models.barberia import Barberia
 from app.models.suscripcion import Suscripcion
 from app.schemas import BarberiaCreate, BarberiaResponse
+from app.schemas.barberia import MapsLinkUpdate
 from app.core.deps import get_usuario_actual
 from app.models.usuario import Usuario
 from typing import List
@@ -149,6 +150,30 @@ def eliminar_subdominio(
     if not barberia:
         raise HTTPException(status_code=404, detail="Barberia no encontrada")
     barberia.subdominio = None
+    db.commit()
+    db.refresh(barberia)
+    return barberia
+
+
+@router.patch("/{barberia_id}/maps-link", response_model=BarberiaResponse)
+def actualizar_maps_link(
+    barberia_id: int,
+    datos: MapsLinkUpdate,
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    barberia = db.query(Barberia).filter(
+        Barberia.id == barberia_id,
+        Barberia.dueno_id == usuario.id
+    ).first()
+    if not barberia:
+        barberia = db.query(Barberia).filter(
+            Barberia.id == barberia_id,
+            Barberia.id == usuario.barberia_id
+        ).first()
+    if not barberia:
+        raise HTTPException(status_code=404, detail="Barberia no encontrada")
+    barberia.maps_link = datos.maps_link
     db.commit()
     db.refresh(barberia)
     return barberia

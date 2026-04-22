@@ -698,9 +698,33 @@ function AgendarCita() {
             Agendar cita
           </h1>
           {barberia && (
-            <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>
-              {barberia.nombre}
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>
+                {barberia.nombre}
+              </p>
+              {barberia.maps_link && (
+                <a
+                  href={barberia.maps_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    fontSize: 12, fontWeight: 600, color: '#C9A84C',
+                    background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)',
+                    borderRadius: 100, padding: '3px 10px', textDecoration: 'none',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(201,168,76,0.2)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(201,168,76,0.1)'}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  Cómo llegar
+                </a>
+              )}
+            </div>
           )}
         </div>
 
@@ -1132,8 +1156,22 @@ function AgendarCita() {
                               ×
                             </button>
                           )}
-                          <input type="file" accept="image/*" style={{ display: 'none' }}
-                            onChange={e => setComprobante(e.target.files[0] || null)} />
+                          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: 'none' }}
+                            onChange={e => {
+                              const f = e.target.files[0];
+                              if (!f) return setComprobante(null);
+                              if (!['image/jpeg','image/png','image/webp','image/gif'].includes(f.type)) {
+                                alert('Solo se aceptan imágenes (jpg, png, webp, gif)');
+                                e.target.value = '';
+                                return;
+                              }
+                              if (f.size > 8 * 1024 * 1024) {
+                                alert('El archivo no puede superar 8 MB');
+                                e.target.value = '';
+                                return;
+                              }
+                              setComprobante(f);
+                            }} />
                         </label>
                         <p style={{ fontSize: 11, color: '#8A8A8A', margin: '6px 0 0 0' }}>
                           Si adjuntás el comprobante, tu cita quedará pendiente de confirmación por el barbero.

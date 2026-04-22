@@ -50,6 +50,7 @@ export const toggleBarberia = (id) => API.patch(`/barberias/${id}/toggle`);
 export const getBarberia = (id) => API.get(`/barberias/${id}`);
 export const actualizarSubdominio = (id, subdominio) => API.patch(`/barberias/${id}/subdominio`, { subdominio });
 export const eliminarSubdominio = (id) => API.delete(`/barberias/${id}/subdominio`);
+export const actualizarMapsLink = (id, maps_link) => API.patch(`/barberias/${id}/maps-link`, { maps_link });
 export const getBarberiaBySlug = (slug) => API.get(`/barberias/slug/${slug}`);
 
 // Auth

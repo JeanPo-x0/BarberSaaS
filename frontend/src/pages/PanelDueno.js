@@ -6,7 +6,7 @@ import {
   getMisBarberos, crearBarbero, toggleBarbero, eliminarBarbero,
   getMisServicios, crearServicio, toggleServicio, eliminarServicio,
   getMiBarberia, toggleBarberia, crearBarberiaAdicional,
-  getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio,
+  getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio, actualizarMapsLink,
   getConfigPagos, updateConfigPagos,
 } from '../services/api';
 
@@ -102,6 +102,12 @@ function PanelDueno() {
   const [slugError, setSlugError] = useState('');
   const [slugCargando, setSlugCargando] = useState(false);
 
+  // Maps link
+  const [editandoMaps, setEditandoMaps] = useState(null);
+  const [mapsInput, setMapsInput] = useState('');
+  const [mapsError, setMapsError] = useState('');
+  const [mapsCargando, setMapsCargando] = useState(false);
+
   const cargarDatos = () => {
     getMisBarberos().then(r => setBarberos(r.data)).catch(() => {});
     getMisServicios().then(r => setServicios(r.data)).catch(() => {});
@@ -186,6 +192,19 @@ function PanelDueno() {
       setSlugError(err.response?.data?.detail || 'Error al guardar');
     } finally {
       setSlugCargando(false);
+    }
+  };
+
+  const handleGuardarMaps = async (barberiaId) => {
+    setMapsError(''); setMapsCargando(true);
+    try {
+      await actualizarMapsLink(barberiaId, mapsInput.trim() || null);
+      getMiBarberia().then(r => setBarberias(r.data));
+      setEditandoMaps(null); setMapsInput('');
+    } catch (err) {
+      setMapsError(err.response?.data?.detail || 'URL no válida. Usa un link de Google Maps o Waze.');
+    } finally {
+      setMapsCargando(false);
     }
   };
 
@@ -516,6 +535,75 @@ function PanelDueno() {
                       </button>
                       <button onClick={() => handleGuardarSlug(b.id)} disabled={slugCargando || slugInput.length < 3} className="btn-gold" style={{ flex: 1, padding: '8px', fontSize: 13 }}>
                         {slugCargando ? 'Guardando...' : 'Guardar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Maps link */}
+                {b.maps_link && editandoMaps !== b.id ? (
+                  <div style={{
+                    background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.2)',
+                    borderRadius: 8, padding: '8px 12px',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  }}>
+                    <span style={{ fontSize: 13, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      Link Cómo llegar configurado
+                    </span>
+                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                      <button onClick={() => { setEditandoMaps(b.id); setMapsInput(b.maps_link); setMapsError(''); }}
+                        style={{ ...deleteBtn, color: 'var(--text-muted)', background: 'none', border: '1px solid var(--border)' }}>
+                        Editar
+                      </button>
+                      <button onClick={() => { setMapsInput(''); actualizarMapsLink(b.id, null).then(() => getMiBarberia().then(r => setBarberias(r.data))); }}
+                        style={deleteBtn}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,57,70,0.18)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(230,57,70,0.08)'}>
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                ) : editandoMaps !== b.id ? (
+                  <button
+                    onClick={() => { setEditandoMaps(b.id); setMapsInput(''); setMapsError(''); }}
+                    style={{
+                      width: '100%', background: 'none', cursor: 'pointer',
+                      border: '1px dashed rgba(255,255,255,0.1)',
+                      borderRadius: 8, padding: '8px', marginTop: 4,
+                      fontSize: 12, color: 'var(--text-muted)', fontFamily: "'DM Sans'",
+                      transition: 'border-color 0.2s, color 0.2s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#C9A84C'; e.currentTarget.style.color = '#C9A84C'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                  >
+                    + Agregar link de Google Maps / Waze
+                  </button>
+                ) : null}
+
+                {/* Editor maps */}
+                {editandoMaps === b.id && (
+                  <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px', marginTop: 4 }}>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+                      Pegá el link de Google Maps o Waze de tu local.
+                    </p>
+                    <input
+                      value={mapsInput}
+                      onChange={e => { setMapsInput(e.target.value); setMapsError(''); }}
+                      placeholder="https://maps.google.com/..."
+                      className="input-dark"
+                      style={{ marginBottom: 8 }}
+                      autoFocus
+                    />
+                    {mapsError && <p style={{ color: '#E63946', fontSize: 12, margin: '0 0 8px 0' }}>{mapsError}</p>}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => { setEditandoMaps(null); setMapsError(''); }} className="btn-outline" style={{ flex: 1, padding: '8px', fontSize: 13 }}>
+                        Cancelar
+                      </button>
+                      <button onClick={() => handleGuardarMaps(b.id)} disabled={mapsCargando || !mapsInput.trim()} className="btn-gold" style={{ flex: 1, padding: '8px', fontSize: 13 }}>
+                        {mapsCargando ? 'Guardando...' : 'Guardar'}
                       </button>
                     </div>
                   </div>

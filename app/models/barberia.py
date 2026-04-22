@@ -15,6 +15,7 @@ class Barberia(Base):
     twilio_numero = Column(String, nullable=True)
     plan = Column(String, default="basico")
     subdominio = Column(String, nullable=True, unique=True)
+    maps_link = Column(String, nullable=True)
     dueno_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
 
     barberos = relationship("Barbero", back_populates="barberia")

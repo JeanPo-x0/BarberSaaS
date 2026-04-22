@@ -252,23 +252,50 @@ def rechazar_pago(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), 
 
 
 COMPROBANTES_DIR = "/tmp/comprobantes"
-ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+MAX_FILE_SIZE = 8 * 1024 * 1024  # 8 MB
+
+# Validated by magic bytes, NOT by content_type (which is user-controlled)
+IMAGE_SIGNATURES = {
+    b"\xff\xd8\xff": "jpg",
+    b"\x89PNG\r\n\x1a\n": "png",
+    b"RIFF": "webp",   # checked further below
+    b"GIF87a": "gif",
+    b"GIF89a": "gif",
+}
+
+def _detect_image_ext(header: bytes) -> str | None:
+    if header[:3] == b"\xff\xd8\xff":
+        return "jpg"
+    if header[:8] == b"\x89PNG\r\n\x1a\n":
+        return "png"
+    if header[:4] == b"RIFF" and header[8:12] == b"WEBP":
+        return "webp"
+    if header[:6] in (b"GIF87a", b"GIF89a"):
+        return "gif"
+    return None
 
 @router.post("/{cita_id}/comprobante", response_model=CitaResponse)
 async def subir_comprobante(cita_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
-    if file.content_type not in ALLOWED_TYPES:
+    # Read full file into memory with size cap to prevent disk exhaustion
+    data = await file.read(MAX_FILE_SIZE + 1)
+    if len(data) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="El archivo no puede superar 8 MB")
+
+    # Validate by actual magic bytes, not by content_type (user-controlled)
+    ext = _detect_image_ext(data[:12])
+    if ext is None:
         raise HTTPException(status_code=400, detail="Solo se aceptan imágenes (jpg, png, webp, gif)")
 
     cita = db.query(Cita).filter(Cita.id == cita_id).first()
     if not cita:
         raise HTTPException(status_code=404, detail="Cita no encontrada")
 
-    ext = file.filename.rsplit(".", 1)[-1] if "." in file.filename else "jpg"
+    # Filename is a pure UUID hex + validated ext — never derived from user input
     filename = f"{uuid.uuid4().hex}.{ext}"
     os.makedirs(COMPROBANTES_DIR, exist_ok=True)
     dest = os.path.join(COMPROBANTES_DIR, filename)
     with open(dest, "wb") as f:
-        shutil.copyfileobj(file.file, f)
+        f.write(data)
 
     comprobante_url = f"{settings.BACKEND_URL}/comprobantes/{filename}"
     cita.comprobante_url = comprobante_url

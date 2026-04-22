@@ -1,5 +1,13 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional
+from urllib.parse import urlparse
+
+MAPS_ALLOWED_HOSTS = {
+    "maps.google.com", "www.maps.google.com",
+    "goo.gl", "maps.app.goo.gl",
+    "waze.com", "www.waze.com", "ul.waze.com",
+    "maps.apple.com",
+}
 
 class BarberiaBase(BaseModel):
     nombre: str
@@ -12,10 +20,30 @@ class BarberiaBase(BaseModel):
 class BarberiaCreate(BarberiaBase):
     pass
 
+class MapsLinkUpdate(BaseModel):
+    maps_link: Optional[str] = None
+
+    @field_validator("maps_link")
+    @classmethod
+    def validar_maps_link(cls, v):
+        if v is None or v == "":
+            return None
+        try:
+            parsed = urlparse(v)
+            if parsed.scheme not in ("http", "https"):
+                raise ValueError("Solo se permiten URLs http/https")
+            host = parsed.netloc.lower().split(":")[0]
+            if host not in MAPS_ALLOWED_HOSTS:
+                raise ValueError("Solo se permiten links de Google Maps, Waze o Apple Maps")
+        except Exception as e:
+            raise ValueError(str(e))
+        return v
+
 class BarberiaResponse(BarberiaBase):
     id: int
     activa: bool
     subdominio: Optional[str] = None
+    maps_link: Optional[str] = None
 
     class Config:
         from_attributes = True
