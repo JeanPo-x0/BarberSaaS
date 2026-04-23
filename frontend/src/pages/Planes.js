@@ -434,7 +434,7 @@ export default function Planes() {
                   className={plan.popular ? 'btn-gold' : 'btn-outline'}
                   style={{ width: '100%', opacity: cargando ? 0.7 : 1, cursor: cargando ? 'wait' : 'pointer' }}
                 >
-                  {cargando ? 'Procesando...' : token ? `Mejorar a ${plan.nombre}` : `Empezar con ${plan.nombre}`}
+                  {cargando ? 'Procesando...' : usuario ? `Mejorar a ${plan.nombre}` : `Empezar con ${plan.nombre}`}
                 </button>
               </div>
             );
