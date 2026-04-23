@@ -487,9 +487,49 @@ function Agenda() {
 
         {/* Botón nueva cita visible */}
         {!mostrarForm && activas.length > 0 && (
-          <div className="anim-fadeup" style={{ marginBottom: 20 }}>
-            <button onClick={() => setMostrarForm(true)} className="btn-gold" style={{ width: '100%', padding: '12px', fontSize: 14 }}>
-              + Nueva cita
+          <div className="anim-fadeup" style={{ marginBottom: 24 }}>
+            <button
+              onClick={() => setMostrarForm(true)}
+              style={{
+                width: '100%', padding: '18px 24px',
+                background: 'linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(201,168,76,0.06) 100%)',
+                border: '1px solid rgba(201,168,76,0.3)',
+                borderRadius: 14, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 16,
+                transition: 'border-color 0.2s, background 0.2s, transform 0.15s',
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = 'rgba(201,168,76,0.55)';
+                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(201,168,76,0.18) 0%, rgba(201,168,76,0.1) 100%)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = 'rgba(201,168,76,0.3)';
+                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(201,168,76,0.06) 100%)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <div style={{
+                width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="2" strokeLinecap="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1, textAlign: 'left' }}>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#C9A84C', letterSpacing: '0.01em' }}>
+                  Nueva cita
+                </p>
+                <p style={{ margin: '2px 0 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
+                  Agendar manualmente para un cliente
+                </p>
+              </div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(201,168,76,0.5)" strokeWidth="2" strokeLinecap="round">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
             </button>
           </div>
         )}

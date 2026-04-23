@@ -297,7 +297,26 @@ function PanelDueno() {
   const sectionCard = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '24px' };
 
   return (
-    <div className="bg-panel" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif", display: 'flex', flexDirection: 'column' }}>
+    <div className="bg-panel" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif", display: 'flex', flexDirection: 'column', position: 'relative' }}>
+
+      {/* Fondo: glow dorado + grilla */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+        }} />
+        <div style={{
+          position: 'absolute', top: -120, left: '50%', transform: 'translateX(-50%)',
+          width: 700, height: 400,
+          background: 'radial-gradient(ellipse, rgba(201,168,76,0.12) 0%, transparent 70%)',
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to bottom, transparent 25%, var(--bg-primary) 100%)',
+        }} />
+      </div>
+
       <Navbar />
 
       <div style={{ display: 'flex', flex: 1 }}>

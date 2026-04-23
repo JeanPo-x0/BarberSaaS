@@ -349,7 +349,7 @@ function DashboardBarbero() {
         {/* Fade de la grilla hacia abajo */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(to bottom, transparent 40%, var(--bg-primary) 100%)',
+          background: 'linear-gradient(to bottom, transparent 25%, var(--bg-primary) 100%)',
         }} />
       </div>
 
