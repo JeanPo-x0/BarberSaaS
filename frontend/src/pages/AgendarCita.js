@@ -579,7 +579,7 @@ function AgendarCita() {
                 {configPagos.cancelacion_porcentaje > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
-                      Si cancelás con menos de <strong style={{ color: '#F5F5F5' }}>{configPagos.cancelacion_horas_minimo} horas</strong> de anticipación o no te presentás, se retendrá el <strong style={{ color: '#F5F5F5' }}>{configPagos.cancelacion_porcentaje}%</strong> del monto pagado.
+                      Si cancelás con menos de <strong style={{ color: '#F5F5F5' }}>{configPagos.cancelacion_horas_minimo || 24} horas</strong> de anticipación o no te presentás, se retendrá el <strong style={{ color: '#F5F5F5' }}>{configPagos.cancelacion_porcentaje}%</strong> del monto pagado.
                     </p>
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
                       Ejemplo: si pagaste ₡10,000, recibirías ₡{(10000 * (1 - configPagos.cancelacion_porcentaje / 100)).toLocaleString('es-CR')} de vuelta.
@@ -587,7 +587,7 @@ function AgendarCita() {
                   </div>
                 ) : (
                   <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
-                    Podés cancelar sin costo siempre que avisés con al menos <strong style={{ color: '#F5F5F5' }}>{configPagos.cancelacion_horas_minimo} horas</strong> de anticipación.
+                    Podés cancelar sin costo siempre que avisés con al menos <strong style={{ color: '#F5F5F5' }}>{configPagos.cancelacion_horas_minimo || 24} horas</strong> de anticipación.
                   </p>
                 )}
               </div>
@@ -1263,9 +1263,13 @@ function AgendarCita() {
                     borderRadius: 10, padding: '12px 14px',
                     display: 'flex', gap: 10, alignItems: 'flex-start',
                   }}>
-                    <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <line x1="12" y1="9" x2="12" y2="13" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round"/>
+                      <line x1="12" y1="17" x2="12.01" y2="17" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
                     <p style={{ fontSize: 12, color: '#fbbf24', margin: 0, lineHeight: 1.5 }}>
-                      <strong>Política de cancelación:</strong> se cobra el {configPagos.cancelacion_porcentaje}% del servicio si cancelás con menos de {configPagos.cancelacion_horas_minimo} horas de anticipación.
+                      <strong>Política de cancelación:</strong> se cobra el {configPagos.cancelacion_porcentaje}% del servicio si cancelás con menos de {configPagos.cancelacion_horas_minimo || 24} horas de anticipación.
                     </p>
                   </div>
                 )}

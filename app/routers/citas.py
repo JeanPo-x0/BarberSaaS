@@ -103,17 +103,7 @@ def crear_cita(cita: CitaCreate, db: Session = Depends(get_db)):
                 servicio=servicio.nombre if servicio else "Servicio",
                 fecha_hora=fecha_hora_str
             )
-            # Notificar al barbero que hay un pago pendiente de verificar
-            if estado_pago == "pendiente" and metodo and servicio:
-                notificar_pago_pendiente_barbero(
-                    telefono=barbero.telefono,
-                    nombre_barbero=barbero.nombre,
-                    cliente=cliente.nombre if cliente else "Cliente",
-                    servicio=servicio.nombre,
-                    metodo=metodo,
-                    fecha_hora=fecha_hora_str,
-                    monto=servicio.precio,
-                )
+            # El barbero recibe notificación separada cuando el cliente sube el comprobante
         else:
             print(f"[WhatsApp] Barbero {barbero.id} ({barbero.nombre}) no tiene telefono guardado")
     except Exception as e:
@@ -369,17 +359,7 @@ async def subir_comprobante(cita_id: int, file: UploadFile = File(...), db: Sess
                 monto=servicio.precio if servicio else 0,
                 comprobante_url=comprobante_url,
             )
-        # Notificar al cliente que su pago está pendiente de confirmación
-        if cliente and cliente.telefono:
-            from app.services.whatsapp import enviar_mensaje
-            enviar_mensaje(
-                cliente.telefono,
-                f"Hola {cliente.nombre}! Recibimos tu comprobante de pago.\n\n"
-                f"Servicio: {servicio.nombre if servicio else 'Servicio'}\n"
-                f"Fecha: {fecha_str}\n\n"
-                f"Tu cita queda *pendiente de confirmacion* hasta que el barbero verifique el pago. "
-                f"Te avisaremos cuando este confirmada."
-            )
+        # El cliente ya recibió confirmación al agendar; el barbero confirma/rechaza desde el panel
     except Exception as e:
         print(f"[WhatsApp] ERROR enviando comprobante: {e}")
 

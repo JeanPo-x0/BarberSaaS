@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { formatearInput, formatearTelefono } from '../utils/phone';
 import {
-  getMisBarberos, crearBarbero, toggleBarbero, eliminarBarbero, invitarBarbero,
+  getMisBarberos, crearBarbero, toggleBarbero, eliminarBarbero, invitarBarbero, editarBarbero,
   getMisServicios, crearServicio, toggleServicio, eliminarServicio,
   getMiBarberia, toggleBarberia, crearBarberiaAdicional,
   getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio, actualizarMapsLink,
@@ -115,6 +115,15 @@ function PanelDueno() {
   const [inviteCargando, setInviteCargando] = useState(false);
   const [inviteExito, setInviteExito] = useState('');
 
+  // Editar barbero
+  const [editandoBarbero, setEditandoBarbero] = useState(null);
+  const [editBarberoForm, setEditBarberoForm] = useState({ nombre: '', telefono: '', especialidad: '' });
+  const [editBarberoError, setEditBarberoError] = useState('');
+  const [editBarberoCargando, setEditBarberoCargando] = useState(false);
+
+  // Link copiado
+  const [linkCopiado, setLinkCopiado] = useState(null);
+
   const cargarDatos = () => {
     getMisBarberos().then(r => setBarberos(r.data)).catch(() => {});
     getMisServicios().then(r => setServicios(r.data)).catch(() => {});
@@ -214,6 +223,32 @@ function PanelDueno() {
     } finally {
       setMapsCargando(false);
     }
+  };
+
+  const handleEditarBarbero = async (barberoId) => {
+    setEditBarberoError(''); setEditBarberoCargando(true);
+    try {
+      await editarBarbero(barberoId, {
+        nombre: editBarberoForm.nombre.trim(),
+        telefono: editBarberoForm.telefono.trim() || null,
+        especialidad: editBarberoForm.especialidad.trim() || null,
+      });
+      getMisBarberos().then(r => setBarberos(r.data));
+      setEditandoBarbero(null);
+    } catch (err) {
+      const det = err.response?.data?.detail;
+      setEditBarberoError(typeof det === 'string' ? det : 'Error al guardar');
+    } finally {
+      setEditBarberoCargando(false);
+    }
+  };
+
+  const copiarLinkBarbero = (barberoId) => {
+    const link = `${window.location.origin}/barbero/login`;
+    navigator.clipboard.writeText(link).then(() => {
+      setLinkCopiado(barberoId);
+      setTimeout(() => setLinkCopiado(null), 2000);
+    });
   };
 
   const handleInvitar = async (barberoId) => {
@@ -351,8 +386,30 @@ function PanelDueno() {
                     </p>
                   </div>
                   <div className="panel-item-actions" style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                    {/* Lápiz editar */}
                     <button
-                      onClick={() => { setInvitandoBarbero(b.id); setInviteEmail(b.email || ''); setInviteError(''); }}
+                      title="Editar datos"
+                      onClick={() => { setEditandoBarbero(b.id); setEditBarberoForm({ nombre: b.nombre, telefono: b.telefono || '', especialidad: b.especialidad || '' }); setEditBarberoError(''); setInvitandoBarbero(null); }}
+                      style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                    {/* Link copiable */}
+                    <button
+                      title="Copiar link de acceso"
+                      onClick={() => copiarLinkBarbero(b.id)}
+                      style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border)', background: linkCopiado === b.id ? 'rgba(74,222,128,0.1)' : 'var(--bg-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, transition: 'all 0.2s' }}
+                    >
+                      {linkCopiado === b.id
+                        ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        : <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="#94a3b8" strokeWidth="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round"/></svg>
+                      }
+                    </button>
+                    <button
+                      onClick={() => { setInvitandoBarbero(b.id); setInviteEmail(b.email || ''); setInviteError(''); setEditandoBarbero(null); }}
                       style={{ padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: "'DM Sans'", background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)', color: '#C9A84C', transition: 'all 0.2s' }}
                     >
                       {b.email ? 'Reenviar' : 'Invitar'}
@@ -371,6 +428,28 @@ function PanelDueno() {
                     </button>
                   </div>
                 </div>
+
+                {/* Panel editar datos */}
+                {editandoBarbero === b.id && (
+                  <div style={{ marginTop: 10, background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 10, padding: 14 }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 10px 0' }}>Editar datos del barbero</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <input value={editBarberoForm.nombre} onChange={e => setEditBarberoForm(f => ({ ...f, nombre: e.target.value }))}
+                        placeholder="Nombre *" className="input-dark" />
+                      <input value={editBarberoForm.telefono} onChange={e => setEditBarberoForm(f => ({ ...f, telefono: formatearInput(e.target.value) }))}
+                        placeholder="Teléfono (opcional)" className="input-dark" inputMode="numeric" />
+                      <input value={editBarberoForm.especialidad} onChange={e => setEditBarberoForm(f => ({ ...f, especialidad: e.target.value }))}
+                        placeholder="Especialidad (opcional)" className="input-dark" />
+                    </div>
+                    {editBarberoError && <p style={{ color: '#E63946', fontSize: 12, margin: '8px 0 0 0' }}>{editBarberoError}</p>}
+                    <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                      <button onClick={() => setEditandoBarbero(null)} className="btn-outline" style={{ flex: 1, padding: '8px', fontSize: 13 }}>Cancelar</button>
+                      <button onClick={() => handleEditarBarbero(b.id)} disabled={editBarberoCargando || !editBarberoForm.nombre.trim()} className="btn-gold" style={{ flex: 1, padding: '8px', fontSize: 13, opacity: (editBarberoCargando || !editBarberoForm.nombre.trim()) ? 0.7 : 1 }}>
+                        {editBarberoCargando ? 'Guardando...' : 'Guardar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Panel invitar */}
                 {invitandoBarbero === b.id && (

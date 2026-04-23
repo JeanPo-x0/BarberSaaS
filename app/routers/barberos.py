@@ -182,6 +182,71 @@ def login_barbero(datos: LoginBarberoRequest, db: Session = Depends(get_db)):
     }
 
 
+@router.patch("/{barbero_id}/editar", response_model=BarberoResponse)
+def editar_barbero(
+    barbero_id: int,
+    datos: dict,
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    barbero = db.query(Barbero).filter(
+        Barbero.id == barbero_id,
+        Barbero.barberia_id == usuario.barberia_id,
+    ).first()
+    if not barbero:
+        raise HTTPException(status_code=404, detail="Barbero no encontrado")
+    campos_permitidos = {"nombre", "telefono", "especialidad"}
+    for campo, valor in datos.items():
+        if campo in campos_permitidos:
+            if campo == "telefono" and valor:
+                valor = formatear_telefono(valor)
+            setattr(barbero, campo, valor)
+    db.commit()
+    db.refresh(barbero)
+    return barbero
+
+
+@router.get("/me/historial")
+def historial_barbero(barbero: Barbero = Depends(get_barbero_actual), db: Session = Depends(get_db)):
+    from app.models.cita import Cita
+    from app.models.cliente import Cliente
+    from app.models.servicio import Servicio
+    hace_30 = datetime.utcnow() - timedelta(days=30)
+    citas = (
+        db.query(Cita)
+        .filter(Cita.barbero_id == barbero.id, Cita.fecha_hora >= hace_30)
+        .order_by(Cita.fecha_hora.desc())
+        .limit(50)
+        .all()
+    )
+    resultado = []
+    for c in citas:
+        cliente = db.query(Cliente).filter(Cliente.id == c.cliente_id).first()
+        servicio = db.query(Servicio).filter(Servicio.id == c.servicio_id).first()
+        resultado.append({
+            "id": c.id,
+            "fecha_hora": c.fecha_hora.isoformat(),
+            "estado": c.estado,
+            "cliente": {"nombre": cliente.nombre} if cliente else None,
+            "servicio": {"nombre": servicio.nombre, "precio": servicio.precio} if servicio else None,
+            "servicios_extra": c.servicios_extra,
+        })
+    return resultado
+
+
+@router.patch("/me/perfil")
+def actualizar_perfil_barbero(datos: dict, barbero: Barbero = Depends(get_barbero_actual), db: Session = Depends(get_db)):
+    campos_permitidos = {"nombre", "telefono", "especialidad"}
+    for campo, valor in datos.items():
+        if campo in campos_permitidos:
+            if campo == "telefono" and valor:
+                valor = formatear_telefono(valor)
+            setattr(barbero, campo, valor)
+    db.commit()
+    db.refresh(barbero)
+    return {"ok": True, "nombre": barbero.nombre, "telefono": barbero.telefono, "especialidad": barbero.especialidad}
+
+
 @router.get("/me/agenda")
 def agenda_barbero(barbero: Barbero = Depends(get_barbero_actual), db: Session = Depends(get_db)):
     from app.models.cita import Cita

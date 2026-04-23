@@ -49,8 +49,8 @@ async def webhook_whatsapp(request: Request, background_tasks: BackgroundTasks, 
 
     if barberia:
         link = (
-            f"{settings.FRONTEND_URL}/b/{barberia.slug}"
-            if barberia.slug
+            f"{settings.FRONTEND_URL}/b/{barberia.subdominio}"
+            if barberia.subdominio
             else f"{settings.FRONTEND_URL}/agendar/{barberia.id}"
         )
         respuesta = (
