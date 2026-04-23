@@ -145,7 +145,12 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
         sub_id = data["id"]
         status = data["status"]
         barberia_id = int(data.get("metadata", {}).get("barberia_id", 0))
+        if barberia_id <= 0:
+            return {"ok": False, "razon": "barberia_id invalido"}
         plan = data.get("metadata", {}).get("plan", "pro")
+        PLANES_VALIDOS = {"basico", "pro", "premium"}
+        if plan not in PLANES_VALIDOS:
+            plan = "pro"
 
         sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia_id).first()
         if sus:

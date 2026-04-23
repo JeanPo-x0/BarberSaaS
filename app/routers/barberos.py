@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
+from app.core.limiter import limiter
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.barbero import Barbero
 from app.models.usuario import Usuario
 from app.schemas import BarberoCreate, BarberoResponse
-from app.schemas.barbero import InvitarBarberoRequest, ActivarBarberoRequest, LoginBarberoRequest
+from app.schemas.barbero import InvitarBarberoRequest, ActivarBarberoRequest, LoginBarberoRequest, BarberoUpdate
 from app.core.deps import get_usuario_actual, get_barbero_actual
 from app.core.security import hash_password, verify_password, crear_token
 from app.utils.phone import formatear_telefono
@@ -148,7 +149,8 @@ def invitar_barbero(
 
 
 @router.post("/activar")
-def activar_cuenta_barbero(datos: ActivarBarberoRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/hour")
+def activar_cuenta_barbero(request: Request, datos: ActivarBarberoRequest, db: Session = Depends(get_db)):
     from app.routers.auth import validar_password
     token_hash = hashlib.sha256(datos.token.encode()).hexdigest()
     barbero = db.query(Barbero).filter(Barbero.inv_token_hash == token_hash).first()
@@ -166,7 +168,8 @@ def activar_cuenta_barbero(datos: ActivarBarberoRequest, db: Session = Depends(g
 
 
 @router.post("/login")
-def login_barbero(datos: LoginBarberoRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def login_barbero(request: Request, datos: LoginBarberoRequest, db: Session = Depends(get_db)):
     email = datos.email.lower().strip()
     barbero = db.query(Barbero).filter(Barbero.email == email).first()
     if not barbero or not barbero.password_hash or not verify_password(datos.password, barbero.password_hash):
@@ -185,7 +188,7 @@ def login_barbero(datos: LoginBarberoRequest, db: Session = Depends(get_db)):
 @router.patch("/{barbero_id}/editar", response_model=BarberoResponse)
 def editar_barbero(
     barbero_id: int,
-    datos: dict,
+    datos: BarberoUpdate,
     usuario: Usuario = Depends(get_usuario_actual),
     db: Session = Depends(get_db),
 ):
@@ -195,12 +198,12 @@ def editar_barbero(
     ).first()
     if not barbero:
         raise HTTPException(status_code=404, detail="Barbero no encontrado")
-    campos_permitidos = {"nombre", "telefono", "especialidad"}
-    for campo, valor in datos.items():
-        if campo in campos_permitidos:
-            if campo == "telefono" and valor:
-                valor = formatear_telefono(valor)
-            setattr(barbero, campo, valor)
+    if datos.nombre is not None:
+        barbero.nombre = datos.nombre
+    if datos.telefono is not None:
+        barbero.telefono = formatear_telefono(datos.telefono) if datos.telefono else None
+    if datos.especialidad is not None:
+        barbero.especialidad = datos.especialidad
     db.commit()
     db.refresh(barbero)
     return barbero
@@ -235,13 +238,13 @@ def historial_barbero(barbero: Barbero = Depends(get_barbero_actual), db: Sessio
 
 
 @router.patch("/me/perfil")
-def actualizar_perfil_barbero(datos: dict, barbero: Barbero = Depends(get_barbero_actual), db: Session = Depends(get_db)):
-    campos_permitidos = {"nombre", "telefono", "especialidad"}
-    for campo, valor in datos.items():
-        if campo in campos_permitidos:
-            if campo == "telefono" and valor:
-                valor = formatear_telefono(valor)
-            setattr(barbero, campo, valor)
+def actualizar_perfil_barbero(datos: BarberoUpdate, barbero: Barbero = Depends(get_barbero_actual), db: Session = Depends(get_db)):
+    if datos.nombre is not None:
+        barbero.nombre = datos.nombre
+    if datos.telefono is not None:
+        barbero.telefono = formatear_telefono(datos.telefono) if datos.telefono else None
+    if datos.especialidad is not None:
+        barbero.especialidad = datos.especialidad
     db.commit()
     db.refresh(barbero)
     return {"ok": True, "nombre": barbero.nombre, "telefono": barbero.telefono, "especialidad": barbero.especialidad}

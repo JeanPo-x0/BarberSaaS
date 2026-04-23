@@ -116,7 +116,7 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 @router.post("/login", response_model=TokenResponse)
-@limiter.limit("5/minute")
+@limiter.limit("3/minute")
 def login(request: Request, datos: LoginRequest, db: Session = Depends(get_db)):
     usuario = db.query(Usuario).filter(Usuario.email == datos.email.lower().strip()).first()
     if not usuario or not verify_password(datos.password, usuario.password_hash):
@@ -261,7 +261,8 @@ def cambiar_password(
 
 
 @router.post("/reset-password")
-def reset_password(datos: ResetPasswordRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/hour")
+def reset_password(request: Request, datos: ResetPasswordRequest, db: Session = Depends(get_db)):
     token_hash = hashlib.sha256(datos.token.encode()).hexdigest()
 
     registro = db.query(PasswordResetToken).filter(

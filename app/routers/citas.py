@@ -1,5 +1,6 @@
 import os, uuid, shutil
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
+from app.core.limiter import limiter
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from datetime import datetime, timedelta
@@ -316,7 +317,8 @@ def _detect_image_ext(header: bytes) -> str | None:
     return None
 
 @router.post("/{cita_id}/comprobante", response_model=CitaResponse)
-async def subir_comprobante(cita_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+async def subir_comprobante(request: Request, cita_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
     # Read full file into memory with size cap to prevent disk exhaustion
     data = await file.read(MAX_FILE_SIZE + 1)
     if len(data) > MAX_FILE_SIZE:
@@ -330,6 +332,10 @@ async def subir_comprobante(cita_id: int, file: UploadFile = File(...), db: Sess
     cita = db.query(Cita).filter(Cita.id == cita_id).first()
     if not cita:
         raise HTTPException(status_code=404, detail="Cita no encontrada")
+    if cita.estado in ("cancelada", "completada"):
+        raise HTTPException(status_code=400, detail="No se puede subir comprobante a una cita cancelada o completada")
+    if cita.estado_pago == "confirmado":
+        raise HTTPException(status_code=400, detail="El pago ya fue confirmado")
 
     # Filename is a pure UUID hex + validated ext — never derived from user input
     filename = f"{uuid.uuid4().hex}.{ext}"

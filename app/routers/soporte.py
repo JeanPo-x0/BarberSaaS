@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 from app.services.email import enviar_email
 from app.core.config import settings
+from html import escape
 
 router = APIRouter(prefix="/soporte", tags=["Soporte"])
 
@@ -21,8 +22,8 @@ def enviar_contacto(datos: ContactoRequest):
     asunto = asuntos.get(datos.tipo, f"Contacto — {datos.tipo}")
 
     filas = "".join(
-        f"<tr><td style='padding:6px 12px;color:#aaa;font-size:13px;'>{k}</td>"
-        f"<td style='padding:6px 12px;color:#fff;font-size:13px;'>{v}</td></tr>"
+        f"<tr><td style='padding:6px 12px;color:#aaa;font-size:13px;'>{escape(str(k))}</td>"
+        f"<td style='padding:6px 12px;color:#fff;font-size:13px;'>{escape(str(v))}</td></tr>"
         for k, v in datos.campos.items()
     )
 

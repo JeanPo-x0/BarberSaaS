@@ -20,6 +20,14 @@ class BarberoResponse(BarberoBase):
     class Config:
         from_attributes = True
 
+class BarberoUpdate(BaseModel):
+    nombre: Optional[str] = None
+    telefono: Optional[str] = None
+    especialidad: Optional[str] = None
+
+    class Config:
+        extra = "forbid"
+
 class InvitarBarberoRequest(BaseModel):
     email: str
 

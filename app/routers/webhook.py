@@ -14,14 +14,15 @@ async def webhook_whatsapp(request: Request, background_tasks: BackgroundTasks, 
     form = await request.form()
     form_dict = dict(form)
 
-    # Validar firma de Twilio para rechazar requests falsos
+    # Validar firma de Twilio — fallo duro si no está configurado
     auth_token = os.getenv("TWILIO_AUTH_TOKEN", "")
-    if auth_token:
-        validator = RequestValidator(auth_token)
-        signature = request.headers.get("X-Twilio-Signature", "")
-        url = str(request.url)
-        if not validator.validate(url, form_dict, signature):
-            return Response(content="Forbidden", status_code=403)
+    if not auth_token:
+        return Response(content="Service unavailable", status_code=503)
+    validator = RequestValidator(auth_token)
+    signature = request.headers.get("X-Twilio-Signature", "")
+    url = str(request.url)
+    if not validator.validate(url, form_dict, signature):
+        return Response(content="Forbidden", status_code=403)
 
     body = form_dict.get("Body", "").strip()
 
