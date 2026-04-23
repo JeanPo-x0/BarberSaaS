@@ -95,6 +95,23 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        {/* Grilla global de fondo — aparece en todas las páginas */}
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }} />
+          <div style={{
+            position: 'absolute', top: -120, left: '50%', transform: 'translateX(-50%)',
+            width: 700, height: 400,
+            background: 'radial-gradient(ellipse, rgba(201,168,76,0.09) 0%, transparent 70%)',
+          }} />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(to bottom, transparent 20%, #0A0A0A 100%)',
+          }} />
+        </div>
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>

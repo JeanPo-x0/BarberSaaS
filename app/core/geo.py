@@ -34,13 +34,18 @@ async def obtener_geo(ip: str) -> dict:
                 f"http://ip-api.com/json/{ip}",
                 params={"fields": "countryCode,org,isp"},
             )
-            data = r.json() if r.status_code == 200 else {}
+            data = r.json() if r.status_code == 200 else None
     except Exception:
-        # Si la API falla, dejar pasar para no bloquear usuarios legítimos
-        data = {}
+        data = None
+
+    if data is None:
+        # API falló o rate-limited: usar caché vieja si existe, si no fail-open
+        if cached:
+            return cached
+        return {"country": "CR", "org": "", "ts": ahora}
 
     resultado = {
-        "country": data.get("countryCode", "CR"),  # default CR si ip-api falla → no bloquear usuarios legítimos
+        "country": data.get("countryCode", "CR"),
         "org": (data.get("org", "") + " " + data.get("isp", "")).lower(),
         "ts": ahora,
     }
