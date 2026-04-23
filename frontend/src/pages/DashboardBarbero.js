@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAgendaBarbero, getHistorialBarbero, actualizarPerfilBarbero, completarCitaBarbero, cancelarCitaBarbero } from '../services/api';
+import { getAgendaBarbero, getHistorialBarbero, actualizarPerfilBarbero, completarCitaBarbero, cancelarCitaBarbero, logoutBarbero } from '../services/api';
 import { formatearInput } from '../utils/phone';
 
 const ESTADO = {
@@ -298,7 +298,8 @@ function DashboardBarbero() {
     }
   };
 
-  const cerrarSesion = () => {
+  const cerrarSesion = async () => {
+    try { await logoutBarbero(); } catch {}
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
     navigate('/barbero/login');

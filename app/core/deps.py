@@ -40,9 +40,12 @@ def solo_dueno(usuario: Usuario = Depends(get_usuario_actual)):
 
 def get_barbero_actual(request: Request, db: Session = Depends(get_db)):
     from app.models.barbero import Barbero
-    # Barberos solo usan Bearer token — nunca la cookie del dueño
-    auth = request.headers.get("Authorization", "")
-    token = auth[7:] if auth.startswith("Bearer ") else None
+    # 1. Cookie HttpOnly (flujo seguro)
+    token = request.cookies.get("barbero_token")
+    # 2. Bearer header (fallback para clientes que aún tengan token en localStorage)
+    if not token:
+        auth = request.headers.get("Authorization", "")
+        token = auth[7:] if auth.startswith("Bearer ") else None
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
     payload = verificar_token(token)

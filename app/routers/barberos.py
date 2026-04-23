@@ -178,12 +178,28 @@ def login_barbero(request: Request, datos: LoginBarberoRequest, db: Session = De
     payload = {"sub": barbero.email, "rol": "barbero", "barbero_id": barbero.id, "barberia_id": barbero.barberia_id, "nombre": barbero.nombre}
     token = crear_token(payload)
     from fastapi.responses import JSONResponse
+    from app.core.config import settings
     response = JSONResponse({
         "access_token": token,
         "token_type": "bearer",
         "barbero": {"id": barbero.id, "nombre": barbero.nombre, "email": barbero.email, "barberia_id": barbero.barberia_id},
     })
-    response.delete_cookie(key="auth_token", httponly=True, secure=True, samesite="none")
+    response.set_cookie(
+        key="barbero_token",
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
+    return response
+
+
+@router.post("/logout")
+def logout_barbero():
+    from fastapi.responses import JSONResponse
+    response = JSONResponse({"ok": True})
+    response.delete_cookie(key="barbero_token", httponly=True, secure=True, samesite="none")
     return response
 
 
