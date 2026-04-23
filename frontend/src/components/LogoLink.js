@@ -22,7 +22,7 @@ function BSMark({ size = 40 }) {
 
 /* ── NavLogo — compact navbar mark ── */
 export function NavLogo({ to }) {
-  const autenticado = !!localStorage.getItem('token');
+  const autenticado = !!localStorage.getItem('usuario');
   const dest = to || (autenticado ? '/agenda' : '/');
   return (
     <Link to={dest} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>

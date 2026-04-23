@@ -5,6 +5,7 @@ const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 const API = axios.create({
   baseURL: BASE_URL,
   timeout: 70000, // 70s — cubre el cold start de Render free tier (~60s)
+  withCredentials: true,
 });
 
 // Despierta el servidor haciendo polling hasta que responda (cold start Render).
@@ -33,7 +34,6 @@ API.interceptors.response.use(
     // Skip redirect for login/auth endpoints — 401 there means wrong credentials, not expired session
     const esEndpointPublico = url.includes('/auth/login') || url.includes('/auth/registro') || url.includes('/auth/onboarding');
     if (error.response?.status === 401 && !esEndpointPublico) {
-      localStorage.removeItem('token');
       localStorage.removeItem('usuario');
       window.location.href = '/login';
     }
@@ -56,6 +56,7 @@ export const getBarberiaBySlug = (slug) => API.get(`/barberias/slug/${slug}`);
 // Auth
 export const getMe = () => API.get('/auth/me');
 export const login = (data) => API.post('/auth/login', data);
+export const logout = () => API.post('/auth/logout');
 export const registro = (data) => API.post('/auth/registro', data);
 export const onboarding = (data) => API.post('/auth/onboarding', data);
 export const recuperarPassword = (data) => API.post('/auth/recuperar-password', data);

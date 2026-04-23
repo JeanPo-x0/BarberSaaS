@@ -275,12 +275,14 @@ async def geo_block_middleware(request: Request, call_next):
     return await call_next(request)
 
 _cors_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
+if settings.ENV == "production":
+    _cors_origins = [o for o in _cors_origins if "localhost" not in o]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
     allow_headers=["Authorization", "Content-Type", "Accept"],
-    allow_credentials=False,
+    allow_credentials=True,
 )
 
 app.include_router(auth.router)

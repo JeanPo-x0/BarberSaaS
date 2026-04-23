@@ -13,7 +13,7 @@ const Spinner = () => (
 );
 
 export default function DashboardIngresos() {
-  const { token } = useAuth();
+  const { usuario } = useAuth();
   const navigate = useNavigate();
   const [datos, setDatos] = useState(null);
   const [retencion, setRetencion] = useState(null);
@@ -23,9 +23,9 @@ export default function DashboardIngresos() {
   const [enviando, setEnviando] = useState({});
 
   useEffect(() => {
-    if (!token) { navigate('/login'); return; }
+    if (!usuario) { navigate('/login'); return; }
     cargarDatos();
-  }, [token]); // eslint-disable-line
+  }, [usuario]); // eslint-disable-line
 
   const cargarDatos = async () => {
     setCargando(true); setError('');

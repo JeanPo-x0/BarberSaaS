@@ -136,7 +136,7 @@ function PanelDueno() {
   };
 
   useEffect(() => {
-    if (!localStorage.getItem('token')) { navigate('/login'); return; }
+    if (!localStorage.getItem('usuario')) { navigate('/login'); return; }
     cargarDatos();
   }, [navigate]);
 

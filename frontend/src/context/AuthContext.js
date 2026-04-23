@@ -1,29 +1,26 @@
 import { createContext, useContext, useState } from 'react';
+import { logout as apiLogout } from '../services/api';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(localStorage.getItem('token'));
   const [usuario, setUsuario] = useState(
     JSON.parse(localStorage.getItem('usuario') || 'null')
   );
 
-  const iniciarSesion = (tokenRecibido, datosUsuario) => {
-    localStorage.setItem('token', tokenRecibido);
+  const iniciarSesion = (datosUsuario) => {
     localStorage.setItem('usuario', JSON.stringify(datosUsuario));
-    setToken(tokenRecibido);
     setUsuario(datosUsuario);
   };
 
-  const cerrarSesion = () => {
-    localStorage.removeItem('token');
+  const cerrarSesion = async () => {
+    try { await apiLogout(); } catch {}
     localStorage.removeItem('usuario');
-    setToken(null);
     setUsuario(null);
   };
 
   return (
-    <AuthContext.Provider value={{ token, usuario, iniciarSesion, cerrarSesion }}>
+    <AuthContext.Provider value={{ usuario, iniciarSesion, cerrarSesion }}>
       {children}
     </AuthContext.Provider>
   );

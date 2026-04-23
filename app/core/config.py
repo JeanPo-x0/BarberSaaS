@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     STRIPE_COUPON_EARLYACCESS: str = "EARLYACCESS"
 
     # App
+    ENV: str = "production"     # "development" en .env local para habilitar localhost en CORS
     DOCS_ENABLED: bool = False  # Activar solo en desarrollo local con DOCS_ENABLED=true en .env
     FRONTEND_URL: str = "http://localhost:3000"
     BACKEND_URL: str = "http://localhost:8000"

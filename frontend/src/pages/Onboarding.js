@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { onboarding, login, getMe, crearCheckout } from '../services/api';
+import { onboarding, login, crearCheckout } from '../services/api';
 import { NavLogo } from '../components/LogoLink';
 import { formatearInput, formatearTelefono } from '../utils/phone';
 
@@ -67,9 +67,8 @@ export default function Onboarding() {
         telefono: form.telefono ? formatearTelefono(form.telefono) : '',
       });
       const loginRes = await login({ email: form.email, password: form.password });
-      localStorage.setItem('token', loginRes.data.access_token);
-      const meRes = await getMe();
-      const bid = meRes.data.barberia_id;
+      const bid = loginRes.data.usuario?.barberia_id;
+      localStorage.setItem('usuario', JSON.stringify(loginRes.data.usuario));
       setLinkGenerado(`${window.location.origin}/agendar/${bid}`);
       // Siempre redirige a Stripe para registrar tarjeta y activar el trial
       try {

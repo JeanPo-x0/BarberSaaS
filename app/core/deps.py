@@ -1,23 +1,36 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.security import verificar_token
 from app.models.usuario import Usuario
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-def get_usuario_actual(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def _extraer_token(request: Request) -> str | None:
+    # 1. Cookie HTTP-only (dueños autenticados via browser)
+    token = request.cookies.get("auth_token")
+    if token:
+        return token
+    # 2. Authorization header (barberos con token en localStorage, clientes API)
+    auth = request.headers.get("Authorization", "")
+    if auth.startswith("Bearer "):
+        return auth[7:]
+    return None
+
+
+def get_usuario_actual(request: Request, db: Session = Depends(get_db)):
+    token = _extraer_token(request)
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
     payload = verificar_token(token)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
     usuario = db.query(Usuario).filter(Usuario.email == payload.get("sub")).first()
     if not usuario:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
-    # Verificar que el rol del token coincida con el de la DB (detecta escalación de privilegios)
     if payload.get("rol") != usuario.rol:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
     return usuario
+
 
 def solo_dueno(usuario: Usuario = Depends(get_usuario_actual)):
     if usuario.rol != "dueno":
@@ -25,8 +38,11 @@ def solo_dueno(usuario: Usuario = Depends(get_usuario_actual)):
     return usuario
 
 
-def get_barbero_actual(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def get_barbero_actual(request: Request, db: Session = Depends(get_db)):
     from app.models.barbero import Barbero
+    token = _extraer_token(request)
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
     payload = verificar_token(token)
     if not payload or payload.get("rol") != "barbero":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")

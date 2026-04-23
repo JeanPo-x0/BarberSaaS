@@ -3,7 +3,7 @@ import re
 import secrets
 import hashlib
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -117,16 +117,32 @@ class RefreshRequest(BaseModel):
 
 @router.post("/login", response_model=TokenResponse)
 @limiter.limit("3/minute")
-def login(request: Request, datos: LoginRequest, db: Session = Depends(get_db)):
+def login(request: Request, response: Response, datos: LoginRequest, db: Session = Depends(get_db)):
     usuario = db.query(Usuario).filter(Usuario.email == datos.email.lower().strip()).first()
     if not usuario or not verify_password(datos.password, usuario.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales invalidas")
-    payload = {"sub": usuario.email, "rol": usuario.rol, "barberia_id": usuario.barberia_id}
+    token_payload = {"sub": usuario.email, "rol": usuario.rol, "barberia_id": usuario.barberia_id}
+    access_token = crear_token(token_payload)
+    response.set_cookie(
+        key="auth_token",
+        value=access_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
     return {
-        "access_token": crear_token(payload),
-        "refresh_token": crear_refresh_token(payload),
+        "access_token": access_token,
+        "refresh_token": crear_refresh_token(token_payload),
         "token_type": "bearer",
+        "usuario": {"id": usuario.id, "email": usuario.email, "rol": usuario.rol, "barberia_id": usuario.barberia_id},
     }
+
+
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie(key="auth_token", httponly=True, secure=True, samesite="none")
+    return {"ok": True}
 
 @router.post("/refresh", response_model=TokenResponse)
 def refresh(datos: RefreshRequest, db: Session = Depends(get_db)):

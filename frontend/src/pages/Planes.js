@@ -232,7 +232,7 @@ export default function Planes() {
   const [loadingPlan, setLoadingPlan] = useState(null);
   const [showEnterprise, setShowEnterprise] = useState(false);
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { usuario } = useAuth();
 
   useEffect(() => {
     getCouponActivo().then(r => setCouponActivo(r.data.activo)).catch(() => {});
@@ -240,7 +240,7 @@ export default function Planes() {
 
   const handleElegirPlan = async (planId) => {
     if (planId === 'enterprise') { setShowEnterprise(true); return; }
-    if (!token) {
+    if (!usuario) {
       navigate('/registro', { state: { plan: planId } });
       return;
     }
@@ -268,7 +268,7 @@ export default function Planes() {
         padding: '0 24px',
       }}>
         <NavLogo />
-        {token ? (
+        {usuario ? (
           <Link to="/panel" style={{
             display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none',
             fontSize: 13, fontWeight: 600, color: 'var(--text-muted)',

@@ -47,7 +47,7 @@ const Spinner = () => (
 );
 
 export default function SuperAdmin() {
-  const { token } = useAuth();
+  const { usuario } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [barberias, setBarberias] = useState([]);
@@ -57,9 +57,9 @@ export default function SuperAdmin() {
   const [accionando, setAccionando] = useState({});
 
   useEffect(() => {
-    if (!token) { navigate('/login'); return; }
+    if (!usuario) { navigate('/login'); return; }
     cargar();
-  }, [token]); // eslint-disable-line
+  }, [usuario]); // eslint-disable-line
 
   const cargar = async () => {
     setCargando(true); setError('');
@@ -103,7 +103,7 @@ export default function SuperAdmin() {
   );
 
   return (
-    <div className="bg-panel" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="bg-panel sidebar-page" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
       <Navbar links={[{ label: 'Panel', to: '/panel' }]} />
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>

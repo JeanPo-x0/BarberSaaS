@@ -132,7 +132,7 @@ function Historial() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!localStorage.getItem('token')) { navigate('/login'); return; }
+    if (!localStorage.getItem('usuario')) { navigate('/login'); return; }
     getMisCitas().then(res => {
       const hace30dias = new Date();
       hace30dias.setDate(hace30dias.getDate() - 30);

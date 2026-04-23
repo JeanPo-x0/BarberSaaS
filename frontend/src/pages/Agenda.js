@@ -339,7 +339,7 @@ function Agenda() {
   };
 
   useEffect(() => {
-    if (!localStorage.getItem('token')) { navigate('/login'); return; }
+    if (!localStorage.getItem('usuario')) { navigate('/login'); return; }
     cargarCitas();
     getMisBarberos().then(r => setBarberos(r.data)).catch(() => {});
     getMisServicios().then(r => setServicios(r.data)).catch(() => {});
