@@ -1,6 +1,21 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { onboarding, login, getMe, crearCheckout } from '../services/api';
+
+function calcularFortaleza(pwd) {
+  const checks = [
+    pwd.length >= 8,
+    /[A-Z]/.test(pwd),
+    /[!@#$%^&*()\-_=+{}|;:",.<>?/\\]/.test(pwd),
+    /[0-9]/.test(pwd),
+  ];
+  const nivel = checks.filter(Boolean).length;
+  const labels = ['', 'Muy débil', 'Débil', 'Intermedia', 'Fuerte'];
+  const colors = ['', '#E63946', '#f97316', '#C9A84C', '#4ade80'];
+  return { nivel, label: labels[nivel], color: colors[nivel], pct: nivel * 25, checks };
+}
+
+const CHECK_LABELS = ['8+ caracteres', 'Mayúscula', 'Caracter especial', 'Número'];
 import { NavLogo } from '../components/LogoLink';
 import { formatearInput, formatearTelefono } from '../utils/phone';
 
@@ -33,10 +48,12 @@ export default function Onboarding() {
     setError('');
   };
 
+  const fortaleza = calcularFortaleza(form.password);
+
   const handleRegistro = () => {
-    if (!form.email || !form.password) { setError('Email y contrasena son obligatorios'); return; }
-    if (!form.email.includes('@')) { setError('El email ingresado no es valido'); return; }
-    if (form.password.length < 6) { setError('La contrasena debe tener al menos 6 caracteres'); return; }
+    if (!form.email || !form.password) { setError('Email y contraseña son obligatorios'); return; }
+    if (!form.email.includes('@')) { setError('El email ingresado no es válido'); return; }
+    if (fortaleza.nivel < 3) { setError('La contraseña es muy débil. Usá mayúsculas, números y caracteres especiales.'); return; }
     if (!tcAceptado) { setError('Debes aceptar los Términos y Condiciones para continuar'); return; }
     setPaso(1);
   };
@@ -197,8 +214,28 @@ export default function Onboarding() {
 
               <input name="email" type="email" placeholder="Email" value={form.email}
                 onChange={handleChange} className="input-dark" autoComplete="email" />
-              <input name="password" type="password" placeholder="Contrasena (min. 6 caracteres)"
+              <input name="password" type="password" placeholder="Contraseña (mín. 8 caracteres)"
                 value={form.password} onChange={handleChange} className="input-dark" autoComplete="new-password" />
+              {form.password && (
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', marginBottom: 6 }}>
+                    <div style={{ height: '100%', width: `${fortaleza.pct}%`, background: fortaleza.color, borderRadius: 2, transition: 'width 0.3s, background 0.3s' }} />
+                  </div>
+                  {fortaleza.label && <p style={{ fontSize: 11, color: fortaleza.color, margin: '0 0 6px 0', fontWeight: 600 }}>{fortaleza.label}</p>}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                    {CHECK_LABELS.map((lbl, i) => (
+                      <span key={i} style={{
+                        fontSize: 10, padding: '2px 7px', borderRadius: 100,
+                        background: fortaleza.checks[i] ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.04)',
+                        color: fortaleza.checks[i] ? '#4ade80' : '#666',
+                        border: `1px solid ${fortaleza.checks[i] ? 'rgba(74,222,128,0.2)' : 'transparent'}`,
+                      }}>
+                        {fortaleza.checks[i] ? '✓' : '·'} {lbl}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {form.plan !== 'basico' && (
                 <input type="text" placeholder="Codigo de descuento (opcional)"

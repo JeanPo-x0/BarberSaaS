@@ -2,6 +2,21 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { registro, crearBarberia } from '../services/api';
 
+function calcularFortaleza(pwd) {
+  const checks = [
+    pwd.length >= 8,
+    /[A-Z]/.test(pwd),
+    /[!@#$%^&*()\-_=+{}|;:",.<>?/\\]/.test(pwd),
+    /[0-9]/.test(pwd),
+  ];
+  const nivel = checks.filter(Boolean).length;
+  const labels = ['', 'Muy débil', 'Débil', 'Intermedia', 'Fuerte'];
+  const colors = ['', '#E63946', '#f97316', '#C9A84C', '#4ade80'];
+  return { nivel, label: labels[nivel], color: colors[nivel], pct: nivel * 25, checks };
+}
+
+const CHECK_LABELS = ['8+ caracteres', 'Mayúscula', 'Caracter especial', 'Número'];
+
 function Registro() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -11,9 +26,12 @@ function Registro() {
   const [cargando, setCargando] = useState(false);
   const navigate = useNavigate();
 
+  const fortaleza = calcularFortaleza(password);
+
   const handleRegistro = async (e) => {
     e.preventDefault();
     setError('');
+    if (fortaleza.nivel < 3) { setError('La contraseña es muy débil. Usá mayúsculas, números y caracteres especiales.'); return; }
     setCargando(true);
     try {
       const resBarberia = await crearBarberia({ nombre: nombreBarberia, telefono });
@@ -55,6 +73,26 @@ function Registro() {
             <input type="password" value={password} onChange={e => setPassword(e.target.value)}
               className="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400"
               placeholder="••••••••" required />
+            {password && (
+              <div style={{ marginTop: 8 }}>
+                <div style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', marginBottom: 6 }}>
+                  <div style={{ height: '100%', width: `${fortaleza.pct}%`, background: fortaleza.color, borderRadius: 2, transition: 'width 0.3s, background 0.3s' }} />
+                </div>
+                {fortaleza.label && <p style={{ fontSize: 11, color: fortaleza.color, margin: '0 0 6px 0', fontWeight: 600 }}>{fortaleza.label}</p>}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                  {CHECK_LABELS.map((lbl, i) => (
+                    <span key={i} style={{
+                      fontSize: 10, padding: '2px 7px', borderRadius: 100,
+                      background: fortaleza.checks[i] ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.04)',
+                      color: fortaleza.checks[i] ? '#4ade80' : '#666',
+                      border: `1px solid ${fortaleza.checks[i] ? 'rgba(74,222,128,0.2)' : 'transparent'}`,
+                    }}>
+                      {fortaleza.checks[i] ? '✓' : '·'} {lbl}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           {error && <p className="text-red-400 text-sm">{error}</p>}
           <button type="submit" disabled={cargando}
