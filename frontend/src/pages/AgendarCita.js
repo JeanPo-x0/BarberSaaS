@@ -5,6 +5,7 @@ import {
   getBarberosPorBarberia, getServiciosPorBarberia, getBarberia,
   getBarberiaBySlug, buscarOCrearCliente, crearCita, getDisponibilidad,
   getConfigPagosPublica, subirComprobante,
+  consultarCitasCliente, cancelarCitaCliente,
 } from '../services/api';
 import { formatearInput, formatearTelefono } from '../utils/phone';
 
@@ -206,6 +207,13 @@ function AgendarCita() {
   const [comprobante, setComprobante] = useState(null);
   const [tcAceptado, setTcAceptado] = useState(false);
   const [tcRechazado, setTcRechazado] = useState(false);
+
+  const [panelCancelar, setPanelCancelar] = useState(false);
+  const [telCancelar, setTelCancelar] = useState('');
+  const [buscandoCitas, setBuscandoCitas] = useState(false);
+  const [citasCliente, setCitasCliente] = useState(null);
+  const [cancelando, setCancelando] = useState(null);
+  const [canceladaInfo, setCanceladaInfo] = useState(null);
 
   useEffect(() => {
     const resolveId = slug
@@ -1317,6 +1325,229 @@ function AgendarCita() {
             </div>
           )}
         </div>
+
+        {/* ── Panel: Mis citas / Cancelar ── */}
+        <div style={{ marginTop: 20 }}>
+          <button
+            type="button"
+            onClick={() => { setPanelCancelar(o => !o); setCitasCliente(null); setCanceladaInfo(null); setTelCancelar(''); }}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '14px 18px',
+              background: panelCancelar ? 'rgba(230,57,70,0.06)' : 'rgba(255,255,255,0.02)',
+              border: `1px solid ${panelCancelar ? 'rgba(230,57,70,0.2)' : 'rgba(255,255,255,0.07)'}`,
+              borderRadius: panelCancelar ? '14px 14px 0 0' : 14,
+              cursor: 'pointer', fontFamily: "'DM Sans'",
+              transition: 'all 0.2s',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: 8,
+                background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.18)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E63946" strokeWidth="2.2" strokeLinecap="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/>
+                </svg>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 600, color: panelCancelar ? '#E63946' : 'var(--text-muted)' }}>
+                ¿Ya tenés una cita? Consultala o cancelala aquí
+              </span>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round"
+              style={{ transform: panelCancelar ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }}>
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </button>
+
+          {panelCancelar && (
+            <div style={{
+              background: 'rgba(17,17,17,0.9)', border: '1px solid rgba(230,57,70,0.15)',
+              borderTop: 'none', borderRadius: '0 0 14px 14px',
+              padding: '20px 18px',
+            }}>
+              {!canceladaInfo ? (
+                <>
+                  {!citasCliente ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+                        Ingresá tu número de WhatsApp para buscar tu cita.
+                      </p>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input
+                          value={telCancelar}
+                          onChange={e => setTelCancelar(formatearInput(e.target.value))}
+                          placeholder="8888 8888"
+                          className="input-dark"
+                          inputMode="numeric"
+                          style={{ flex: 1, fontSize: 14 }}
+                        />
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!telCancelar.trim()) return;
+                            setBuscandoCitas(true);
+                            try {
+                              const r = await consultarCitasCliente({ telefono: telCancelar });
+                              setCitasCliente(r.data);
+                            } catch {
+                              setCitasCliente([]);
+                            } finally {
+                              setBuscandoCitas(false);
+                            }
+                          }}
+                          disabled={buscandoCitas || !telCancelar.trim()}
+                          style={{
+                            padding: '0 16px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                            background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)',
+                            color: '#C9A84C', cursor: 'pointer', fontFamily: "'DM Sans'",
+                            flexShrink: 0, opacity: (!telCancelar.trim() || buscandoCitas) ? 0.5 : 1,
+                          }}
+                        >
+                          {buscandoCitas ? '...' : 'Buscar'}
+                        </button>
+                      </div>
+                    </div>
+                  ) : citasCliente.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                      <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
+                        No encontramos citas pendientes con ese número.
+                      </p>
+                      <button type="button" onClick={() => { setCitasCliente(null); setTelCancelar(''); }}
+                        style={{ fontSize: 12, color: '#C9A84C', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                        Intentar con otro número
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+                        Citas pendientes encontradas:
+                      </p>
+                      {citasCliente.map(c => {
+                        const d = new Date(c.fecha_hora);
+                        const fechaStr = d.toLocaleDateString('es-CR', { weekday: 'long', day: '2-digit', month: 'long' });
+                        const horaStr = d.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+                        const pagado = c.estado_pago === 'confirmado';
+                        return (
+                          <div key={c.id} style={{
+                            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+                            borderRadius: 12, padding: '14px 16px',
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+                              <div style={{ minWidth: 0 }}>
+                                <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 3px 0', textTransform: 'capitalize' }}>
+                                  {fechaStr} a las {horaStr}
+                                </p>
+                                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 2px 0' }}>
+                                  {c.barbero_nombre} · {c.servicio_nombre}
+                                </p>
+                                {pagado && (
+                                  <span style={{
+                                    fontSize: 10, fontWeight: 700, color: '#4ade80',
+                                    background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)',
+                                    borderRadius: 100, padding: '2px 8px',
+                                  }}>
+                                    Depósito confirmado
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                disabled={cancelando === c.id}
+                                onClick={async () => {
+                                  if (!window.confirm(`¿Cancelar tu cita del ${fechaStr} a las ${horaStr}?`)) return;
+                                  setCancelando(c.id);
+                                  try {
+                                    const r = await cancelarCitaCliente(c.id, { telefono: telCancelar });
+                                    setCanceladaInfo({ fecha: fechaStr, hora: horaStr, pagado: r.data.estado_pago === 'confirmado' });
+                                  } catch (err) {
+                                    alert(err.response?.data?.detail || 'Error al cancelar');
+                                  } finally {
+                                    setCancelando(null);
+                                  }
+                                }}
+                                style={{
+                                  padding: '8px 14px', borderRadius: 9, fontSize: 12, fontWeight: 700,
+                                  background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.25)',
+                                  color: '#E63946', cursor: 'pointer', fontFamily: "'DM Sans'",
+                                  flexShrink: 0, opacity: cancelando === c.id ? 0.5 : 1,
+                                }}
+                              >
+                                {cancelando === c.id ? 'Cancelando...' : 'Cancelar cita'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <button type="button" onClick={() => { setCitasCliente(null); setTelCancelar(''); }}
+                        style={{ fontSize: 12, color: '#555', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textAlign: 'left', marginTop: 4 }}>
+                        Buscar con otro número
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                /* ── Estado: cita cancelada ── */
+                <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                  <div style={{
+                    width: 48, height: 48, borderRadius: '50%', margin: '0 auto 14px',
+                    background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 12l5 5L20 7" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 4px 0' }}>
+                    Cita cancelada
+                  </p>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 16px 0' }}>
+                    {canceladaInfo.fecha} a las {canceladaInfo.hora}
+                  </p>
+
+                  {canceladaInfo.pagado && barberia?.telefono && (
+                    <div style={{
+                      background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)',
+                      borderRadius: 12, padding: '14px 16px', marginBottom: 14, textAlign: 'left',
+                    }}>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: '#fbbf24', margin: '0 0 6px 0' }}>
+                        Tenías un depósito confirmado
+                      </p>
+                      <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px 0', lineHeight: 1.6 }}>
+                        Para coordinar el reembolso de tu depósito, contactá directamente a la barbería por WhatsApp.
+                      </p>
+                      <a
+                        href={`https://wa.me/${(barberia.telefono || '').replace(/\D/g,'')}?text=${encodeURIComponent(`Hola, cancelé mi cita del ${canceladaInfo.fecha} a las ${canceladaInfo.hora} y quisiera coordinar el reembolso de mi depósito.`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                          padding: '10px', borderRadius: 10,
+                          background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.25)',
+                          color: '#25D366', fontSize: 13, fontWeight: 700, textDecoration: 'none',
+                        }}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                          <path d="M20.52 3.48A11.93 11.93 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.18-1.57A11.96 11.96 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.22-3.48-8.52z" fill="#25D366"/>
+                          <path d="M17.5 14.4c-.3-.15-1.77-.87-2.04-.97s-.47-.15-.67.15-.77.97-.94 1.17-.35.22-.65.07c-.3-.15-1.27-.47-2.42-1.49-.89-.8-1.5-1.78-1.67-2.08s-.02-.46.13-.61c.13-.13.3-.35.45-.52s.2-.3.3-.5.05-.37-.03-.52-.67-1.62-.92-2.22c-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37s-1.04 1.02-1.04 2.48 1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.1 4.49.71.31 1.27.49 1.7.62.72.23 1.37.2 1.88.12.57-.09 1.77-.72 2.02-1.42s.25-1.3.17-1.42c-.07-.12-.27-.2-.57-.35z" fill="#fff"/>
+                        </svg>
+                        Solicitar reembolso por WhatsApp
+                      </a>
+                    </div>
+                  )}
+
+                  <button type="button" onClick={() => { setCanceladaInfo(null); setCitasCliente(null); setTelCancelar(''); setPanelCancelar(false); }}
+                    style={{ fontSize: 12, color: '#555', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                    Cerrar
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );

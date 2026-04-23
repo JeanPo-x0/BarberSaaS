@@ -325,15 +325,17 @@ export default function Soporte() {
                 botonTexto="Enviar solicitud de reembolso"
                 descripcion={
                   <>
-                    Los reembolsos aplican cuando: hubo un cobro duplicado, el plan no se activó por error técnico, o solicitás dentro de los primeros 7 días de un nuevo ciclo sin haber usado el servicio.{' '}
-                    <span style={{ color: '#E63946' }}>No aplica</span> si ya usaste el servicio ese período o si el trial terminó sin cancelar.
+                    Aplica si hubo un cobro duplicado, el plan no se activó por error técnico, o solicitás dentro de los primeros 7 días del ciclo sin haber usado el servicio.{' '}
+                    <span style={{ color: '#E63946' }}>No aplica</span> si ya usaste el servicio ese período o el trial terminó sin cancelar. El número de recibo lo encontrás en el correo de confirmación de Stripe.
                   </>
                 }
                 campos={[
                   { key: 'nombre', label: 'Tu nombre', required: true },
                   { key: 'correo', label: 'Correo de tu cuenta', tipo: 'email', required: true },
+                  { key: 'recibo', label: 'Número de recibo / transacción (ej: ch_xxx o IN-0001)', required: true },
+                  { key: 'monto', label: 'Monto cobrado (ej: $9.99 o ₡6500)', required: true },
                   { key: 'fecha', label: 'Fecha del cobro (ej: 15/04/2026)', required: true },
-                  { key: 'motivo', label: 'Motivo del reembolso', tipo: 'textarea', required: true },
+                  { key: 'motivo', label: 'Descripción del problema', tipo: 'textarea', required: true },
                 ]}
               />
             </Section>

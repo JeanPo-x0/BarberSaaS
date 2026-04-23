@@ -98,6 +98,8 @@ export const eliminarServicio = (id) => API.delete(`/servicios/${id}`);
 // Clientes
 export const getClientes = () => API.get('/clientes/');
 export const buscarOCrearCliente = (data) => API.post('/clientes/buscar-o-crear', data);
+export const consultarCitasCliente = (data) => API.post('/clientes/consultar-citas', data);
+export const cancelarCitaCliente = (citaId, data) => API.patch(`/clientes/${citaId}/cancelar-por-cliente`, data);
 
 // Citas
 export const getCitas = () => API.get('/citas/');
