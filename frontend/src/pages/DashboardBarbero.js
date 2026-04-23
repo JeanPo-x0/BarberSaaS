@@ -328,10 +328,31 @@ function DashboardBarbero() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif", position: 'relative' }}>
+
+      {/* Fondo: glow dorado + grilla */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+        {/* Grilla sutil */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+        }} />
+        {/* Glow dorado top-center */}
+        <div style={{
+          position: 'absolute', top: -120, left: '50%', transform: 'translateX(-50%)',
+          width: 700, height: 400,
+          background: 'radial-gradient(ellipse, rgba(201,168,76,0.12) 0%, transparent 70%)',
+        }} />
+        {/* Fade de la grilla hacia abajo */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to bottom, transparent 40%, var(--bg-primary) 100%)',
+        }} />
+      </div>
 
       {/* Header */}
-      <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '0 20px' }}>
+      <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '0 20px', position: 'relative', zIndex: 1 }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -385,7 +406,7 @@ function DashboardBarbero() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 20px' }}>
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 20px', position: 'relative', zIndex: 1 }}>
 
         {/* ── TAB AGENDA ── */}
         {tab === 'agenda' && (
