@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { wakeUpServer } from './services/api';
+import GeoBlock from './components/GeoBlock';
+import axios from 'axios';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Barberias from './pages/Barberias';
@@ -32,8 +34,27 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
 function AppRoutes() {
-  useEffect(() => { wakeUpServer(); }, []);
+  const [bloqueado, setBloqueado] = useState(false);
+
+  useEffect(() => {
+    wakeUpServer();
+    // Verificar geo — timeout de 6s, si falla el backend deja pasar (fail open)
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+    axios.get(`${BASE_URL}/`, { signal: controller.signal })
+      .catch(err => {
+        if (err.response?.status === 403) {
+          const msg = err.response?.data?.detail || '';
+          if (msg.includes('Costa Rica') || msg.includes('VPN')) setBloqueado(true);
+        }
+      })
+      .finally(() => clearTimeout(timer));
+  }, []);
+
+  if (bloqueado) return <GeoBlock />;
 
   return (
     <>
