@@ -764,7 +764,7 @@ export default function Home() {
           BarberSaaS 2026 &mdash; Hecho en Costa Rica
         </p>
         <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>
-          © 2025 BarberSaaS &nbsp;&middot;&nbsp;{' '}
+          © {new Date().getFullYear()} BarberSaaS &nbsp;&middot;&nbsp;{' '}
           <Link
             to="/terminos"
             style={{ color: '#C9A84C', textDecoration: 'none' }}
