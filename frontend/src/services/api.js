@@ -34,9 +34,10 @@ API.interceptors.response.use(
     // Skip redirect for login/auth endpoints — 401 there means wrong credentials, not expired session
     const esEndpointPublico = url.includes('/auth/login') || url.includes('/auth/registro') || url.includes('/auth/onboarding') || url.includes('/barberos/login') || url.includes('/barberos/activar');
     if (error.response?.status === 401 && !esEndpointPublico) {
+      const usuarioActual = JSON.parse(localStorage.getItem('usuario') || 'null');
       localStorage.removeItem('usuario');
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      window.location.href = usuarioActual?.rol === 'barbero' ? '/barbero/login' : '/login';
     }
     return Promise.reject(error);
   }

@@ -178,11 +178,14 @@ def login_barbero(request: Request, datos: LoginBarberoRequest, db: Session = De
         raise HTTPException(status_code=403, detail="Cuenta no activada. Revisá tu email.")
     payload = {"sub": barbero.email, "rol": "barbero", "barbero_id": barbero.id, "barberia_id": barbero.barberia_id}
     token = crear_token(payload)
-    return {
+    from fastapi.responses import JSONResponse
+    response = JSONResponse({
         "access_token": token,
         "token_type": "bearer",
         "barbero": {"id": barbero.id, "nombre": barbero.nombre, "email": barbero.email, "barberia_id": barbero.barberia_id},
-    }
+    })
+    response.delete_cookie(key="auth_token", httponly=True, secure=True, samesite="none")
+    return response
 
 
 @router.patch("/{barbero_id}/editar", response_model=BarberoResponse)
