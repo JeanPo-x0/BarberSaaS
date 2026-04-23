@@ -2,6 +2,14 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { recuperarPassword } from '../services/api';
 
+function KeyIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+    </svg>
+  );
+}
+
 function RecuperarPassword() {
   const [email, setEmail] = useState('');
   const [enviado, setEnviado] = useState(false);
@@ -13,7 +21,7 @@ function RecuperarPassword() {
     try {
       await recuperarPassword({ email });
     } catch {
-      // Siempre mostrar exito para no revelar si el email existe
+      // Siempre mostrar éxito para no revelar si el email existe
     } finally {
       setCargando(false);
       setEnviado(true);
@@ -21,55 +29,126 @@ function RecuperarPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-      <div className="bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-md">
-        <h1 className="text-3xl font-bold text-yellow-400 text-center mb-2">BarberSaaS</h1>
-        <p className="text-gray-400 text-center mb-8">Recuperar contrasena</p>
+    <div style={{
+      minHeight: '100vh',
+      background: '#0A0A0A',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 24,
+      fontFamily: "'DM Sans', sans-serif",
+    }}>
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse 70% 45% at 50% 0%, rgba(201,168,76,0.1) 0%, transparent 70%)',
+      }} />
 
-        {enviado ? (
-          <div className="text-center space-y-4">
-            <p className="text-white font-semibold">Revisa tu correo</p>
-            <p className="text-gray-400 text-sm">
-              Si el email <span className="text-yellow-400">{email}</span> esta registrado,
-              recibiras un link para restablecer tu contrasena. El link expira en 15 minutos.
-            </p>
-            <Link
-              to="/login"
-              className="inline-block mt-4 text-yellow-400 hover:underline text-sm"
-            >
-              ← Volver al login
-            </Link>
+      <div style={{ width: '100%', maxWidth: 400, position: 'relative' }}>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: '50%',
+            background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <KeyIcon />
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-gray-300 mb-1">Tu email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                placeholder="tu@email.com"
-                required
-              />
-            </div>
-            <p className="text-gray-500 text-sm">
-              Te enviaremos un link para crear una nueva contrasena.
+          <div>
+            <p style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.1em', color: '#C9A84C', margin: 0, lineHeight: 1 }}>
+              Recuperar contraseña
             </p>
-            <button
-              type="submit"
-              disabled={cargando}
-              className="w-full bg-yellow-400 text-gray-900 font-bold py-2 rounded-lg hover:bg-yellow-300 transition disabled:opacity-50"
-            >
-              {cargando ? 'Enviando...' : 'Enviar link de recuperacion'}
-            </button>
-            <p className="text-center text-gray-500 text-sm mt-2">
-              <Link to="/login" className="text-yellow-400 hover:underline">
-                ← Volver al login
-              </Link>
-            </p>
-          </form>
-        )}
+            <p style={{ fontSize: 11, color: '#555', margin: 0, letterSpacing: '0.04em' }}>BarberSaaS</p>
+          </div>
+        </div>
+
+        <div style={{
+          background: '#111',
+          border: '1px solid rgba(201,168,76,0.15)',
+          borderRadius: 18,
+          overflow: 'hidden',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.05)',
+        }}>
+          <div style={{ height: 3, background: 'linear-gradient(90deg, transparent, #C9A84C 40%, #e8c96a 60%, transparent)' }} />
+
+          <div style={{ padding: '28px 28px 24px' }}>
+            {enviado ? (
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  width: 52, height: 52, borderRadius: '50%',
+                  background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 16px',
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 22, letterSpacing: '0.08em', color: '#fff', margin: '0 0 8px 0' }}>
+                  Revisá tu correo
+                </h2>
+                <p style={{ color: '#666', fontSize: 13, margin: '0 0 6px 0', lineHeight: 1.6 }}>
+                  Si el email <span style={{ color: '#C9A84C' }}>{email}</span> está registrado, recibirás un link para restablecer tu contraseña.
+                </p>
+                <p style={{ color: '#444', fontSize: 12, margin: '0 0 24px 0' }}>El link expira en 15 minutos.</p>
+                <Link
+                  to="/login"
+                  style={{ fontSize: 13, color: '#C9A84C', textDecoration: 'none', fontWeight: 600 }}
+                >
+                  ← Volver al login
+                </Link>
+              </div>
+            ) : (
+              <>
+                <h1 style={{
+                  fontFamily: "'Bebas Neue'", fontSize: 26, letterSpacing: '0.08em',
+                  color: '#fff', margin: '0 0 4px 0',
+                }}>
+                  ¿Olvidaste tu contraseña?
+                </h1>
+                <p style={{ color: '#555', fontSize: 13, margin: '0 0 24px 0' }}>
+                  Te enviamos un link para crear una nueva.
+                </p>
+
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 11, color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="tu@email.com"
+                      required
+                      autoComplete="email"
+                      className="input-dark"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn-gold"
+                    disabled={cargando}
+                    style={{ marginTop: 4, opacity: cargando ? 0.7 : 1 }}
+                  >
+                    {cargando ? 'Enviando...' : 'Enviar link de recuperación'}
+                  </button>
+                </form>
+
+                <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '20px 0' }} />
+
+                <p style={{ textAlign: 'center', margin: 0 }}>
+                  <Link to="/login" style={{ fontSize: 12, color: '#444', textDecoration: 'none', transition: 'color 0.2s' }}
+                    onMouseEnter={e => e.target.style.color = '#C9A84C'}
+                    onMouseLeave={e => e.target.style.color = '#444'}
+                  >
+                    ← Volver al login
+                  </Link>
+                </p>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
