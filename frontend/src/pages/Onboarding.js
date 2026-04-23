@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { onboarding, login, getMe, crearCheckout } from '../services/api';
+import { NavLogo } from '../components/LogoLink';
+import { formatearInput, formatearTelefono } from '../utils/phone';
 
 function calcularFortaleza(pwd) {
   const checks = [
@@ -16,8 +18,6 @@ function calcularFortaleza(pwd) {
 }
 
 const CHECK_LABELS = ['8+ caracteres', 'Mayúscula', 'Caracter especial', 'Número'];
-import { NavLogo } from '../components/LogoLink';
-import { formatearInput, formatearTelefono } from '../utils/phone';
 
 const PASOS = ['Tu cuenta', 'Tu barberia', 'Listo'];
 
