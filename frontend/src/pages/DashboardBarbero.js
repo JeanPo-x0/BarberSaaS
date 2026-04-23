@@ -77,8 +77,14 @@ function CitaCard({ cita, onCompletar, onCancelar, mostrarFecha }) {
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 10px', alignItems: 'center' }}>
             {cita.servicio && (
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                ✂ {[cita.servicio.nombre, ...serviciosExtra.map(s => s.nombre)].join(' + ')}
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+                  <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                  <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                  <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+                </svg>
+                {[cita.servicio.nombre, ...serviciosExtra.map(s => s.nombre)].join(' + ')}
               </span>
             )}
             {totalPrecio != null && (
@@ -216,8 +222,14 @@ function DashboardBarbero() {
     const token = localStorage.getItem('token');
     if (!token) { navigate('/barbero/login'); return; }
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const payload = JSON.parse(atob(b64));
       if (payload.rol !== 'barbero') { navigate('/login'); return; }
+      // Fallback: tokens viejos sin nombre usan localStorage
+      if (!payload.nombre) {
+        const ls = JSON.parse(localStorage.getItem('usuario') || '{}');
+        payload.nombre = ls.nombre || '';
+      }
       setBarberoInfo(payload);
     } catch {
       navigate('/barbero/login');

@@ -176,7 +176,7 @@ def login_barbero(request: Request, datos: LoginBarberoRequest, db: Session = De
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
     if not barbero.cuenta_activa:
         raise HTTPException(status_code=403, detail="Cuenta no activada. Revisá tu email.")
-    payload = {"sub": barbero.email, "rol": "barbero", "barbero_id": barbero.id, "barberia_id": barbero.barberia_id}
+    payload = {"sub": barbero.email, "rol": "barbero", "barbero_id": barbero.id, "barberia_id": barbero.barberia_id, "nombre": barbero.nombre}
     token = crear_token(payload)
     from fastapi.responses import JSONResponse
     response = JSONResponse({
