@@ -24,6 +24,7 @@ from app.models.barberia import Barberia
 from app.core.deps import get_usuario_actual, get_barbero_actual
 from app.core.config import settings
 from app.models.lista_espera import ListaEspera
+from app.models.bloqueo import BloqueoDisponibilidad
 
 router = APIRouter(prefix="/citas", tags=["Citas"])
 
@@ -124,6 +125,20 @@ def ver_disponibilidad(request: Request, barbero_id: int, fecha: str, db: Sessio
         dia = datetime.strptime(fecha, "%Y-%m-%d")
     except ValueError:
         raise HTTPException(status_code=400, detail="Formato de fecha invalido. Usa YYYY-MM-DD")
+
+    # Si el barbero tiene ese día bloqueado, todos los slots no disponibles
+    bloqueado = db.query(BloqueoDisponibilidad).filter(
+        BloqueoDisponibilidad.barbero_id == barbero_id,
+        BloqueoDisponibilidad.fecha == dia.date(),
+    ).first()
+    if bloqueado:
+        slots = []
+        hora_actual = dia.replace(hour=5, minute=0)
+        hora_fin = dia.replace(hour=23, minute=30)
+        while hora_actual < hora_fin:
+            slots.append({"hora": hora_actual.strftime("%H:%M"), "disponible": False})
+            hora_actual += timedelta(minutes=30)
+        return {"barbero_id": barbero_id, "fecha": fecha, "slots": slots, "bloqueado": True}
 
     slots = []
     hora_actual = dia.replace(hour=5, minute=0)

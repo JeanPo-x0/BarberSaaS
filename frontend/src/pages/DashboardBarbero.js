@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAgendaBarbero, getHistorialBarbero, actualizarPerfilBarbero, completarCitaBarbero, cancelarCitaBarbero, logoutBarbero } from '../services/api';
+import { getAgendaBarbero, getHistorialBarbero, actualizarPerfilBarbero, completarCitaBarbero, cancelarCitaBarbero, logoutBarbero, getMisBloqueos, crearBloqueo, eliminarBloqueo } from '../services/api';
 import { formatearInput } from '../utils/phone';
 
 const ESTADO = {
@@ -217,6 +217,12 @@ function DashboardBarbero() {
 
   const [toastMsg, setToastMsg] = useState('');
 
+  const [bloqueos, setBloqueos] = useState([]);
+  const [bloqueosCargados, setBloqueosCargados] = useState(false);
+  const [nuevaFecha, setNuevaFecha] = useState('');
+  const [nuevoMotivo, setNuevoMotivo] = useState('');
+  const [guardandoBloqueo, setGuardandoBloqueo] = useState(false);
+
   const toast = (msg) => { setToastMsg(msg); setTimeout(() => setToastMsg(''), 3000); };
 
   useEffect(() => {
@@ -273,9 +279,42 @@ function DashboardBarbero() {
       .finally(() => setCargandoHistorial(false));
   };
 
+  const cargarBloqueos = () => {
+    if (bloqueosCargados) return;
+    getMisBloqueos()
+      .then(r => { setBloqueos(r.data); setBloqueosCargados(true); })
+      .catch(() => {});
+  };
+
+  const handleAgregarBloqueo = async () => {
+    if (!nuevaFecha) return;
+    setGuardandoBloqueo(true);
+    try {
+      const r = await crearBloqueo({ fecha: nuevaFecha, motivo: nuevoMotivo.trim() || null });
+      setBloqueos(prev => [...prev, r.data].sort((a, b) => a.fecha.localeCompare(b.fecha)));
+      setNuevaFecha(''); setNuevoMotivo('');
+      toast('Día bloqueado.');
+    } catch (err) {
+      toast(err.response?.data?.detail || 'Error al bloquear');
+    } finally {
+      setGuardandoBloqueo(false);
+    }
+  };
+
+  const handleEliminarBloqueo = async (id) => {
+    try {
+      await eliminarBloqueo(id);
+      setBloqueos(prev => prev.filter(b => b.id !== id));
+      toast('Bloqueo eliminado.');
+    } catch {
+      toast('Error al eliminar');
+    }
+  };
+
   const handleTabChange = (t) => {
     setTab(t);
     if (t === 'historial') cargarHistorial();
+    if (t === 'disponibilidad') cargarBloqueos();
     if (t === 'perfil' && barberoInfo) {
       setPerfilForm({ nombre: barberoInfo.nombre || '', telefono: '', especialidad: '' });
     }
@@ -326,6 +365,7 @@ function DashboardBarbero() {
   const TABS = [
     { key: 'agenda', label: 'Agenda' },
     { key: 'historial', label: 'Historial' },
+    { key: 'disponibilidad', label: 'Disponibilidad' },
     { key: 'perfil', label: 'Mi Perfil' },
   ];
 
@@ -499,6 +539,106 @@ function DashboardBarbero() {
                 <FeatureLocked titulo="Exportar historial" descripcion="Descargá tu historial completo en Excel o PDF." />
                 <FeatureLocked titulo="Ranking de clientes frecuentes" descripcion="Identificá a tus mejores clientes automáticamente." />
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB DISPONIBILIDAD ── */}
+        {tab === 'disponibilidad' && (
+          <div className="anim-fadein" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* Bloquear nueva fecha */}
+            <div style={{
+              background: 'var(--bg-card)', border: '1px solid var(--border)',
+              borderRadius: 16, padding: '22px',
+            }}>
+              <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 18, letterSpacing: '0.06em', margin: '0 0 6px 0' }}>
+                Bloquear día
+              </h2>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 16px 0' }}>
+                Los clientes no podrán agendar citas en los días que bloquees.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 }}>
+                    Fecha
+                  </label>
+                  <input
+                    type="date"
+                    value={nuevaFecha}
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={e => setNuevaFecha(e.target.value)}
+                    className="input-dark"
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 }}>
+                    Motivo (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={nuevoMotivo}
+                    onChange={e => setNuevoMotivo(e.target.value)}
+                    placeholder="Ej: Vacaciones, cita médica..."
+                    className="input-dark"
+                    maxLength={80}
+                  />
+                </div>
+                <button
+                  onClick={handleAgregarBloqueo}
+                  disabled={!nuevaFecha || guardandoBloqueo}
+                  className="btn-gold"
+                  style={{ marginTop: 4, opacity: (!nuevaFecha || guardandoBloqueo) ? 0.5 : 1 }}
+                >
+                  {guardandoBloqueo ? 'Bloqueando...' : 'Bloquear día'}
+                </button>
+              </div>
+            </div>
+
+            {/* Lista de bloqueos */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '22px' }}>
+              <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 18, letterSpacing: '0.06em', margin: '0 0 14px 0' }}>
+                Días bloqueados
+              </h2>
+              {bloqueos.length === 0 ? (
+                <p style={{ fontSize: 13, color: '#333', margin: 0 }}>No tenés días bloqueados.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {bloqueos.map(b => {
+                    const d = new Date(b.fecha + 'T12:00:00');
+                    const label = d.toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                    const isPast = b.fecha < new Date().toISOString().split('T')[0];
+                    return (
+                      <div key={b.id} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                        padding: '12px 14px',
+                        background: isPast ? 'rgba(255,255,255,0.02)' : 'rgba(230,57,70,0.04)',
+                        border: `1px solid ${isPast ? 'rgba(255,255,255,0.05)' : 'rgba(230,57,70,0.15)'}`,
+                        borderRadius: 10, opacity: isPast ? 0.5 : 1,
+                      }}>
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ fontSize: 13, fontWeight: 700, color: isPast ? 'var(--text-muted)' : '#fff', margin: 0, textTransform: 'capitalize' }}>{label}</p>
+                          {b.motivo && <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{b.motivo}</p>}
+                        </div>
+                        <button
+                          onClick={() => handleEliminarBloqueo(b.id)}
+                          style={{
+                            background: 'rgba(230,57,70,0.06)', border: '1px solid rgba(230,57,70,0.18)',
+                            borderRadius: 8, color: '#E63946', cursor: 'pointer',
+                            fontSize: 11, fontWeight: 700, fontFamily: "'DM Sans'",
+                            padding: '5px 11px', flexShrink: 0, transition: 'background 0.15s',
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,57,70,0.15)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(230,57,70,0.06)'}
+                        >
+                          Quitar
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}

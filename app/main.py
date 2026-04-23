@@ -13,6 +13,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from app.core.config import settings
 from app.routers import barberias, barberos, clientes, servicios, citas, auth, webhook
 from app.routers import suscripcion, stats, admin, lista_espera, configuracion_pagos, soporte
+from app.routers import bloqueos as bloqueos_router
 from app.models.lista_espera import ListaEspera
 from app.models.suscripcion import Suscripcion
 from app.services.whatsapp import notificar_lista_espera
@@ -302,6 +303,7 @@ app.include_router(admin.router)
 app.include_router(lista_espera.router)
 app.include_router(configuracion_pagos.router)
 app.include_router(soporte.router)
+app.include_router(bloqueos_router.router)
 
 _comprobantes_dir = "/tmp/comprobantes"
 os.makedirs(_comprobantes_dir, exist_ok=True)

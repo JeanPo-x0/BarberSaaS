@@ -21,6 +21,7 @@ import Terminos from './pages/Terminos';
 import Privacidad from './pages/Privacidad';
 import Soporte from './pages/Soporte';
 import Cuenta from './pages/Cuenta';
+import NotFound from './pages/NotFound';
 import ActivarBarbero from './pages/ActivarBarbero';
 import LoginBarbero from './pages/LoginBarbero';
 import DashboardBarbero from './pages/DashboardBarbero';
@@ -78,6 +79,7 @@ function AppRoutes() {
         <Route path="/cuenta" element={<ProtectedRoute><Cuenta /></ProtectedRoute>} />
         <Route path="/suscripcion/exito" element={<ProtectedRoute><SuscripcionExito /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
@@ -98,10 +100,6 @@ function App() {
             position: 'absolute', top: -120, left: '50%', transform: 'translateX(-50%)',
             width: 700, height: 400,
             background: 'radial-gradient(ellipse, rgba(201,168,76,0.09) 0%, transparent 70%)',
-          }} />
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to bottom, transparent 20%, #0A0A0A 100%)',
           }} />
         </div>
         <AppRoutes />

@@ -80,6 +80,9 @@ export const getAgendaBarbero = () => API.get('/barberos/me/agenda');
 export const getHistorialBarbero = () => API.get('/barberos/me/historial');
 export const actualizarPerfilBarbero = (data) => API.patch('/barberos/me/perfil', data);
 export const editarBarbero = (id, data) => API.patch(`/barberos/${id}/editar`, data);
+export const getMisBloqueos = () => API.get('/bloqueos/mis');
+export const crearBloqueo = (data) => API.post('/bloqueos/', data);
+export const eliminarBloqueo = (id) => API.delete(`/bloqueos/${id}`);
 export const completarCitaBarbero = (id) => API.patch(`/citas/${id}/completar-barbero`);
 export const cancelarCitaBarbero = (id) => API.patch(`/citas/${id}/cancelar-barbero`);
 
