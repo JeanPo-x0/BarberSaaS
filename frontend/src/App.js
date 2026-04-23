@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { wakeUpServer } from './services/api';
 import GeoBlock from './components/GeoBlock';
-import axios from 'axios';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Barberias from './pages/Barberias';
@@ -34,24 +33,17 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-
 function AppRoutes() {
   const [bloqueado, setBloqueado] = useState(false);
 
   useEffect(() => {
     wakeUpServer();
-    // Verificar geo — timeout de 6s, si falla el backend deja pasar (fail open)
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 6000);
-    axios.get(`${BASE_URL}/`, { signal: controller.signal })
-      .catch(err => {
-        if (err.response?.status === 403) {
-          const msg = err.response?.data?.detail || '';
-          if (msg.includes('Costa Rica') || msg.includes('VPN')) setBloqueado(true);
-        }
-      })
-      .finally(() => clearTimeout(timer));
+    // Check geo directo desde el browser — sin pasar por el backend
+    // ipapi.co detecta la IP real del usuario (VPN incluida), 30k req/mes gratis
+    fetch('https://ipapi.co/country/', { signal: AbortSignal.timeout(5000) })
+      .then(r => r.text())
+      .then(country => { if (country.trim() !== 'CR') setBloqueado(true); })
+      .catch(() => {}); // fail open si la API no responde
   }, []);
 
   if (bloqueado) return <GeoBlock />;
