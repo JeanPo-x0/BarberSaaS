@@ -2,22 +2,29 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login, wakeUpServer } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import LogoLink from '../components/LogoLink';
+
+function StoreIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+      <polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+  );
+}
 
 function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [cargando, setCargando] = useState(false);
-  const [estadoConexion, setEstadoConexion] = useState(''); // mensaje de estado durante cold start
-  const [showPass, setShowPass] = useState(false);
-  const { iniciarSesion } = useAuth();
-  const navigate = useNavigate();
+  const [email, setEmail]               = useState('');
+  const [password, setPassword]         = useState('');
+  const [error, setError]               = useState('');
+  const [cargando, setCargando]         = useState(false);
+  const [estadoConexion, setEstadoConexion] = useState('');
+  const [showPass, setShowPass]         = useState(false);
+  const { iniciarSesion }               = useAuth();
+  const navigate                        = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
-    setEstadoConexion('');
+    setError(''); setEstadoConexion('');
     setCargando(true);
 
     const intentarLogin = async () => {
@@ -33,24 +40,19 @@ function Login() {
       await intentarLogin();
     } catch (err) {
       if (!err.response) {
-        // Cold start / CORS durante arranque: esperamos a que el servidor
-        // confirme que esta listo (polling /health) antes de reintentar.
         setEstadoConexion('Iniciando servidor, por favor espera...');
         await wakeUpServer();
-        // Espera extra para que la DB termine de conectar tras el cold start
         await new Promise(r => setTimeout(r, 3000));
         try {
           await intentarLogin();
         } catch (err2) {
           setEstadoConexion('');
-          if (!err2.response) {
-            setError('El servidor no responde. Intenta de nuevo en unos segundos.');
-          } else {
-            setError('Email o contrasena incorrectos.');
-          }
+          setError(!err2.response
+            ? 'El servidor no responde. Intenta de nuevo en unos segundos.'
+            : 'Email o contraseña incorrectos.');
         }
       } else {
-        setError('Email o contrasena incorrectos.');
+        setError('Email o contraseña incorrectos.');
       }
     } finally {
       setCargando(false);
@@ -61,160 +63,174 @@ function Login() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--bg-primary)',
+      background: '#0A0A0A',
       display: 'flex',
-      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '24px',
+      padding: 24,
       fontFamily: "'DM Sans', sans-serif",
     }}>
-      {/* Back link */}
-      <div style={{ position: 'absolute', top: 24, left: 24 }}>
-        <LogoLink to="/" />
-      </div>
+      {/* Glow de fondo — tono más cálido/intenso que el barbero */}
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse 70% 45% at 50% 0%, rgba(201,168,76,0.1) 0%, transparent 70%)',
+      }} />
 
-      <div className="anim-fadeup anim-scalein" style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border)',
-        borderRadius: 18,
-        padding: '40px 36px',
-        width: '100%',
-        maxWidth: 420,
-        boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
-      }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <h1 style={{
-            fontFamily: "'Bebas Neue', cursive",
-            fontSize: 32, letterSpacing: '0.12em',
-            color: 'var(--text-primary)', margin: '0 0 6px 0',
+      <div style={{ width: '100%', maxWidth: 400, position: 'relative' }}>
+
+        {/* Identificador de rol */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: '50%',
+            background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            Bienvenido de vuelta
-          </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>
-            Ingresa a tu panel de administracion
-          </p>
+            <StoreIcon />
+          </div>
+          <div>
+            <p style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.1em', color: '#C9A84C', margin: 0, lineHeight: 1 }}>
+              Panel Dueños
+            </p>
+            <p style={{ fontSize: 11, color: '#555', margin: 0, letterSpacing: '0.04em' }}>BarberSaaS</p>
+          </div>
         </div>
 
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Email */}
-          <div>
-            <label style={{ display: 'block', fontSize: 13, color: 'var(--text-muted)', marginBottom: 6, fontWeight: 500 }}>
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="input-dark"
-              placeholder="tu@email.com"
-              required
-              autoComplete="email"
-            />
-          </div>
+        <div style={{
+          background: '#111',
+          border: '1px solid rgba(201,168,76,0.15)',
+          borderRadius: 18,
+          overflow: 'hidden',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.05)',
+        }}>
+          {/* Franja dorada superior */}
+          <div style={{ height: 3, background: 'linear-gradient(90deg, transparent, #C9A84C 40%, #e8c96a 60%, transparent)' }} />
 
-          {/* Password */}
-          <div>
-            <label style={{ display: 'block', fontSize: 13, color: 'var(--text-muted)', marginBottom: 6, fontWeight: 500 }}>
-              Contrasena
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showPass ? 'text' : 'password'}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="input-dark"
-                placeholder="••••••••"
-                required
-                autoComplete="current-password"
-                style={{ paddingRight: 44 }}
-              />
+          <div style={{ padding: '28px 28px 24px' }}>
+            <h1 style={{
+              fontFamily: "'Bebas Neue'", fontSize: 26, letterSpacing: '0.08em',
+              color: '#fff', margin: '0 0 4px 0',
+            }}>
+              Bienvenido de vuelta
+            </h1>
+            <p style={{ color: '#555', fontSize: 13, margin: '0 0 24px 0' }}>Ingresá con tu cuenta de dueño</p>
+
+            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 11, color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="tu@email.com"
+                  required
+                  autoComplete="email"
+                  className="input-dark"
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 11, color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                  Contraseña
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    autoComplete="current-password"
+                    className="input-dark"
+                    style={{ paddingRight: 44 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(v => !v)}
+                    style={{
+                      position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: '#555', padding: 0, display: 'flex',
+                    }}
+                  >
+                    {showPass ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Cold start */}
+              {estadoConexion && (
+                <div style={{
+                  background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)',
+                  borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#C9A84C', textAlign: 'center',
+                }}>
+                  {estadoConexion}
+                </div>
+              )}
+
+              {error && (
+                <div style={{
+                  background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.25)',
+                  borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#E63946',
+                }}>
+                  {error}
+                </div>
+              )}
+
               <button
-                type="button"
-                onClick={() => setShowPass(!showPass)}
-                style={{
-                  position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: 'var(--text-muted)', padding: 0, display: 'flex',
-                }}
+                type="submit"
+                className="btn-gold"
+                disabled={cargando}
+                style={{ marginTop: 4, opacity: cargando ? 0.7 : 1 }}
               >
-                {showPass ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                  </svg>
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                )}
+                {cargando ? 'Ingresando...' : 'Ingresar'}
+              </button>
+            </form>
+
+            <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '20px 0' }} />
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'center' }}>
+              <Link to="/recuperar-password" style={{
+                fontSize: 12, color: '#444', textDecoration: 'none', transition: 'color 0.2s',
+              }}
+                onMouseEnter={e => e.target.style.color = '#C9A84C'}
+                onMouseLeave={e => e.target.style.color = '#444'}
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+
+              <p style={{ fontSize: 12, color: '#444', margin: 0 }}>
+                ¿No tenés cuenta?{' '}
+                <Link to="/registro" style={{ color: '#C9A84C', textDecoration: 'none', fontWeight: 600 }}>
+                  Registrá tu barbería
+                </Link>
+              </p>
+
+              <button
+                onClick={() => navigate('/barbero/login')}
+                style={{
+                  width: '100%', background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10,
+                  color: '#666', cursor: 'pointer', fontSize: 12,
+                  fontFamily: "'DM Sans'", fontWeight: 500, padding: '10px',
+                  transition: 'border-color 0.2s, color 0.2s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(201,168,76,0.3)'; e.currentTarget.style.color = '#C9A84C'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = '#666'; }}
+              >
+                Soy barbero — ir a mi portal
               </button>
             </div>
           </div>
-
-          {/* Estado cold start */}
-          {estadoConexion && (
-            <div style={{
-              background: 'rgba(201,168,76,0.08)',
-              border: '1px solid rgba(201,168,76,0.25)',
-              borderRadius: 10, padding: '10px 14px',
-              fontSize: 13, color: '#C9A84C', textAlign: 'center',
-            }}>
-              {estadoConexion}
-            </div>
-          )}
-
-          {/* Error */}
-          {error && (
-            <div style={{
-              background: 'rgba(230,57,70,0.08)',
-              border: '1px solid rgba(230,57,70,0.25)',
-              borderRadius: 10, padding: '10px 14px',
-              fontSize: 13, color: '#E63946',
-            }}>
-              {error}
-            </div>
-          )}
-
-          {/* Submit */}
-          <button
-            type="submit"
-            className="btn-gold"
-            disabled={cargando}
-            style={{ width: '100%', marginTop: 4, opacity: cargando ? 0.7 : 1 }}
-          >
-            {cargando ? 'Ingresando...' : 'Entrar'}
-          </button>
-        </form>
-
-        {/* Links */}
-        <div style={{ marginTop: 20, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <Link to="/recuperar-password" style={{
-            fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none',
-            transition: 'color 0.2s',
-          }}
-            onMouseEnter={e => e.target.style.color = '#C9A84C'}
-            onMouseLeave={e => e.target.style.color = 'var(--text-muted)'}
-          >
-            Olvide mi contrasena
-          </Link>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
-            No tenes cuenta?{' '}
-            <Link to="/registro" style={{ color: '#C9A84C', textDecoration: 'none', fontWeight: 600 }}>
-              Registra tu barberia
-            </Link>
-          </p>
-          <Link to="/barbero/login" style={{
-            fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none',
-            transition: 'color 0.2s',
-          }}
-            onMouseEnter={e => e.target.style.color = '#C9A84C'}
-            onMouseLeave={e => e.target.style.color = 'var(--text-muted)'}
-          >
-            Ingresar como barbero
-          </Link>
         </div>
       </div>
     </div>
