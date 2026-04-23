@@ -32,7 +32,7 @@ API.interceptors.response.use(
   (error) => {
     const url = error.config?.url || '';
     // Skip redirect for login/auth endpoints — 401 there means wrong credentials, not expired session
-    const esEndpointPublico = url.includes('/auth/login') || url.includes('/auth/registro') || url.includes('/auth/onboarding');
+    const esEndpointPublico = url.includes('/auth/login') || url.includes('/auth/registro') || url.includes('/auth/onboarding') || url.includes('/barberos/login') || url.includes('/barberos/activar');
     if (error.response?.status === 401 && !esEndpointPublico) {
       localStorage.removeItem('usuario');
       localStorage.removeItem('token');
