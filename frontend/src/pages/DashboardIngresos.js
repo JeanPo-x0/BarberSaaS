@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../context/AuthContext';
-import { getIngresos, getRetencion, getAvanzadas, postReenganche } from '../services/api';
+import { getIngresos, getRetencion, getAvanzadas, postReenganche, exportarReportePDF } from '../services/api';
 import Navbar from '../components/Navbar';
 
 const Spinner = () => (
@@ -21,6 +21,7 @@ export default function DashboardIngresos() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState({});
+  const [exportando, setExportando] = useState(false);
 
   useEffect(() => {
     if (!usuario) { navigate('/login'); return; }
@@ -41,6 +42,23 @@ export default function DashboardIngresos() {
         : 'Error cargando estadisticas.');
     } finally {
       setCargando(false);
+    }
+  };
+
+  const handleExportarPDF = async () => {
+    setExportando(true);
+    try {
+      const res = await exportarReportePDF();
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `reporte_${new Date().toISOString().split('T')[0]}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Error al generar el reporte');
+    } finally {
+      setExportando(false);
     }
   };
 
@@ -77,13 +95,37 @@ export default function DashboardIngresos() {
       <div className="mobile-px" style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
 
         {/* Header */}
-        <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.08em', color: '#C9A84C', margin: '0 0 4px 0' }}>
-            Ingresos
-          </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>
-            Resumen financiero de tu barbería
-          </p>
+        <div style={{ marginBottom: 28, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <div>
+            <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.08em', color: '#C9A84C', margin: '0 0 4px 0' }}>
+              Ingresos
+            </h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>
+              Resumen financiero de tu barbería
+            </p>
+          </div>
+          {avanzadas && (
+            <button
+              onClick={handleExportarPDF}
+              disabled={exportando}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)',
+                borderRadius: 10, padding: '9px 16px', cursor: exportando ? 'wait' : 'pointer',
+                color: '#C9A84C', fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans'",
+                opacity: exportando ? 0.6 : 1, transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => !exportando && (e.currentTarget.style.background = 'rgba(201,168,76,0.15)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(201,168,76,0.08)')}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              {exportando ? 'Generando...' : 'Exportar PDF'}
+            </button>
+          )}
         </div>
 
         {/* Métricas principales — solo hoy y mes */}

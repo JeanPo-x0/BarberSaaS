@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
+import io
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
@@ -273,3 +275,192 @@ def enviar_whatsapp_reenganche(
         raise HTTPException(status_code=500, detail=f"Error enviando WhatsApp: {e}")
 
     return {"ok": True, "mensaje": f"WhatsApp enviado a {cliente.nombre}"}
+
+
+@router.get("/exportar-pdf")
+def exportar_pdf(
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    """Genera y descarga un reporte PDF de los últimos 30 días — solo Premium."""
+    barberia = _verificar_plan(usuario, db)
+    sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia.id).first()
+    plan = sus.plan if sus else barberia.plan
+    if plan != "premium":
+        raise HTTPException(status_code=403, detail="Esta funcion requiere plan Premium")
+
+    from fpdf import FPDF
+
+    ahora = datetime.utcnow()
+    hace_30 = ahora - timedelta(days=30)
+
+    citas = (
+        db.query(Cita)
+        .join(Barbero, Cita.barbero_id == Barbero.id)
+        .filter(
+            and_(
+                Barbero.barberia_id == barberia.id,
+                Cita.fecha_hora >= hace_30,
+            )
+        )
+        .order_by(Cita.fecha_hora.desc())
+        .all()
+    )
+
+    total = len(citas)
+    completadas = sum(1 for c in citas if c.estado == "completada")
+    canceladas  = sum(1 for c in citas if c.estado == "cancelada")
+    pendientes  = sum(1 for c in citas if c.estado == "pendiente")
+    ingresos    = _sumar_ingresos(db, barberia.id, hace_30, ahora)
+
+    # ── Construir PDF ────────────────────────────────────────────
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=16)
+    pdf.add_page()
+    pdf.set_margins(16, 16, 16)
+
+    GOLD   = (201, 168, 76)
+    DARK   = (20,  20,  20)
+    MUTED  = (120, 120, 120)
+    WHITE  = (255, 255, 255)
+    GREEN  = (74,  222, 128)
+    RED    = (230, 57,  70)
+    ORANGE = (251, 146, 60)
+
+    def safe(text: str) -> str:
+        replacements = {'á':'a','é':'e','í':'i','ó':'o','ú':'u','ü':'u',
+                        'Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U','Ü':'U',
+                        'ñ':'n','Ñ':'N','¿':'','¡':'','—':'-','–':'-'}
+        for k, v in replacements.items():
+            text = text.replace(k, v)
+        return text
+
+    # Header band
+    pdf.set_fill_color(*DARK)
+    pdf.rect(0, 0, 210, 36, 'F')
+    pdf.set_y(10)
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.set_text_color(*GOLD)
+    pdf.cell(0, 8, "BarberSaaS", ln=False, align='L')
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(*MUTED)
+    pdf.set_y(10)
+    pdf.cell(0, 8, f"Generado: {ahora.strftime('%d/%m/%Y %H:%M')} UTC", align='R', ln=True)
+    pdf.set_y(40)
+
+    # Barbería y periodo
+    pdf.set_font("Helvetica", "B", 20)
+    pdf.set_text_color(*DARK)
+    pdf.cell(0, 10, safe(barberia.nombre), ln=True)
+    pdf.set_font("Helvetica", "", 11)
+    pdf.set_text_color(*MUTED)
+    pdf.cell(0, 6, safe(f"Reporte de citas — {hace_30.strftime('%d/%m/%Y')} al {ahora.strftime('%d/%m/%Y')}"), ln=True)
+    pdf.ln(6)
+
+    # Línea separadora
+    pdf.set_draw_color(*GOLD)
+    pdf.set_line_width(0.6)
+    pdf.line(16, pdf.get_y(), 194, pdf.get_y())
+    pdf.ln(8)
+
+    # Resumen — 4 chips en fila
+    col_w = 43
+    chips = [
+        ("TOTAL CITAS", str(total), DARK),
+        ("COMPLETADAS", str(completadas), GREEN),
+        ("CANCELADAS",  str(canceladas),  RED),
+        ("INGRESOS",    f"CRC {ingresos:,.0f}", GOLD),
+    ]
+    y0 = pdf.get_y()
+    for i, (label, value, color) in enumerate(chips):
+        x = 16 + i * (col_w + 2)
+        pdf.set_fill_color(245, 245, 245)
+        pdf.rect(x, y0, col_w, 22, 'F')
+        pdf.set_xy(x, y0 + 3)
+        pdf.set_font("Helvetica", "", 7)
+        pdf.set_text_color(*MUTED)
+        pdf.cell(col_w, 4, label, align='C', ln=False)
+        pdf.set_xy(x, y0 + 9)
+        pdf.set_font("Helvetica", "B", 13)
+        pdf.set_text_color(*color)
+        pdf.cell(col_w, 8, safe(value), align='C', ln=False)
+    pdf.set_y(y0 + 28)
+
+    if not citas:
+        pdf.set_font("Helvetica", "", 12)
+        pdf.set_text_color(*MUTED)
+        pdf.cell(0, 10, "No hay citas en este periodo.", ln=True, align='C')
+    else:
+        # Encabezado tabla
+        headers = ["Fecha", "Hora", "Barbero", "Cliente", "Servicio", "Precio", "Estado"]
+        col_ws  = [24,       16,     36,         40,         40,         26,       22]
+
+        pdf.set_fill_color(*DARK)
+        pdf.set_text_color(*WHITE)
+        pdf.set_font("Helvetica", "B", 8)
+        for h, w in zip(headers, col_ws):
+            pdf.cell(w, 7, h, border=0, fill=True, align='C')
+        pdf.ln()
+
+        # Filas
+        pdf.set_font("Helvetica", "", 7.5)
+        for idx, c in enumerate(citas):
+            barbero_obj  = db.query(Barbero).filter(Barbero.id == c.barbero_id).first()
+            cliente_obj  = db.query(Cliente).filter(Cliente.id == c.cliente_id).first()
+            servicio_obj = db.query(Servicio).filter(Servicio.id == c.servicio_id).first()
+
+            fill_bg = (248, 248, 248) if idx % 2 == 0 else WHITE
+            pdf.set_fill_color(*fill_bg)
+
+            if c.estado == "completada":
+                estado_color = GREEN
+            elif c.estado == "cancelada":
+                estado_color = RED
+            else:
+                estado_color = ORANGE
+
+            row = [
+                c.fecha_hora.strftime("%d/%m/%y"),
+                c.fecha_hora.strftime("%H:%M"),
+                safe(barbero_obj.nombre  if barbero_obj  else "-"),
+                safe(cliente_obj.nombre  if cliente_obj  else "-"),
+                safe(servicio_obj.nombre if servicio_obj else "-"),
+                f"{float(servicio_obj.precio):,.0f}" if servicio_obj else "-",
+                c.estado.capitalize(),
+            ]
+
+            for i, (val, w) in enumerate(zip(row, col_ws)):
+                if i == 6:
+                    pdf.set_text_color(*estado_color)
+                else:
+                    pdf.set_text_color(*DARK)
+                pdf.cell(w, 6, val, border=0, fill=True, align='C')
+            pdf.ln()
+
+        # Línea cierre tabla
+        pdf.set_draw_color(220, 220, 220)
+        pdf.set_line_width(0.3)
+        pdf.line(16, pdf.get_y(), 194, pdf.get_y())
+        pdf.ln(4)
+
+        # Totales pie
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_text_color(*DARK)
+        total_w = sum(col_ws[:6])
+        pdf.cell(total_w, 7, f"Total ingresos ({completadas} citas completadas):", align='R')
+        pdf.set_text_color(*GOLD)
+        pdf.cell(col_ws[6], 7, safe(f"CRC {ingresos:,.0f}"), align='C', ln=True)
+
+    # Footer
+    pdf.set_y(-18)
+    pdf.set_font("Helvetica", "", 8)
+    pdf.set_text_color(*MUTED)
+    pdf.cell(0, 6, "BarberSaaS — Sistema de gestion de barberias | barbersas.com", align='C')
+
+    buf = io.BytesIO(pdf.output())
+    filename = f"reporte_{barberia.nombre.lower().replace(' ', '_')}_{ahora.strftime('%Y%m%d')}.pdf"
+    return StreamingResponse(
+        buf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

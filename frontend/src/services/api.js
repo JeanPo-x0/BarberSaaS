@@ -123,6 +123,8 @@ export const getAvanzadas = () => API.get('/stats/avanzadas');
 export const postReenganche = (cliente_id) => API.post('/stats/reenganche', { cliente_id });
 
 // Admin
+export const exportarReportePDF = () => API.get('/stats/exportar-pdf', { responseType: 'blob' });
+
 export const getAdminStats = () => API.get('/admin/stats');
 export const getAdminBarberias = () => API.get('/admin/barberias');
 export const suspenderBarberia = (id) => API.patch(`/admin/barberias/${id}/suspender`);
