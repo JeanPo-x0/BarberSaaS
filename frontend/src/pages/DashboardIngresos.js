@@ -71,6 +71,9 @@ export default function DashboardIngresos() {
     <div className="bg-panel" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif" }}>
       <Navbar />
 
+      <div style={{ display: 'flex', flex: 1 }}>
+        <div className="hidden md:block" style={{ width: 220, flexShrink: 0 }} />
+        <div style={{ flex: 1, minWidth: 0 }}>
       <div className="mobile-px" style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
 
         {/* Header */}
@@ -241,6 +244,8 @@ export default function DashboardIngresos() {
             ))}
           </div>
         )}
+      </div>
+        </div>
       </div>
     </div>
   );
