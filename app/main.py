@@ -27,11 +27,15 @@ def limpiar_citas_antiguas():
     db = SessionLocal()
     try:
         hace_30_dias = datetime.utcnow() - timedelta(days=30)
+        hace_1_anio = datetime.utcnow() - timedelta(days=365)
+        # Solo borrar canceladas después de 30 días — completadas se guardan 1 año
         db.query(Cita).filter(
-            and_(
-                Cita.estado.in_(["cancelada", "completada"]),
-                Cita.fecha_hora < hace_30_dias
-            )
+            Cita.estado == "cancelada",
+            Cita.fecha_hora < hace_30_dias
+        ).delete(synchronize_session=False)
+        db.query(Cita).filter(
+            Cita.estado == "completada",
+            Cita.fecha_hora < hace_1_anio
         ).delete(synchronize_session=False)
         db.commit()
     finally:
@@ -242,7 +246,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── Rutas excluidas del geo-bloqueo ───────────────────────────
 # Los webhooks de Twilio y Stripe vienen de IPs de EEUU — no bloquear
-GEO_BYPASS_PREFIXES = ("/webhook", "/health", "/")
+GEO_BYPASS_PREFIXES = ("/webhook", "/health")
 
 @app.middleware("http")
 async def geo_block_middleware(request: Request, call_next):

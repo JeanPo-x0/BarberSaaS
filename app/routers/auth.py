@@ -76,7 +76,6 @@ class ResetPasswordRequest(BaseModel):
 @limiter.limit("5/minute")
 def registrar_usuario(request: Request, usuario: UsuarioCreate, db: Session = Depends(get_db)):
     email = sanitizar(usuario.email).lower()
-    validar_dominio_email(email)
     validar_password(usuario.password)
     existente = db.query(Usuario).filter(Usuario.email == email).first()
     if existente:
@@ -168,7 +167,6 @@ def me(usuario: Usuario = Depends(get_usuario_actual)):
 def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(get_db)):
     """Registro completo: crea usuario dueño + barbería + suscripción trial."""
     email = sanitizar(datos.email).lower()
-    validar_dominio_email(email)
     validar_password(datos.password)
     existente = db.query(Usuario).filter(Usuario.email == email).first()
     if existente:

@@ -102,29 +102,41 @@ export default function Onboarding() {
 
   return (
     <div style={{
-      minHeight: '100vh', background: 'var(--bg-primary)',
+      minHeight: '100vh', background: '#0A0A0A',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', padding: '24px',
       fontFamily: "'DM Sans', sans-serif",
     }}>
+      {/* Glow de fondo */}
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse 70% 45% at 50% 0%, rgba(201,168,76,0.1) 0%, transparent 70%)',
+      }} />
+
       {/* Back */}
-      <div style={{ position: 'absolute', top: 20, left: 24 }}>
+      <div style={{ position: 'absolute', top: 20, left: 24, zIndex: 1 }}>
         <NavLogo to="/" />
       </div>
 
-      <div style={{ width: '100%', maxWidth: 440 }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <h1 style={{
-            fontFamily: "'Bebas Neue', cursive",
-            fontSize: 34, letterSpacing: '0.1em',
-            color: 'var(--text-primary)', margin: '0 0 6px 0',
+      <div style={{ width: '100%', maxWidth: 440, position: 'relative' }}>
+        {/* Badge de marca */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: '50%',
+            background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            Configura tu barberia
-          </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>
-            Listo en menos de 2 minutos
-          </p>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
+          <div>
+            <p style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.1em', color: '#C9A84C', margin: 0, lineHeight: 1 }}>
+              Registrá tu barbería
+            </p>
+            <p style={{ fontSize: 11, color: '#555', margin: 0, letterSpacing: '0.04em' }}>BarberSaaS · 14 días gratis</p>
+          </div>
         </div>
 
         {/* Stepper */}
@@ -163,10 +175,15 @@ export default function Onboarding() {
 
         {/* Card */}
         <div style={{
-          background: 'var(--bg-card)', border: '1px solid var(--border)',
-          borderRadius: 18, padding: '32px 28px',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
+          background: '#111',
+          border: '1px solid rgba(201,168,76,0.15)',
+          borderRadius: 18,
+          overflow: 'hidden',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.05)',
         }}>
+          {/* Franja dorada superior */}
+          <div style={{ height: 3, background: 'linear-gradient(90deg, transparent, #C9A84C 40%, #e8c96a 60%, transparent)' }} />
+          <div style={{ padding: '28px 28px 24px' }}>
           {error && (
             <div style={{
               background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.25)',
@@ -371,6 +388,7 @@ export default function Onboarding() {
               </button>
             </div>
           )}
+          </div>{/* /padding */}
         </div>
       </div>
     </div>
