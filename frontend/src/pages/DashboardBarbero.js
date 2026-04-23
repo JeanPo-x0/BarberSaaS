@@ -34,6 +34,7 @@ function CitaCard({ cita, onCompletar, onCancelar, mostrarFecha }) {
   const accentColor = ACCENT_LEFT[cita.estado] || ACCENT_LEFT.pendiente;
   const { hora, fecha } = fmt(cita.fecha_hora);
   const esPendiente = cita.estado === 'pendiente';
+  const puedeCantelar = esPendiente && (new Date(cita.fecha_hora) - new Date()) <= 2 * 60 * 60 * 1000;
   const serviciosExtra = cita.servicios_extra || [];
   const totalPrecio = cita.servicio
     ? cita.servicio.precio + serviciosExtra.reduce((acc, s) => acc + s.precio, 0)
@@ -116,7 +117,7 @@ function CitaCard({ cita, onCompletar, onCancelar, mostrarFecha }) {
                 Completar
               </button>
             )}
-            {onCancelar && (
+            {onCancelar && puedeCantelar && (
               <button onClick={() => onCancelar(cita.id)} style={{
                 padding: '5px 11px', borderRadius: 8, fontSize: 11, fontWeight: 700,
                 cursor: 'pointer', fontFamily: "'DM Sans'",

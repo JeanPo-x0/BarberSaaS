@@ -385,6 +385,10 @@ def cancelar_cita_barbero(
         raise HTTPException(status_code=400, detail="La cita ya fue cancelada")
     if cita.estado == "completada":
         raise HTTPException(status_code=400, detail="No se puede cancelar una cita completada")
+    # Solo se puede cancelar con menos de 2 horas de anticipación (citas guardadas en hora CR = UTC-6)
+    ahora_cr = datetime.utcnow() - timedelta(hours=6)
+    if cita.fecha_hora > ahora_cr + timedelta(hours=2):
+        raise HTTPException(status_code=403, detail="Solo podés cancelar citas con menos de 2 horas de anticipación. Avisale al dueño para cancelaciones futuras.")
     cita.estado = "cancelada"
     db.commit()
     db.refresh(cita)
