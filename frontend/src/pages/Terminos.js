@@ -6,55 +6,81 @@ const SECTIONS = [
     title: '1. Uso del Servicio',
     content: `BarberSaaS es una plataforma de gestión de citas y administración para barberías, disponible para establecimientos en Costa Rica y otros países de habla hispana. Al utilizar el servicio, el usuario acepta cumplir con estos términos en su totalidad.
 
-El servicio está destinado a propietarios de barberías ("dueños") y a sus clientes finales ("usuarios"). Los dueños son responsables del uso correcto de la plataforma dentro de su establecimiento y de garantizar que sus clientes estén informados sobre el uso de sus datos.
+La plataforma está destinada a tres tipos de usuarios:
+- Dueños de barbería: responsables de la configuración del establecimiento, la gestión de barberos y los servicios ofrecidos.
+- Barberos: empleados o colaboradores con acceso a su agenda personal mediante cuenta propia, invitados por el dueño.
+- Clientes: personas que agendan citas a través del enlace público de la barbería.
+
+Los dueños son responsables del uso correcto de la plataforma dentro de su establecimiento, de la configuración de políticas de pago y cancelación, y de garantizar que sus clientes estén informados sobre el uso de sus datos.
 
 Está prohibido usar BarberSaaS para actividades ilegales, fraudulentas o que violen los derechos de terceros. Nos reservamos el derecho de suspender o cancelar cuentas que incumplan estas condiciones sin previo aviso.`,
   },
   {
-    id: 'responsabilidad',
-    title: '2. Responsabilidad del Prestador',
-    content: `BarberSaaS provee la plataforma tecnológica "tal cual" (as-is). Si bien nos esforzamos por mantener el servicio disponible de manera continua, no garantizamos una disponibilidad ininterrumpida del 100%, ya que pueden presentarse períodos de mantenimiento, actualizaciones o situaciones fuera de nuestro control.
+    id: 'agendamiento',
+    title: '2. Agendamiento y Servicios',
+    content: `Los clientes pueden agendar citas seleccionando uno o varios servicios simultáneamente (por ejemplo: corte + barba + cejas). La duración total y el precio se calculan automáticamente según los servicios seleccionados.
 
-BarberSaaS no se hace responsable por:
-- Pérdidas económicas derivadas de interrupciones del servicio.
-- Errores u omisiones en la información ingresada por el dueño o los clientes.
-- Incumplimientos de citas por parte de clientes o barberos.
-- Daños indirectos, incidentales o consecuentes relacionados con el uso de la plataforma.
+El agendamiento queda sujeto a la disponibilidad del barbero seleccionado. BarberSaaS no garantiza la disponibilidad de un turno específico y no se hace responsable por errores en la disponibilidad mostrada si la barbería no mantiene su agenda actualizada.
 
-La responsabilidad total de BarberSaaS ante cualquier reclamación no excederá el monto pagado por el usuario en los tres (3) meses anteriores al evento que origina la reclamación.`,
+Cada cita queda registrada con el cliente, el barbero asignado, los servicios seleccionados y el método de pago indicado. El cliente recibirá una confirmación vía WhatsApp al momento de agendar.`,
   },
   {
     id: 'cancelacion',
     title: '3. Política de Cancelación',
-    content: `Los clientes pueden cancelar o reprogramar citas a través de los canales habilitados por cada barbería (WhatsApp, enlace de agendamiento, etc.).
+    content: `Los clientes pueden cancelar citas respondiendo CANCELAR al número de WhatsApp de la barbería.
 
-Cada barbería puede configurar su propia política de cancelación dentro de la plataforma, incluyendo:
-- Un tiempo mínimo de anticipación requerido para cancelaciones sin costo (por ejemplo, 24 horas antes de la cita).
-- Un porcentaje de cobro sobre el valor del servicio en caso de cancelaciones tardías o inasistencias (no-show), según lo establecido por el dueño de la barbería.
+Cada barbería configura su propia política de cancelación dentro de la plataforma, la cual es informada al cliente antes de confirmar el agendamiento e incluye:
+- Un tiempo mínimo de anticipación para cancelar sin costo (configurable por el dueño).
+- Un porcentaje de retención sobre el monto pagado en caso de cancelación tardía o inasistencia (no-show).
 
-BarberSaaS actúa únicamente como intermediario tecnológico. La aplicación o no de cargos por cancelación es responsabilidad exclusiva de cada barbería. Se recomienda a los clientes revisar la política de cancelación del establecimiento antes de agendar.`,
+BarberSaaS actúa únicamente como intermediario tecnológico. La aplicación de cargos por cancelación es responsabilidad exclusiva de cada barbería. El cliente acepta esta política al confirmar su cita.`,
   },
   {
-    id: 'pagos',
-    title: '4. Pagos y Reembolsos',
-    content: `Las suscripciones a los planes de BarberSaaS se cobran de forma mensual o anual, según la elección del dueño de la barbería al momento del registro. Los pagos se procesan a través de pasarelas de pago seguras de terceros.
+    id: 'pagos-citas',
+    title: '4. Pagos de Citas (SINPE / Efectivo)',
+    content: `Las barberías pueden requerir un depósito previo para confirmar la cita, configurable como porcentaje del valor total. Los métodos de pago habilitados por cada barbería pueden incluir:
+- SINPE Móvil: el cliente realiza la transferencia al número indicado y sube el comprobante a través de la plataforma. El dueño o barbero confirma o rechaza el comprobante manualmente.
+- Efectivo: el pago se realiza en el establecimiento al momento de la cita.
 
-Período de prueba: Los nuevos usuarios tienen acceso a un período de prueba gratuito de 14 días al registrar un método de pago válido. Al finalizar el período de prueba, se cobra automáticamente el plan seleccionado a la tarjeta registrada.
+BarberSaaS no procesa ni retiene dinero de las citas. Actúa únicamente como intermediario para la coordinación del pago entre el cliente y la barbería. Cualquier disputa sobre el monto, reembolso o confirmación de pago debe resolverse directamente entre el cliente y la barbería.
 
-Cancelación durante el trial: Si cancelás tu suscripción antes de que terminen los 14 días de prueba, no se realizará ningún cobro. Podrás continuar usando la plataforma con acceso completo hasta que se cumpla el plazo del trial. Una vez vencido, la cuenta pasará al plan básico sin funcionalidades premium.
+Los comprobantes de pago (imágenes) subidos por los clientes se almacenan de forma segura y son accesibles únicamente por el dueño y el barbero asignado a la cita.`,
+  },
+  {
+    id: 'suscripciones',
+    title: '5. Suscripciones y Facturación',
+    content: `Las suscripciones a los planes de BarberSaaS se cobran de forma mensual o anual, según la elección del dueño al momento del registro. Los pagos de suscripción se procesan mediante Stripe, una pasarela de pago certificada PCI DSS. BarberSaaS no almacena datos de tarjetas de crédito en sus servidores.
 
-Cancelación de plan activo: Si cancelás un plan ya cobrado, la suscripción permanece activa hasta el final del período ya pagado. No se realizan cobros adicionales, pero tampoco se reembolsa el período en curso.
+Período de prueba: Los nuevos usuarios tienen acceso a 14 días de prueba gratuita al registrar un método de pago válido. Al finalizar el período de prueba, se cobra automáticamente el plan seleccionado.
 
-Reembolsos: No se realizan reembolsos por períodos ya facturados, salvo que exista un fallo técnico grave atribuible directamente a BarberSaaS que haya impedido el uso del servicio. Cualquier solicitud debe enviarse a saascompany.cr@gmail.com dentro de los 7 días calendario posteriores al cobro.
+Cancelación durante el trial: Si cancelás antes de que terminen los 14 días, no se realiza ningún cobro y la cuenta conserva acceso hasta que venza el plazo.
 
-Precios: BarberSaaS se reserva el derecho de modificar los precios de los planes con un aviso previo de al menos 30 días a los usuarios activos.`,
+Cancelación de plan activo: La suscripción permanece activa hasta el fin del período ya pagado. No se generan cobros adicionales ni se reembolsa el período en curso.
+
+Reembolsos: No se realizan reembolsos por períodos ya facturados, salvo fallo técnico grave atribuible a BarberSaaS. Las solicitudes deben enviarse a saascompany.cr@gmail.com dentro de los 7 días calendario posteriores al cobro.
+
+Precios: BarberSaaS se reserva el derecho de modificar los precios con un aviso previo de al menos 30 días a los usuarios activos.`,
+  },
+  {
+    id: 'responsabilidad',
+    title: '6. Responsabilidad del Prestador',
+    content: `BarberSaaS provee la plataforma tecnológica "tal cual" (as-is). No garantizamos disponibilidad ininterrumpida del 100%, ya que pueden presentarse períodos de mantenimiento o situaciones fuera de nuestro control.
+
+BarberSaaS no se hace responsable por:
+- Pérdidas económicas derivadas de interrupciones del servicio.
+- Errores en la información ingresada por el dueño, barberos o clientes.
+- Incumplimientos de citas por parte de clientes o barberos.
+- Disputas de pago entre clientes y barberías.
+- Daños indirectos, incidentales o consecuentes relacionados con el uso de la plataforma.
+
+La responsabilidad total de BarberSaaS ante cualquier reclamación no excederá el monto pagado por el usuario en los tres (3) meses anteriores al evento.`,
   },
   {
     id: 'datos',
-    title: '5. Datos Personales',
+    title: '7. Datos Personales',
     content: `El tratamiento de datos personales en BarberSaaS se rige por la Ley N.° 8968 — Ley de Protección de la Persona frente al tratamiento de sus datos personales — de la República de Costa Rica, y su reglamento.
 
-Los datos recopilados (nombre, número de teléfono WhatsApp, historial de citas) se utilizan exclusivamente para proveer el servicio de agendamiento y enviar notificaciones relacionadas con las citas. No se venden ni se comparten con terceros con fines comerciales ajenos al servicio.
+Los datos recopilados (nombre, teléfono WhatsApp, email del barbero, historial de citas) se utilizan exclusivamente para proveer el servicio. No se venden ni se comparten con terceros con fines comerciales ajenos al servicio.
 
 Los titulares de los datos tienen derecho a:
 - Acceder a sus datos personales almacenados en la plataforma.
@@ -62,23 +88,19 @@ Los titulares de los datos tienen derecho a:
 - Solicitar la supresión de sus datos, sujeto a obligaciones legales vigentes.
 - Oponerse al tratamiento de sus datos en los casos contemplados por la ley.
 
-Para ejercer cualquiera de estos derechos, el titular debe enviar una solicitud escrita al correo de contacto indicado en la sección 6 de estos términos. Atenderemos su solicitud en un plazo máximo de 10 días hábiles.
-
-Para mayor detalle, consulte nuestra Política de Privacidad.`,
+Para ejercer cualquiera de estos derechos, envíe una solicitud a saascompany.cr@gmail.com. La atenderemos en un plazo máximo de 10 días hábiles. Para mayor detalle, consulte nuestra Política de Privacidad.`,
   },
   {
     id: 'modificaciones',
-    title: '6. Modificaciones a los Términos',
-    content: `BarberSaaS se reserva el derecho de modificar estos Términos y Condiciones en cualquier momento. Cuando se realicen cambios relevantes, notificaremos a los usuarios activos mediante un aviso visible en la plataforma o por correo electrónico con al menos 15 días de anticipación.
+    title: '8. Modificaciones a los Términos',
+    content: `BarberSaaS se reserva el derecho de modificar estos Términos y Condiciones en cualquier momento. Cuando se realicen cambios relevantes, notificaremos a los usuarios activos mediante un aviso en la plataforma o por correo electrónico con al menos 15 días de anticipación.
 
-El uso continuado del servicio tras la entrada en vigor de los nuevos términos constituye la aceptación de los mismos. Si el usuario no está de acuerdo con los cambios, puede cancelar su suscripción y dejar de usar la plataforma antes de la fecha de entrada en vigor.
-
-Le recomendamos revisar periódicamente esta página para mantenerse informado sobre cualquier actualización.`,
+El uso continuado del servicio tras la entrada en vigor de los nuevos términos constituye su aceptación. Si no está de acuerdo, puede cancelar su suscripción antes de la fecha de entrada en vigor.`,
   },
   {
     id: 'contacto',
-    title: '7. Contacto',
-    content: `Para consultas, reclamos o solicitudes relacionadas con estos Términos y Condiciones, puede comunicarse con nosotros a través del siguiente medio:
+    title: '9. Contacto',
+    content: `Para consultas, reclamos o solicitudes relacionadas con estos Términos y Condiciones:
 
 Correo electrónico: saascompany.cr@gmail.com
 
@@ -307,7 +329,7 @@ export default function Terminos() {
         }}
       >
         <p style={{ fontSize: 12, color: '#8A8A8A', margin: 0 }}>
-          © 2026 BarberSaaS &mdash; Hecho en Costa Rica &mdash;{' '}
+          © {new Date().getFullYear()} BarberSaaS &mdash; Hecho en Costa Rica &mdash;{' '}
           <Link to="/privacidad" style={{ color: '#C9A84C', textDecoration: 'none' }}>
             Política de Privacidad
           </Link>

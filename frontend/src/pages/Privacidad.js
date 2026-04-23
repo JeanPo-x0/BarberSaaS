@@ -6,12 +6,21 @@ const SECTIONS = [
     title: '1. Qué Datos Recopilamos',
     content: `BarberSaaS recopila únicamente los datos personales estrictamente necesarios para prestar el servicio de agendamiento de citas. Estos son:
 
-- Nombre completo o nombre de pila del cliente.
+De clientes:
+- Nombre completo o nombre de pila.
 - Número de teléfono asociado a WhatsApp.
-- Historial de citas (fecha, hora, servicio solicitado, barbería visitada).
-- Información del dueño de la barbería: nombre, correo electrónico y datos del establecimiento (nombre, dirección, horario).
+- Historial de citas (fecha, hora, servicios solicitados, barbería y barbero asignado).
+- Comprobantes de pago SINPE (imágenes) cuando el cliente los sube voluntariamente para confirmar un depósito.
 
-No recopilamos datos sensibles como número de cédula, datos bancarios propios del cliente final ni información de salud. Los datos de pago de suscripciones son procesados directamente por la pasarela de pago y nunca quedan almacenados en nuestros servidores.`,
+De dueños de barbería:
+- Nombre, correo electrónico y contraseña (almacenada con hash seguro).
+- Datos del establecimiento: nombre, dirección, teléfono, número SINPE, configuración de servicios y políticas de pago.
+
+De barberos:
+- Nombre, teléfono, especialidad y correo electrónico (cuando el dueño envía una invitación de acceso).
+- Contraseña (almacenada con hash seguro, solo si el barbero activa su cuenta).
+
+No recopilamos número de cédula, datos bancarios completos del cliente final ni información de salud. Los datos de tarjeta de crédito para suscripciones son procesados directamente por Stripe y nunca quedan almacenados en nuestros servidores.`,
   },
   {
     id: 'como-usamos',
@@ -19,24 +28,27 @@ No recopilamos datos sensibles como número de cédula, datos bancarios propios 
     content: `Los datos personales recopilados se utilizan exclusivamente para los siguientes fines:
 
 - Agendar, confirmar, modificar o cancelar citas en nombre del cliente.
-- Enviar recordatorios automáticos vía WhatsApp (24 horas y 1 hora antes de la cita).
-- Notificar disponibilidad en lista de espera cuando se libera un turno.
-- Permitir al dueño de la barbería gestionar su agenda y consultar el historial de clientes.
-- Mejorar la experiencia de uso de la plataforma mediante análisis estadísticos agregados y anónimos.
+- Enviar notificaciones automáticas vía WhatsApp (confirmación de cita, recordatorios, cancelaciones).
+- Permitir al dueño de la barbería gestionar su agenda, historial de clientes e ingresos.
+- Permitir a los barberos acceder a su agenda personal de citas.
+- Validar comprobantes de pago SINPE subidos por los clientes.
+- Procesar suscripciones y facturación de planes de BarberSaaS.
+- Mejorar la plataforma mediante análisis estadísticos agregados y anónimos.
 
-Nunca utilizamos sus datos para enviar publicidad de terceros, ni para ningún propósito ajeno al servicio de agendamiento.`,
+Nunca utilizamos sus datos para enviar publicidad de terceros ni para ningún propósito ajeno al servicio.`,
   },
   {
     id: 'con-quien',
     title: '3. Con Quién Compartimos Sus Datos',
     content: `BarberSaaS no vende, alquila ni comercializa datos personales a terceros bajo ninguna circunstancia.
 
-Los datos son compartidos únicamente con los siguientes proveedores de servicios tecnológicos, quienes actúan como encargados del tratamiento bajo acuerdos de confidencialidad:
+Los datos son compartidos únicamente con los siguientes proveedores tecnológicos, que actúan como encargados del tratamiento:
 
-- Twilio Inc.: proveedor del servicio de mensajería WhatsApp utilizado para enviar confirmaciones y recordatorios de citas. Twilio procesa el número de teléfono del cliente para la entrega de mensajes. Puede consultar la política de privacidad de Twilio en twilio.com/legal/privacy.
-- Proveedores de infraestructura en la nube (servidores y bases de datos): utilizados para almacenar la información de manera segura.
+- Twilio Inc.: proveedor del servicio de mensajería WhatsApp para confirmaciones, recordatorios y cancelaciones de citas. Procesa el número de teléfono del cliente para la entrega de mensajes.
+- Stripe Inc.: pasarela de pago utilizada para procesar suscripciones de dueños de barbería. Stripe maneja los datos de tarjeta de crédito directamente; BarberSaaS no almacena esta información.
+- Render (infraestructura en la nube): proveedor de servidores y base de datos donde se almacena la información de la plataforma de forma segura.
 
-En caso de requerimiento legal o judicial por parte de autoridades competentes de la República de Costa Rica, BarberSaaS podrá divulgar la información estrictamente necesaria para cumplir con dicha obligación legal.`,
+En caso de requerimiento legal o judicial por parte de autoridades competentes de la República de Costa Rica, BarberSaaS podrá divulgar la información estrictamente necesaria para cumplir con dicha obligación.`,
   },
   {
     id: 'derechos',
@@ -305,7 +317,7 @@ export default function Privacidad() {
         }}
       >
         <p style={{ fontSize: 12, color: '#8A8A8A', margin: 0 }}>
-          © 2026 BarberSaaS &mdash; Hecho en Costa Rica &mdash;{' '}
+          © {new Date().getFullYear()} BarberSaaS &mdash; Hecho en Costa Rica &mdash;{' '}
           <Link to="/terminos" style={{ color: '#C9A84C', textDecoration: 'none' }}>
             Términos y Condiciones
           </Link>
