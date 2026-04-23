@@ -57,6 +57,30 @@ def toggle_servicio(servicio_id: int, usuario: Usuario = Depends(get_usuario_act
     db.refresh(servicio)
     return servicio
 
+@router.patch("/{servicio_id}", response_model=ServicioResponse)
+def editar_servicio(
+    servicio_id: int,
+    datos: dict,
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    servicio = db.query(Servicio).filter(
+        Servicio.id == servicio_id,
+        Servicio.barberia_id == usuario.barberia_id
+    ).first()
+    if not servicio:
+        raise HTTPException(status_code=404, detail="Servicio no encontrado")
+    if "nombre" in datos and datos["nombre"]:
+        servicio.nombre = datos["nombre"]
+    if "duracion_minutos" in datos and datos["duracion_minutos"]:
+        servicio.duracion_minutos = int(datos["duracion_minutos"])
+    if "precio" in datos and datos["precio"] is not None:
+        servicio.precio = float(datos["precio"])
+    db.commit()
+    db.refresh(servicio)
+    return servicio
+
+
 @router.delete("/{servicio_id}")
 def eliminar_servicio(servicio_id: int, usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
     from app.models.cita import Cita

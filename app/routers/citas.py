@@ -372,6 +372,25 @@ async def subir_comprobante(request: Request, cita_id: int, file: UploadFile = F
     return cita
 
 
+@router.patch("/{cita_id}/cancelar-barbero")
+def cancelar_cita_barbero(
+    cita_id: int,
+    barbero: Barbero = Depends(get_barbero_actual),
+    db: Session = Depends(get_db),
+):
+    cita = db.query(Cita).filter(Cita.id == cita_id, Cita.barbero_id == barbero.id).first()
+    if not cita:
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+    if cita.estado == "cancelada":
+        raise HTTPException(status_code=400, detail="La cita ya fue cancelada")
+    if cita.estado == "completada":
+        raise HTTPException(status_code=400, detail="No se puede cancelar una cita completada")
+    cita.estado = "cancelada"
+    db.commit()
+    db.refresh(cita)
+    return {"ok": True}
+
+
 @router.patch("/{cita_id}/cancelar", response_model=CitaResponse)
 def cancelar_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
     cita = db.query(Cita).filter(Cita.id == cita_id).first()

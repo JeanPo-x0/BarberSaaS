@@ -11,14 +11,15 @@ const PLANES = [
     precio_mensual: 29, precio_anual: 232, ahorro: 116, equiv_mensual: 19.33,
     badge: 'Mas popular', popular: true,
     features: ['Hasta 3 barberos', 'Dashboard de ingresos', 'Recordatorios WhatsApp',
-      'Historial de clientes', 'Perfil con historial de cortes', 'Lista de espera inteligente'],
+      'Historial de clientes (30 días)', 'Lista de espera inteligente', 'Gestión de pagos SINPE'],
   },
   {
     id: 'premium', nombre: 'Premium',
     precio_mensual: 59, precio_anual: 472, ahorro: 236, equiv_mensual: 39.33,
     badge: 'Todo incluido',
-    features: ['Barberos ilimitados', 'Todo lo del plan Pro', 'Metricas de retencion',
-      'WhatsApp de reenganche', 'Exportar reportes PDF', 'Subdominio propio', 'Soporte prioritario'],
+    features: ['Barberos ilimitados', 'Todo lo del plan Pro', 'Estadísticas mensuales avanzadas',
+      'Métricas de retención de clientes', 'WhatsApp de reenganche', 'Exportar reportes PDF',
+      'Subdominio propio', 'Soporte prioritario'],
   },
 ];
 

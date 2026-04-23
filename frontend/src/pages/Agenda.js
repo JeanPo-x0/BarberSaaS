@@ -11,9 +11,9 @@ import { formatearInput, formatearTelefono } from '../utils/phone';
 
 /* ── Helpers ─────────────────────────────────────────── */
 const ESTADO = {
-  pendiente:  { bg: 'rgba(201,168,76,0.1)',  color: '#C9A84C', border: 'rgba(201,168,76,0.25)', label: 'Pendiente' },
+  pendiente:  { bg: 'rgba(251,146,60,0.1)',  color: '#FB923C', border: 'rgba(251,146,60,0.25)', label: 'Pendiente' },
   confirmada: { bg: 'rgba(74,222,128,0.08)', color: '#4ade80', border: 'rgba(74,222,128,0.2)',  label: 'Confirmada' },
-  completada: { bg: 'rgba(99,102,241,0.1)',  color: '#818cf8', border: 'rgba(99,102,241,0.25)', label: 'Completada' },
+  completada: { bg: 'rgba(74,222,128,0.08)', color: '#4ade80', border: 'rgba(74,222,128,0.2)',  label: 'Completada' },
   cancelada:  { bg: 'rgba(230,57,70,0.08)',  color: '#E63946', border: 'rgba(230,57,70,0.2)',   label: 'Cancelada' },
 };
 
@@ -484,6 +484,15 @@ function Agenda() {
             ))}
           </div>
         </div>
+
+        {/* Botón nueva cita visible */}
+        {!mostrarForm && activas.length > 0 && (
+          <div className="anim-fadeup" style={{ marginBottom: 20 }}>
+            <button onClick={() => setMostrarForm(true)} className="btn-gold" style={{ width: '100%', padding: '12px', fontSize: 14 }}>
+              + Nueva cita
+            </button>
+          </div>
+        )}
 
         {/* Formulario nueva cita */}
         {mostrarForm && (

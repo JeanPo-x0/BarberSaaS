@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAgendaBarbero, getHistorialBarbero, actualizarPerfilBarbero, completarCitaBarbero } from '../services/api';
+import { getAgendaBarbero, getHistorialBarbero, actualizarPerfilBarbero, completarCitaBarbero, cancelarCitaBarbero } from '../services/api';
 import { formatearInput } from '../utils/phone';
 
 const ESTADO = {
-  pendiente:  { bg: 'rgba(201,168,76,0.1)',  color: '#C9A84C', border: 'rgba(201,168,76,0.25)', label: 'Pendiente' },
-  completada: { bg: 'rgba(99,102,241,0.1)',  color: '#818cf8', border: 'rgba(99,102,241,0.25)', label: 'Completada' },
+  pendiente:  { bg: 'rgba(251,146,60,0.1)',  color: '#FB923C', border: 'rgba(251,146,60,0.25)', label: 'Pendiente' },
+  completada: { bg: 'rgba(74,222,128,0.08)', color: '#4ade80', border: 'rgba(74,222,128,0.2)',  label: 'Completada' },
   cancelada:  { bg: 'rgba(230,57,70,0.08)',  color: '#E63946', border: 'rgba(230,57,70,0.2)',   label: 'Cancelada' },
 };
 
@@ -22,7 +22,7 @@ function esHoy(fecha_hora) {
   return new Date(fecha_hora).toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
 }
 
-function CitaCard({ cita, onCompletar, mostrarFecha }) {
+function CitaCard({ cita, onCompletar, onCancelar, mostrarFecha }) {
   const est = ESTADO[cita.estado] || ESTADO.pendiente;
   const { hora, fecha } = fmt(cita.fecha_hora);
   const esPendiente = cita.estado === 'pendiente';
@@ -74,27 +74,46 @@ function CitaCard({ cita, onCompletar, mostrarFecha }) {
           </div>
         </div>
 
-        {esPendiente && onCompletar && (
-          <button
-            onClick={() => onCompletar(cita.id)}
-            style={{
-              padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
-              cursor: 'pointer', fontFamily: "'DM Sans'", flexShrink: 0,
-              background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)',
-              color: '#4ade80', transition: 'background 0.15s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(74,222,128,0.2)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(74,222,128,0.1)'}
-          >
-            Completar
-          </button>
+        {esPendiente && (
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            {onCompletar && (
+              <button
+                onClick={() => onCompletar(cita.id)}
+                style={{
+                  padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: "'DM Sans'", flexShrink: 0,
+                  background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)',
+                  color: '#4ade80', transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(74,222,128,0.2)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(74,222,128,0.1)'}
+              >
+                Completar
+              </button>
+            )}
+            {onCancelar && (
+              <button
+                onClick={() => onCancelar(cita.id)}
+                style={{
+                  padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: "'DM Sans'", flexShrink: 0,
+                  background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.2)',
+                  color: '#E63946', transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,57,70,0.18)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(230,57,70,0.08)'}
+              >
+                Cancelar
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-function Grupo({ label, citas, onCompletar }) {
+function Grupo({ label, citas, onCompletar, onCancelar }) {
   if (citas.length === 0) return null;
   return (
     <div style={{ marginBottom: 28 }}>
@@ -102,7 +121,7 @@ function Grupo({ label, citas, onCompletar }) {
         {label} <span style={{ color: 'rgba(255,255,255,0.2)' }}>· {citas.length}</span>
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {citas.map(c => <CitaCard key={c.id} cita={c} onCompletar={onCompletar} mostrarFecha={label !== 'Hoy'} />)}
+        {citas.map(c => <CitaCard key={c.id} cita={c} onCompletar={onCompletar} onCancelar={onCancelar} mostrarFecha={label !== 'Hoy'} />)}
       </div>
     </div>
   );
@@ -182,6 +201,17 @@ function DashboardBarbero() {
       toast('Cita marcada como completada.');
     } catch (err) {
       alert(err.response?.data?.detail || 'Error al completar');
+    }
+  };
+
+  const handleCancelar = async (id) => {
+    if (!window.confirm('¿Cancelar esta cita?')) return;
+    try {
+      await cancelarCitaBarbero(id);
+      setCitas(prev => prev.map(c => c.id === id ? { ...c, estado: 'cancelada' } : c));
+      toast('Cita cancelada.');
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Error al cancelar');
     }
   };
 
@@ -299,8 +329,8 @@ function DashboardBarbero() {
               </div>
             ) : (
               <>
-                <Grupo label="Hoy" citas={hoy} onCompletar={handleCompletar} />
-                <Grupo label="Próximas" citas={proximas} onCompletar={handleCompletar} />
+                <Grupo label="Hoy" citas={hoy} onCompletar={handleCompletar} onCancelar={handleCancelar} />
+                <Grupo label="Próximas" citas={proximas} onCompletar={handleCompletar} onCancelar={handleCancelar} />
               </>
             )}
           </div>
@@ -336,10 +366,10 @@ function DashboardBarbero() {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" stroke="#C9A84C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#C9A84C', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Disponible en plan Pro</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#C9A84C', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Disponible en plan Premium</span>
                 </div>
                 <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
-                  Pedile a tu dueño que active el plan Pro para acceder a estadísticas avanzadas, exportar historial y más.
+                  Pedile a tu dueño que active el plan Premium para acceder a estadísticas avanzadas, exportar historial y más.
                 </p>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -403,7 +433,7 @@ function DashboardBarbero() {
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '22px 24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.06em', margin: 0 }}>Perfil público</h2>
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#C9A84C', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 100, padding: '2px 8px' }}>PRO</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#C9A84C', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 100, padding: '2px 8px' }}>PREMIUM</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, opacity: 0.6 }}>
                 <FeatureLocked titulo="Foto de perfil" descripcion="Subí tu foto para aparecer en la página de reservas." />
@@ -411,7 +441,7 @@ function DashboardBarbero() {
                 <FeatureLocked titulo="Link de reserva personal" descripcion="Los clientes pueden agendar directamente con vos." />
               </div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '14px 0 0 0' }}>
-                Pedile a tu dueño que active el plan Pro para desbloquear estas funciones.
+                Pedile a tu dueño que active el plan Premium para desbloquear estas funciones.
               </p>
             </div>
           </div>

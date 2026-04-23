@@ -78,6 +78,7 @@ export const getHistorialBarbero = () => API.get('/barberos/me/historial');
 export const actualizarPerfilBarbero = (data) => API.patch('/barberos/me/perfil', data);
 export const editarBarbero = (id, data) => API.patch(`/barberos/${id}/editar`, data);
 export const completarCitaBarbero = (id) => API.patch(`/citas/${id}/completar-barbero`);
+export const cancelarCitaBarbero = (id) => API.patch(`/citas/${id}/cancelar-barbero`);
 
 // Servicios
 export const getServicios = () => API.get('/servicios/');
@@ -85,6 +86,7 @@ export const getMisServicios = () => API.get('/servicios/mios');
 export const getServiciosPorBarberia = (id) => API.get(`/servicios/barberia/${id}`);
 export const crearServicio = (data) => API.post('/servicios/', data);
 export const toggleServicio = (id) => API.patch(`/servicios/${id}/toggle`);
+export const editarServicio = (id, data) => API.patch(`/servicios/${id}`, data);
 export const eliminarServicio = (id) => API.delete(`/servicios/${id}`);
 
 // Clientes

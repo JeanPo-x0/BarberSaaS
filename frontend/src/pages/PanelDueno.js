@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar';
 import { formatearInput, formatearTelefono } from '../utils/phone';
 import {
   getMisBarberos, crearBarbero, toggleBarbero, eliminarBarbero, invitarBarbero, editarBarbero,
-  getMisServicios, crearServicio, toggleServicio, eliminarServicio,
+  getMisServicios, crearServicio, toggleServicio, editarServicio, eliminarServicio,
   getMiBarberia, toggleBarberia, crearBarberiaAdicional,
   getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio, actualizarMapsLink,
   getConfigPagos, updateConfigPagos,
@@ -72,6 +72,12 @@ function PanelDueno() {
   const [durServicio, setDurServicio] = useState('');
   const [precioServicio, setPrecioServicio] = useState('');
   const [barberias_servicio, setBarberiasServicio] = useState('');
+
+  // Editar servicio
+  const [editandoServicio, setEditandoServicio] = useState(null);
+  const [editServicioForm, setEditServicioForm] = useState({ nombre: '', duracion_minutos: '', precio: '' });
+  const [editServicioCargando, setEditServicioCargando] = useState(false);
+  const [editServicioError, setEditServicioError] = useState('');
 
   // Barberia form
   const [mostrarFormBarberia, setMostrarFormBarberia] = useState(false);
@@ -152,6 +158,23 @@ function PanelDueno() {
     await crearServicio({ nombre: nomServicio, duracion_minutos: parseInt(durServicio), precio: parseFloat(precioServicio), barberia_id: parseInt(barberias_servicio) });
     getMisServicios().then(r => setServicios(r.data));
     setNomServicio(''); setDurServicio(''); setPrecioServicio(''); setBarberiasServicio('');
+  };
+
+  const handleEditarServicio = async (id) => {
+    setEditServicioCargando(true); setEditServicioError('');
+    try {
+      await editarServicio(id, {
+        nombre: editServicioForm.nombre.trim() || undefined,
+        duracion_minutos: editServicioForm.duracion_minutos ? parseInt(editServicioForm.duracion_minutos) : undefined,
+        precio: editServicioForm.precio !== '' ? parseFloat(editServicioForm.precio) : undefined,
+      });
+      getMisServicios().then(r => setServicios(r.data));
+      setEditandoServicio(null);
+    } catch (err) {
+      setEditServicioError(err.response?.data?.detail || 'Error al guardar');
+    } finally {
+      setEditServicioCargando(false);
+    }
   };
 
   const handleCrearBarberia = async (e) => {
@@ -408,12 +431,14 @@ function PanelDueno() {
                         : <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="#94a3b8" strokeWidth="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round"/></svg>
                       }
                     </button>
-                    <button
-                      onClick={() => { setInvitandoBarbero(b.id); setInviteEmail(b.email || ''); setInviteError(''); setEditandoBarbero(null); }}
-                      style={{ padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: "'DM Sans'", background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)', color: '#C9A84C', transition: 'all 0.2s' }}
-                    >
-                      {b.email ? 'Reenviar' : 'Invitar'}
-                    </button>
+                    {!b.cuenta_activa && (
+                      <button
+                        onClick={() => { setInvitandoBarbero(b.id); setInviteEmail(b.email || ''); setInviteError(''); setEditandoBarbero(null); }}
+                        style={{ padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: "'DM Sans'", background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)', color: '#C9A84C', transition: 'all 0.2s' }}
+                      >
+                        {b.email ? 'Reenviar' : 'Invitar'}
+                      </button>
+                    )}
                     <button onClick={() => toggleBarbero(b.id).then(() => getMisBarberos().then(r => setBarberos(r.data)))}
                       style={toggleBtn(b.activo)}>
                       {b.activo ? 'Activo' : 'Inactivo'}
@@ -511,7 +536,8 @@ function PanelDueno() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {servicios.map(s => (
-                <div key={s.id} className="anim-item panel-item-card" style={{
+                <div key={s.id}>
+                <div className="anim-item panel-item-card" style={{
                   background: 'var(--bg-card)', border: '1px solid var(--border)',
                   borderRadius: 12, padding: '14px 16px',
                   display: 'flex', alignItems: 'center', gap: 14,
@@ -546,6 +572,16 @@ function PanelDueno() {
                     </div>
                   </div>
                   <div className="panel-item-actions" style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                    <button
+                      title="Editar servicio"
+                      onClick={() => { setEditandoServicio(s.id); setEditServicioForm({ nombre: s.nombre, duracion_minutos: String(s.duracion_minutos), precio: String(s.precio) }); setEditServicioError(''); }}
+                      style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
                     <button onClick={() => toggleServicio(s.id).then(() => getMisServicios().then(r => setServicios(r.data)))}
                       style={toggleBtn(s.disponible)}>
                       {s.disponible ? 'Disponible' : 'Inactivo'}
@@ -559,6 +595,29 @@ function PanelDueno() {
                       Eliminar
                     </button>
                   </div>
+                </div>
+
+                {/* Panel editar servicio */}
+                {editandoServicio === s.id && (
+                  <div style={{ marginTop: 10, background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 10, padding: 14 }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 10px 0' }}>Editar servicio</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <input value={editServicioForm.nombre} onChange={e => setEditServicioForm(f => ({ ...f, nombre: e.target.value }))}
+                        placeholder="Nombre" className="input-dark" style={{ gridColumn: '1 / -1' }} />
+                      <input value={editServicioForm.duracion_minutos} onChange={e => setEditServicioForm(f => ({ ...f, duracion_minutos: e.target.value }))}
+                        placeholder="Duración (min)" type="number" className="input-dark" />
+                      <input value={editServicioForm.precio} onChange={e => setEditServicioForm(f => ({ ...f, precio: e.target.value }))}
+                        placeholder="Precio" type="number" className="input-dark" />
+                    </div>
+                    {editServicioError && <p style={{ color: '#E63946', fontSize: 12, margin: '8px 0 0 0' }}>{editServicioError}</p>}
+                    <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                      <button onClick={() => setEditandoServicio(null)} className="btn-outline" style={{ flex: 1, padding: '8px', fontSize: 13 }}>Cancelar</button>
+                      <button onClick={() => handleEditarServicio(s.id)} disabled={editServicioCargando} className="btn-gold" style={{ flex: 1, padding: '8px', fontSize: 13, opacity: editServicioCargando ? 0.7 : 1 }}>
+                        {editServicioCargando ? 'Guardando...' : 'Guardar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
                 </div>
               ))}
               {servicios.length === 0 && (
