@@ -61,7 +61,11 @@ function LoginBarbero() {
             </button>
           </form>
 
-          <p style={{ textAlign: 'center', marginTop: 20, fontSize: 12, color: '#555' }}>
+          <p style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: '#555' }}>
+            ¿Olvidaste tu contraseña? Pedile al dueño de tu barbería que te reenvíe la invitación desde el panel.
+          </p>
+
+          <p style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: '#555' }}>
             ¿Sos dueño?{' '}
             <button
               onClick={() => navigate('/login')}

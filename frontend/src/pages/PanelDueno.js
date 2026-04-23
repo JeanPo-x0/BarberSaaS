@@ -330,7 +330,7 @@ function PanelDueno() {
           }}>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
               {plan === 'basico'
-                ? 'Pasa a Pro y agrega hasta 3 barberos, historial de clientes y mas.'
+                ? 'Pasa a Pro y agrega hasta 3 barberos, historial de clientes y más.'
                 : 'Pasa a Premium y desbloquea barberos ilimitados, reenganche y subdominio propio.'}
             </p>
             <button

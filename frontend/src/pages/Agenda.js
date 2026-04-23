@@ -653,7 +653,7 @@ function Agenda() {
         ) : (
           <>
             <Seccion label="Hoy"    citas={hoy}     onCancelar={handleCancelar} onCompletar={handleCompletar} onConfirmarPago={handleConfirmarPago} onRechazarPago={handleRechazarPago} />
-            <Seccion label="Manana" citas={manana}   onCancelar={handleCancelar} onCompletar={handleCompletar} onConfirmarPago={handleConfirmarPago} onRechazarPago={handleRechazarPago} />
+            <Seccion label="Mañana" citas={manana}   onCancelar={handleCancelar} onCompletar={handleCompletar} onConfirmarPago={handleConfirmarPago} onRechazarPago={handleRechazarPago} />
             <Seccion label="Proximas" citas={futuras} onCancelar={handleCancelar} onCompletar={handleCompletar} onConfirmarPago={handleConfirmarPago} onRechazarPago={handleRechazarPago} />
           </>
         )}
