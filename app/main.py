@@ -18,7 +18,8 @@ from app.models.lista_espera import ListaEspera
 from app.models.suscripcion import Suscripcion
 from app.services.whatsapp import notificar_lista_espera
 from app.core.config import settings
-from app.database import SessionLocal
+from app.database import SessionLocal, Base, engine
+import app.models  # noqa: F401 — asegura que todos los modelos están registrados en Base
 from app.models.cita import Cita
 from app.models.barbero import Barbero
 from app.services.whatsapp import recordatorio_cita, recordatorio_1h
@@ -230,6 +231,7 @@ scheduler.add_job(verificar_trials_vencidos, "interval", hours=6)
 
 @asynccontextmanager
 async def lifespan(app):
+    Base.metadata.create_all(bind=engine)  # crea tablas nuevas sin tocar las existentes
     scheduler.start()
     yield
     scheduler.shutdown()
