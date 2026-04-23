@@ -20,7 +20,9 @@ async def webhook_whatsapp(request: Request, background_tasks: BackgroundTasks, 
         return Response(content="Service unavailable", status_code=503)
     validator = RequestValidator(auth_token)
     signature = request.headers.get("X-Twilio-Signature", "")
-    url = str(request.url)
+    # Render termina SSL antes del app — la URL interna puede llegar como http://
+    # Twilio firma siempre con https://, así que forzamos el esquema correcto
+    url = str(request.url).replace("http://", "https://", 1)
     if not validator.validate(url, form_dict, signature):
         return Response(content="Forbidden", status_code=403)
 

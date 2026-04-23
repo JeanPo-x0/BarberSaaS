@@ -1,4 +1,4 @@
 from slowapi import Limiter
-from slowapi.util import get_remote_address
+from app.core.geo import get_real_ip
 
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=get_real_ip)

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.cliente import Cliente
@@ -8,13 +8,15 @@ from app.models.usuario import Usuario
 from app.schemas import ClienteCreate, ClienteResponse
 from app.utils.phone import formatear_telefono
 from app.core.deps import get_usuario_actual
+from app.core.limiter import limiter
 from typing import List
 
 router = APIRouter(prefix="/clientes", tags=["Clientes"])
 
 
 @router.post("/buscar-o-crear", response_model=ClienteResponse)
-def buscar_o_crear_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def buscar_o_crear_cliente(request: Request, cliente: ClienteCreate, db: Session = Depends(get_db)):
     """Endpoint público — usado por la página de agendamiento de clientes."""
     telefono_normalizado = formatear_telefono(cliente.telefono)
     existente = db.query(Cliente).filter(Cliente.telefono == telefono_normalizado).first()

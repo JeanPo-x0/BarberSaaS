@@ -40,7 +40,7 @@ async def obtener_geo(ip: str) -> dict:
         data = {}
 
     resultado = {
-        "country": data.get("countryCode", "CR"),  # default CR si falla
+        "country": data.get("countryCode", ""),  # default vacío si la API falla → el geo-block deniega
         "org": (data.get("org", "") + " " + data.get("isp", "")).lower(),
         "ts": ahora,
     }

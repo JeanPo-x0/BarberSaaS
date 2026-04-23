@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.barbero import Barbero
 from app.models.usuario import Usuario
-from app.schemas import BarberoCreate, BarberoResponse
+from app.schemas import BarberoCreate, BarberoResponse, BarberoPublicResponse
 from app.schemas.barbero import InvitarBarberoRequest, ActivarBarberoRequest, LoginBarberoRequest, BarberoUpdate
 from app.core.deps import get_usuario_actual, get_barbero_actual
 from app.core.security import hash_password, verify_password, crear_token
@@ -50,9 +50,8 @@ def mis_barberos(usuario: Usuario = Depends(get_usuario_actual), db: Session = D
         return []
     return db.query(Barbero).filter(Barbero.barberia_id == usuario.barberia_id).all()
 
-@router.get("/barberia/{barberia_id}", response_model=List[BarberoResponse])
+@router.get("/barberia/{barberia_id}", response_model=List[BarberoPublicResponse])
 def barberos_por_barberia(barberia_id: int, db: Session = Depends(get_db)):
-    # Returns all barbers (active and inactive) so the public page can show unavailable ones
     return db.query(Barbero).filter(Barbero.barberia_id == barberia_id).all()
 
 @router.patch("/{barbero_id}/toggle", response_model=BarberoResponse)
@@ -97,7 +96,7 @@ def listar_barberos(
     """Solo devuelve los barberos de la barbería del usuario logueado."""
     return db.query(Barbero).filter(Barbero.barberia_id == usuario.barberia_id).all()
 
-@router.get("/{barbero_id}", response_model=BarberoResponse)
+@router.get("/{barbero_id}", response_model=BarberoPublicResponse)
 def obtener_barbero(barbero_id: int, db: Session = Depends(get_db)):
     barbero = db.query(Barbero).filter(Barbero.id == barbero_id).first()
     if not barbero:

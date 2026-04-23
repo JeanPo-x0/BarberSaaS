@@ -28,7 +28,8 @@ from app.models.lista_espera import ListaEspera
 router = APIRouter(prefix="/citas", tags=["Citas"])
 
 @router.post("/", response_model=CitaResponse)
-def crear_cita(cita: CitaCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def crear_cita(request: Request, cita: CitaCreate, db: Session = Depends(get_db)):
     barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
     if not barbero:
         raise HTTPException(status_code=404, detail="Barbero no encontrado")
@@ -113,7 +114,8 @@ def crear_cita(cita: CitaCreate, db: Session = Depends(get_db)):
     return nueva
 
 @router.get("/disponibilidad/{barbero_id}")
-def ver_disponibilidad(barbero_id: int, fecha: str, db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def ver_disponibilidad(request: Request, barbero_id: int, fecha: str, db: Session = Depends(get_db)):
     barbero = db.query(Barbero).filter(Barbero.id == barbero_id).first()
     if not barbero:
         raise HTTPException(status_code=404, detail="Barbero no encontrado")

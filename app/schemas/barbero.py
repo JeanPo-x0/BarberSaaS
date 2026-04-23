@@ -20,6 +20,18 @@ class BarberoResponse(BarberoBase):
     class Config:
         from_attributes = True
 
+class BarberoPublicResponse(BaseModel):
+    """Respuesta para endpoints públicos — omite teléfono y email del barbero."""
+    id: int
+    nombre: str
+    especialidad: Optional[str] = None
+    foto: Optional[str] = None
+    barberia_id: int
+    activo: bool
+
+    class Config:
+        from_attributes = True
+
 class BarberoUpdate(BaseModel):
     nombre: Optional[str] = None
     telefono: Optional[str] = None
