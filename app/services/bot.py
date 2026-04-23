@@ -360,8 +360,10 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
         print(f"[CANCELAR] Buscando cliente con telefono: {telefono!r}")
         cliente = _buscar_cliente(db, telefono)
         if cliente:
-            # Busca la próxima cita pendiente (incluye hasta 30 min en el pasado por margen)
-            margen = datetime.utcnow() - timedelta(minutes=30)
+            # Busca la próxima cita pendiente. Las citas se guardan en hora CR (UTC-6),
+            # así que comparamos con hora CR, no UTC.
+            ahora_cr = datetime.utcnow() - timedelta(hours=6)
+            margen = ahora_cr - timedelta(minutes=30)
             cita = db.query(Cita).filter(
                 and_(
                     Cita.cliente_id == cliente.id,

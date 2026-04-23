@@ -242,6 +242,10 @@ function AgendarCita() {
       setError('Seleccioná un método de pago para continuar.');
       return;
     }
+    if (metodoPago === 'sinpe' && configPagos?.deposito_requerido && !comprobante) {
+      setError('Debés subir el comprobante de SINPE para confirmar la cita.');
+      return;
+    }
     setEnviando(true);
     try {
       const cliente = await buscarOCrearCliente({ nombre, telefono: formatearTelefono(telefono) });
@@ -1182,8 +1186,8 @@ function AgendarCita() {
                     {/* Campo de comprobante para SINPE */}
                     {metodoPago === 'sinpe' && (
                       <div style={{ marginTop: 12 }}>
-                        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-muted)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
-                          Comprobante SINPE (opcional)
+                        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: configPagos?.deposito_requerido ? '#FB923C' : 'var(--text-muted)', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+                          Comprobante SINPE {configPagos?.deposito_requerido ? '— requerido *' : '(opcional)'}
                         </p>
                         <label style={{
                           display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
