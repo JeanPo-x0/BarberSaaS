@@ -16,6 +16,7 @@ export function AuthProvider({ children }) {
   const cerrarSesion = async () => {
     try { await apiLogout(); } catch {}
     localStorage.removeItem('usuario');
+    localStorage.removeItem('token');
     setUsuario(null);
   };
 

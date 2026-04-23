@@ -22,6 +22,9 @@ function Login() {
 
     const intentarLogin = async () => {
       const res = await login({ email, password });
+      if (res.data.access_token) {
+        localStorage.setItem('token', res.data.access_token);
+      }
       iniciarSesion(res.data.usuario);
       navigate('/agenda');
     };

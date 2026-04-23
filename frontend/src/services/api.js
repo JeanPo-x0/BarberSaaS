@@ -35,6 +35,7 @@ API.interceptors.response.use(
     const esEndpointPublico = url.includes('/auth/login') || url.includes('/auth/registro') || url.includes('/auth/onboarding');
     if (error.response?.status === 401 && !esEndpointPublico) {
       localStorage.removeItem('usuario');
+      localStorage.removeItem('token');
       window.location.href = '/login';
     }
     return Promise.reject(error);
