@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 class CitaBase(BaseModel):
@@ -9,7 +9,8 @@ class CitaBase(BaseModel):
     cliente_id: int
 
 class CitaCreate(CitaBase):
-    metodo_pago: Optional[str] = None   # sinpe|efectivo|null
+    metodo_pago: Optional[str] = None
+    servicios_ids: Optional[List[int]] = None  # si viene, servicio_id = servicios_ids[0]
 
 # Modelos anidados para enriquecer la respuesta
 class _ClienteBasico(BaseModel):
@@ -40,6 +41,7 @@ class CitaResponse(CitaBase):
     estado_pago: str = "exento"
     metodo_pago: Optional[str] = None
     comprobante_url: Optional[str] = None
+    servicios_extra: Optional[list] = None
     cliente: Optional[_ClienteBasico] = None
     barbero: Optional[_BarberoBasico] = None
     servicio: Optional[_ServicioBasico] = None

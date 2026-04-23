@@ -192,7 +192,7 @@ function AgendarCita() {
   const [slots, setSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [barberoId, setBarberoId] = useState('');
-  const [servicioId, setServicioId] = useState('');
+  const [serviciosIds, setServiciosIds] = useState([]);
   const [fecha, setFecha] = useState('');
   const [horaSeleccionada, setHoraSeleccionada] = useState('');
   const [nombre, setNombre] = useState('');
@@ -248,7 +248,8 @@ function AgendarCita() {
       const nuevaCita = await crearCita({
         fecha_hora: `${fecha}T${horaSeleccionada}:00`,
         barbero_id: parseInt(barberoId),
-        servicio_id: parseInt(servicioId),
+        servicio_id: parseInt(serviciosIds[0]),
+        servicios_ids: serviciosIds.map(Number),
         cliente_id: cliente.data.id,
         metodo_pago: metodoPago || null,
       });
@@ -267,13 +268,15 @@ function AgendarCita() {
 
   const resetForm = () => {
     setConfirmado(false); setPaso(1);
-    setBarberoId(''); setServicioId(''); setFecha(''); setHoraSeleccionada('');
+    setBarberoId(''); setServiciosIds([]); setFecha(''); setHoraSeleccionada('');
     setNombre(''); setTelefono(''); setSlots([]);
     setComprobante(null); setMetodoPago('');
   };
 
   const barberoBusqueda = barberos.find(b => String(b.id) === String(barberoId));
-  const servicioBusqueda = servicios.find(s => String(s.id) === String(servicioId));
+  const serviciosSeleccionados = servicios.filter(s => serviciosIds.includes(String(s.id)));
+  const totalPrecio = serviciosSeleccionados.reduce((sum, s) => sum + s.precio, 0);
+  const totalDuracion = serviciosSeleccionados.reduce((sum, s) => sum + s.duracion_minutos, 0);
 
   const pageWrap = {
     minHeight: '100vh',
@@ -363,7 +366,7 @@ function AgendarCita() {
           }}>
             {[
               ['Barbero', barberoBusqueda?.nombre],
-              ['Servicio', servicioBusqueda?.nombre],
+              ['Servicio', serviciosSeleccionados.map(s => s.nombre).join(' + ')],
               ['Fecha', fecha],
               ['Hora', horaSeleccionada],
             ].map(([label, val]) => (
@@ -829,7 +832,7 @@ function AgendarCita() {
               {/* Servicios */}
               <div>
                 <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-muted)', margin: '0 0 12px 0', textTransform: 'uppercase' }}>
-                  Elige el servicio
+                  Elige los servicios
                 </p>
                 {servicios.length === 0 ? (
                   <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, color: 'var(--text-muted)', fontSize: 13 }}>
@@ -838,10 +841,17 @@ function AgendarCita() {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {servicios.map(s => {
-                      const sel = String(servicioId) === String(s.id);
+                      const sel = serviciosIds.includes(String(s.id));
                       return (
                         <button key={s.id}
-                          onClick={() => s.disponible && setServicioId(String(s.id))}
+                          onClick={() => {
+                            if (!s.disponible) return;
+                            setServiciosIds(prev =>
+                              prev.includes(String(s.id))
+                                ? prev.filter(id => id !== String(s.id))
+                                : [...prev, String(s.id)]
+                            );
+                          }}
                           disabled={!s.disponible}
                           style={{
                             borderRadius: 14, padding: '14px 16px', textAlign: 'left',
@@ -853,32 +863,59 @@ function AgendarCita() {
                             transition: 'all 0.2s', fontFamily: "'DM Sans'", width: '100%',
                             boxShadow: sel ? '0 0 0 1px rgba(201,168,76,0.15)' : 'none',
                           }}>
-                          <div>
-                            <p style={{ fontWeight: 700, fontSize: 14, margin: '0 0 2px 0', color: sel ? '#C9A84C' : 'var(--text-primary)' }}>
-                              {s.nombre}
-                            </p>
-                            <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>
-                              {s.duracion_minutos} min
-                            </p>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{
+                              width: 18, height: 18, borderRadius: 5, flexShrink: 0,
+                              border: `2px solid ${sel ? '#C9A84C' : 'rgba(255,255,255,0.2)'}`,
+                              background: sel ? '#C9A84C' : 'transparent',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              transition: 'all 0.15s',
+                            }}>
+                              {sel && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-5" stroke="#0A0A0A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                            </div>
+                            <div>
+                              <p style={{ fontWeight: 700, fontSize: 14, margin: '0 0 2px 0', color: sel ? '#C9A84C' : 'var(--text-primary)' }}>
+                                {s.nombre}
+                              </p>
+                              <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>
+                                {s.duracion_minutos} min
+                              </p>
+                            </div>
                           </div>
                           <span style={{
                             fontFamily: "'Bebas Neue'", fontSize: 20,
                             color: sel ? '#C9A84C' : 'var(--text-primary)', letterSpacing: '0.05em',
                           }}>
-                            ₡{s.precio}
+                            ₡{Number(s.precio).toLocaleString()}
                           </span>
                         </button>
                       );
                     })}
                   </div>
                 )}
+
+                {/* Resumen total */}
+                {serviciosIds.length > 0 && (
+                  <div style={{
+                    marginTop: 12, background: 'rgba(201,168,76,0.06)',
+                    border: '1px solid rgba(201,168,76,0.2)', borderRadius: 12,
+                    padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  }}>
+                    <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                      {serviciosIds.length} servicio{serviciosIds.length > 1 ? 's' : ''} · {totalDuracion} min
+                    </span>
+                    <span style={{ fontFamily: "'Bebas Neue'", fontSize: 22, color: '#C9A84C', letterSpacing: '0.05em' }}>
+                      ₡{totalPrecio.toLocaleString()}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <button
-                onClick={() => { if (barberoId && servicioId) setPaso(2); }}
-                disabled={!barberoId || !servicioId}
+                onClick={() => { if (barberoId && serviciosIds.length > 0) setPaso(2); }}
+                disabled={!barberoId || serviciosIds.length === 0}
                 className="btn-gold"
-                style={{ width: '100%', opacity: (!barberoId || !servicioId) ? 0.45 : 1 }}
+                style={{ width: '100%', opacity: (!barberoId || serviciosIds.length === 0) ? 0.45 : 1 }}
               >
                 Siguiente →
               </button>
@@ -991,7 +1028,7 @@ function AgendarCita() {
                 </p>
                 {[
                   ['Barbero', barberoBusqueda?.nombre],
-                  ['Servicio', servicioBusqueda?.nombre],
+                  ['Servicio', serviciosSeleccionados.map(s => s.nombre).join(' + ')],
                   ['Fecha', fecha],
                   ['Hora', horaSeleccionada],
                 ].map(([label, val]) => (

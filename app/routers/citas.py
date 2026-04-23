@@ -59,6 +59,24 @@ def crear_cita(cita: CitaCreate, db: Session = Depends(get_db)):
 
     datos = cita.model_dump()
     datos["estado_pago"] = estado_pago
+
+    # Manejar múltiples servicios
+    servicios_ids = datos.pop("servicios_ids", None)
+    if servicios_ids and len(servicios_ids) > 0:
+        datos["servicio_id"] = servicios_ids[0]
+        if len(servicios_ids) > 1:
+            extras = []
+            for sid in servicios_ids[1:]:
+                sv = db.query(Servicio).filter(Servicio.id == sid).first()
+                if sv:
+                    extras.append({"id": sv.id, "nombre": sv.nombre, "precio": float(sv.precio), "duracion_minutos": sv.duracion_minutos})
+            datos["servicios_extra"] = extras if extras else None
+        else:
+            datos["servicios_extra"] = None
+    else:
+        datos.pop("servicios_extra", None)
+        datos["servicios_extra"] = None
+
     nueva = Cita(**datos)
     db.add(nueva)
     db.commit()
