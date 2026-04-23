@@ -89,7 +89,7 @@ function Login() {
           </div>
           <div>
             <p style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.1em', color: '#C9A84C', margin: 0, lineHeight: 1 }}>
-              Panel Dueños
+              Barbería
             </p>
             <p style={{ fontSize: 11, color: '#555', margin: 0, letterSpacing: '0.04em' }}>BarberSaaS</p>
           </div>

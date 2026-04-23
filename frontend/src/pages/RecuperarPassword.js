@@ -54,7 +54,7 @@ function RecuperarPassword() {
             <KeyIcon />
           </div>
           <div>
-            <p style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.1em', color: '#C9A84C', margin: 0, lineHeight: 1 }}>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 16, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#C9A84C', margin: 0, lineHeight: 1 }}>
               Recuperar contraseña
             </p>
             <p style={{ fontSize: 11, color: '#555', margin: 0, letterSpacing: '0.04em' }}>BarberSaaS</p>
@@ -100,8 +100,8 @@ function RecuperarPassword() {
             ) : (
               <>
                 <h1 style={{
-                  fontFamily: "'Bebas Neue'", fontSize: 26, letterSpacing: '0.08em',
-                  color: '#fff', margin: '0 0 4px 0',
+                  fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 22, letterSpacing: '0.04em',
+                  color: '#fff', margin: '0 0 4px 0', textTransform: 'uppercase',
                 }}>
                   ¿Olvidaste tu contraseña?
                 </h1>
