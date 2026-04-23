@@ -53,7 +53,14 @@ export default function GeoBlock() {
               borderRadius: 12, padding: '16px 18px', marginBottom: 24,
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, textAlign: 'left' }}>
-                <span style={{ fontSize: 22, flexShrink: 0, lineHeight: 1.3 }}>🇨🇷</span>
+                {/* Bandera CR: azul-blanco-rojo */}
+                <div style={{ flexShrink: 0, width: 32, height: 22, borderRadius: 4, overflow: 'hidden', marginTop: 2, border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ height: '30%', background: '#002B7F' }} />
+                  <div style={{ height: '10%', background: '#fff' }} />
+                  <div style={{ height: '20%', background: '#CE1126' }} />
+                  <div style={{ height: '10%', background: '#fff' }} />
+                  <div style={{ height: '30%', background: '#002B7F' }} />
+                </div>
                 <p style={{ fontSize: 13, color: '#888', margin: 0, lineHeight: 1.7 }}>
                   <strong style={{ color: '#C9A84C', display: 'block', marginBottom: 4 }}>
                     Solo disponible en Costa Rica
