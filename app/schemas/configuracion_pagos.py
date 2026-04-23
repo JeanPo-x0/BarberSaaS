@@ -22,13 +22,14 @@ class ConfiguracionPagosResponse(ConfiguracionPagosBase):
         from_attributes = True
 
 class ConfiguracionPagosPublica(BaseModel):
-    sinpe_habilitado:       bool
-    sinpe_numero:           Optional[str] = None
-    sinpe_nombre:           Optional[str] = None
-    efectivo_habilitado:    bool
-    tarjeta_habilitado:     bool
-    deposito_requerido:     bool
-    deposito_porcentaje:    int
-    cancelacion_porcentaje: int
+    sinpe_habilitado:         bool
+    sinpe_numero:             Optional[str] = None
+    sinpe_nombre:             Optional[str] = None
+    efectivo_habilitado:      bool
+    tarjeta_habilitado:       bool
+    deposito_requerido:       bool
+    deposito_porcentaje:      int
+    cancelacion_porcentaje:   int
+    cancelacion_horas_minimo: int = 24
     class Config:
         from_attributes = True
