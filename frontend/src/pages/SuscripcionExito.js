@@ -1,4 +1,6 @@
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { sincronizarSuscripcion } from '../services/api';
 
 const CHECK_ANIM = `
 @keyframes draw-circle {
@@ -44,6 +46,18 @@ function AnimatedCheck() {
 
 export default function SuscripcionExito() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const sincronizado = useRef(false);
+
+  useEffect(() => {
+    if (sincronizado.current) return;
+    sincronizado.current = true;
+    const session_id = params.get('session_id');
+    if (session_id) {
+      sincronizarSuscripcion(session_id).catch(() => {});
+    }
+  }, [params]);
+
   return (
     <div style={{
       minHeight: '100vh', background: '#0A0A0A', display: 'flex',

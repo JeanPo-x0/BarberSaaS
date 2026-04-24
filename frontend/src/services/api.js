@@ -122,6 +122,7 @@ export const getEstadoSuscripcion = () => API.get('/suscripcion/estado');
 export const crearCheckout = (data) => API.post('/suscripcion/checkout', data);
 export const getPortalBilling = () => API.get('/suscripcion/portal');
 export const getCouponActivo = () => API.get('/suscripcion/coupon-earlyaccess');
+export const sincronizarSuscripcion = (session_id) => API.post('/suscripcion/sincronizar', { session_id });
 export const cancelarSuscripcion = () => API.post('/suscripcion/cancelar');
 export const reactivarSuscripcion = () => API.post('/suscripcion/reactivar');
 export const enviarContactoSoporte = (data) => API.post('/soporte/contacto', data);

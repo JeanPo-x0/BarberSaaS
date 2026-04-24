@@ -121,6 +121,71 @@ def reactivar_suscripcion(
     return {"ok": True, "mensaje": "Suscripcion reactivada correctamente."}
 
 
+@router.post("/sincronizar")
+def sincronizar_desde_checkout(
+    datos: dict,
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    """Sincroniza la suscripción local con Stripe usando el session_id del checkout."""
+    import stripe as stripe_lib
+    session_id = datos.get("session_id", "")
+    if not session_id:
+        raise HTTPException(status_code=400, detail="session_id requerido")
+
+    try:
+        session = stripe_lib.checkout.Session.retrieve(
+            session_id, expand=["subscription", "subscription.items.data.price"]
+        )
+    except Exception:
+        raise HTTPException(status_code=400, detail="Session invalida")
+
+    sub = session.get("subscription")
+    if not sub or isinstance(sub, str):
+        raise HTTPException(status_code=400, detail="No hay suscripcion en este session")
+
+    sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == usuario.barberia_id).first()
+    if not sus:
+        raise HTTPException(status_code=404, detail="Suscripcion no encontrada")
+
+    meta = sub.get("metadata", {})
+    plan = meta.get("plan") or session.get("metadata", {}).get("plan", "pro")
+    if plan not in ("pro", "premium"):
+        plan = "pro"
+
+    status = sub.get("status")
+    items = sub.get("items", {}).get("data", [])
+    interval = items[0]["price"]["recurring"]["interval"] if items else "month"
+
+    sus.stripe_subscription_id = sub["id"]
+    sus.stripe_price_id = items[0]["price"]["id"] if items else sus.stripe_price_id
+    sus.plan = plan
+    sus.periodo = "anual" if interval == "year" else "mensual"
+
+    barberia = db.query(Barberia).filter(Barberia.id == usuario.barberia_id).first()
+
+    if status == "trialing":
+        sus.estado = "trial"
+        trial_end = sub.get("trial_end")
+        if trial_end:
+            sus.fecha_trial_fin = datetime.utcfromtimestamp(trial_end)
+        if barberia:
+            barberia.plan = plan
+            barberia.activa = True
+    elif status == "active":
+        sus.estado = "activa"
+        if barberia:
+            barberia.plan = plan
+            barberia.activa = True
+
+    ts = sub.get("current_period_end")
+    if ts:
+        sus.fecha_renovacion = datetime.utcfromtimestamp(ts)
+
+    db.commit()
+    return {"ok": True, "plan": plan, "estado": sus.estado}
+
+
 @router.get("/portal")
 def portal_billing(
     usuario: Usuario = Depends(get_usuario_actual),
