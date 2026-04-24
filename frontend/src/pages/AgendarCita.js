@@ -1328,39 +1328,45 @@ function AgendarCita() {
 
         {/* ── Panel: Mis citas / Cancelar ── */}
         <div style={{ marginTop: 20 }}>
-          <button
-            type="button"
-            onClick={() => { setPanelCancelar(o => !o); setCitasCliente(null); setCanceladaInfo(null); setTelCancelar(''); }}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '14px 18px',
-              background: panelCancelar ? 'rgba(230,57,70,0.06)' : 'rgba(255,255,255,0.02)',
-              border: `1px solid ${panelCancelar ? 'rgba(230,57,70,0.2)' : 'rgba(255,255,255,0.07)'}`,
-              borderRadius: panelCancelar ? '14px 14px 0 0' : 14,
-              cursor: 'pointer', fontFamily: "'DM Sans'",
-              transition: 'all 0.2s',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: 8,
-                background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.18)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E63946" strokeWidth="2.2" strokeLinecap="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2"/>
-                  <path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/>
-                </svg>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: panelCancelar ? 0 : undefined }}>
+            <button
+              type="button"
+              onClick={() => { setPanelCancelar(o => !o); setCitasCliente(null); setCanceladaInfo(null); setTelCancelar(''); }}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                padding: '12px 14px',
+                background: panelCancelar ? 'rgba(230,57,70,0.08)' : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${panelCancelar ? 'rgba(230,57,70,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                borderRadius: panelCancelar ? '12px 12px 0 0' : 12,
+                cursor: 'pointer', fontFamily: "'DM Sans'", transition: 'all 0.2s',
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E63946" strokeWidth="2.2" strokeLinecap="round">
+                <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+              <span style={{ fontSize: 13, fontWeight: 600, color: panelCancelar ? '#E63946' : 'var(--text-muted)' }}>Cancelar mi cita</span>
+            </button>
+            {barberia?.telefono ? (
+              <a
+                href={`https://wa.me/${barberia.telefono.replace(/\D/g,'')}?text=${encodeURIComponent('Hola, quisiera solicitar un reembolso por mi cita.')}`}
+                target="_blank" rel="noopener noreferrer"
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  padding: '12px 14px', borderRadius: 12,
+                  background: 'rgba(37,211,102,0.05)', border: '1px solid rgba(37,211,102,0.2)',
+                  color: '#25D366', fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                  fontFamily: "'DM Sans'", transition: 'all 0.2s',
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#25D366"><path d="M20.52 3.48A11.93 11.93 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.18-1.57A11.96 11.96 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.22-3.48-8.52z"/><path d="M17.5 14.4c-.3-.15-1.77-.87-2.04-.97s-.47-.15-.67.15-.77.97-.94 1.17-.35.22-.65.07c-.3-.15-1.27-.47-2.42-1.49-.89-.8-1.5-1.78-1.67-2.08s-.02-.46.13-.61c.13-.13.3-.35.45-.52s.2-.3.3-.5.05-.37-.03-.52-.67-1.62-.92-2.22c-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37s-1.04 1.02-1.04 2.48 1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.1 4.49.71.31 1.27.49 1.7.62.72.23 1.37.2 1.88.12.57-.09 1.77-.72 2.02-1.42s.25-1.3.17-1.42c-.07-.12-.27-.2-.57-.35z" fill="#fff"/></svg>
+                Solicitar reembolso
+              </a>
+            ) : (
+              <div style={{ borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 14px' }}>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Reembolso vía barbería</span>
               </div>
-              <span style={{ fontSize: 13, fontWeight: 600, color: panelCancelar ? '#E63946' : 'var(--text-muted)' }}>
-                ¿Ya tenés una cita? Consultala o cancelala aquí
-              </span>
-            </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round"
-              style={{ transform: panelCancelar ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }}>
-              <path d="M6 9l6 6 6-6"/>
-            </svg>
-          </button>
+            )}
+          </div>
 
           {panelCancelar && (
             <div style={{
