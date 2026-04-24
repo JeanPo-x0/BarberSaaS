@@ -163,26 +163,40 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             sus.stripe_subscription_id = sub_id
             sus.stripe_price_id = data["items"]["data"][0]["price"]["id"]
             sus.plan = plan
+            periodo_interval = data["items"]["data"][0]["price"]["recurring"]["interval"]
+            sus.periodo = "anual" if periodo_interval == "year" else "mensual"
             cancel_at_end = data.get("cancel_at_period_end", False)
-            if status == "active" and cancel_at_end:
+
+            barberia = db.query(Barberia).filter(Barberia.id == barberia_id).first()
+
+            if status == "trialing":
+                # Suscripción nueva en período de prueba — actualizar plan pero mantener estado trial
+                sus.estado = "trial"
+                trial_end_ts = data.get("trial_end")
+                if trial_end_ts:
+                    sus.fecha_trial_fin = datetime.utcfromtimestamp(trial_end_ts)
+                if barberia:
+                    barberia.plan = plan
+                    barberia.activa = True
+            elif status == "active" and cancel_at_end:
                 sus.estado = "cancelacion_pendiente"
+                if barberia:
+                    barberia.plan = plan
+                    barberia.activa = True
             elif status == "active":
                 sus.estado = "activa"
-                barberia = db.query(Barberia).filter(Barberia.id == barberia_id).first()
                 if barberia:
                     barberia.plan = plan
                     barberia.activa = True
             elif status in ("past_due", "unpaid", "canceled"):
                 sus.estado = "suspendida"
-                barberia = db.query(Barberia).filter(Barberia.id == barberia_id).first()
                 if barberia:
                     barberia.activa = False
                     try:
                         enviar_aviso_suspension(barberia.email, barberia.nombre)
                     except Exception:
                         pass
-            periodo_interval = data["items"]["data"][0]["price"]["recurring"]["interval"]
-            sus.periodo = "anual" if periodo_interval == "year" else "mensual"
+
             ts = data.get("current_period_end")
             if ts:
                 sus.fecha_renovacion = datetime.utcfromtimestamp(ts)
