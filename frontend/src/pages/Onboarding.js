@@ -95,6 +95,7 @@ export default function Onboarding() {
         setError(msg);
       } else if (typeof detail === 'string') {
         if (detail === 'Datos de registro invalidos' || detail.toLowerCase().includes('ya esta registrado') || detail.toLowerCase().includes('already')) {
+          setPaso(0);
           setError('Este email ya está registrado. Iniciá sesión o usá otro email.');
         } else if (detail === 'EMAIL_NO_VERIFICADO') {
           localStorage.setItem('pendingCheckout', JSON.stringify({ plan: form.plan, periodo: anual ? 'anual' : 'mensual' }));
