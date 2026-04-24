@@ -165,14 +165,13 @@ function CalendarPicker({ value, onChange, min }) {
                     cursor: past ? 'default' : 'pointer', fontFamily: "'DM Sans'",
                     border: sel ? '1px solid transparent'
                       : today ? '1px solid rgba(201,168,76,0.55)'
-                      : past ? '1px solid rgba(230,57,70,0.2)'
                       : '1px solid transparent',
-                    background: sel ? '#C9A84C' : past ? 'rgba(230,57,70,0.06)' : 'transparent',
-                    color: sel ? '#0A0A0A' : past ? 'rgba(230,57,70,0.55)' : 'var(--text-primary)',
+                    background: sel ? '#C9A84C' : 'transparent',
+                    color: sel ? '#0A0A0A' : past ? 'rgba(255,255,255,0.18)' : 'var(--text-primary)',
                     transition: 'background 0.12s',
                   }}
                   onMouseEnter={e => { if (!past && !sel) e.currentTarget.style.background = 'rgba(201,168,76,0.12)'; }}
-                  onMouseLeave={e => { if (!past && !sel) e.currentTarget.style.background = past ? 'rgba(230,57,70,0.06)' : 'transparent'; }}
+                  onMouseLeave={e => { if (!past && !sel) e.currentTarget.style.background = 'transparent'; }}
                 >
                   {day}
                 </button>
@@ -191,6 +190,7 @@ function AgendarCita() {
   const [barberos, setBarberos] = useState([]);
   const [servicios, setServicios] = useState([]);
   const [slots, setSlots] = useState([]);
+  const [diaBloquado, setDiaBloquado] = useState(false);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [barberoId, setBarberoId] = useState('');
   const [serviciosIds, setServiciosIds] = useState([]);
@@ -239,11 +239,16 @@ function AgendarCita() {
   useEffect(() => {
     if (barberoId && fecha) {
       setLoadingSlots(true);
+      setDiaBloquado(false);
       getDisponibilidad(barberoId, fecha)
-        .then(r => setSlots(r.data.slots))
+        .then(r => {
+          setDiaBloquado(!!r.data.bloqueado);
+          setSlots(r.data.bloqueado ? [] : r.data.slots);
+        })
         .finally(() => setLoadingSlots(false));
     } else {
       setSlots([]);
+      setDiaBloquado(false);
     }
     setHoraSeleccionada('');
   }, [barberoId, fecha]);
@@ -980,6 +985,19 @@ function AgendarCita() {
                   {loadingSlots ? (
                     <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', fontSize: 13 }}>
                       Cargando horarios...
+                    </div>
+                  ) : diaBloquado ? (
+                    <div style={{
+                      background: 'rgba(230,57,70,0.06)', border: '1px solid rgba(230,57,70,0.2)',
+                      borderRadius: 12, padding: '20px 16px', textAlign: 'center',
+                    }}>
+                      <div style={{ fontSize: 22, marginBottom: 8 }}>🚫</div>
+                      <p style={{ color: '#E63946', fontWeight: 700, fontSize: 14, margin: '0 0 4px' }}>
+                        Día no disponible
+                      </p>
+                      <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>
+                        El barbero no trabaja este día. Seleccioná otra fecha.
+                      </p>
                     </div>
                   ) : slots.length === 0 ? (
                     <div style={{
