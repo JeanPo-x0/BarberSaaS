@@ -1379,17 +1379,25 @@ function AgendarCita() {
                   {!citasCliente ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
-                        Ingresá tu número de WhatsApp para buscar tu cita.
+                        Ingresá el número con el que agendaste tu cita.
                       </p>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <input
-                          value={telCancelar}
-                          onChange={e => setTelCancelar(formatearInput(e.target.value))}
-                          placeholder="8888 8888"
-                          className="input-dark"
-                          inputMode="numeric"
-                          style={{ flex: 1, fontSize: 14 }}
-                        />
+                        <div style={{ display: 'flex', flex: 1 }}>
+                          <span style={{
+                            padding: '0 10px', height: '42px', lineHeight: '42px',
+                            background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                            borderRight: 'none', borderRadius: '8px 0 0 8px',
+                            fontSize: 13, color: 'var(--text-muted)', flexShrink: 0,
+                          }}>+506</span>
+                          <input
+                            value={telCancelar}
+                            onChange={e => setTelCancelar(formatearInput(e.target.value))}
+                            placeholder="8888 8888"
+                            className="input-dark"
+                            inputMode="numeric"
+                            style={{ borderRadius: '0 8px 8px 0', fontSize: 14, width: '100%' }}
+                          />
+                        </div>
                         <button
                           type="button"
                           onClick={async () => {
@@ -1417,6 +1425,7 @@ function AgendarCita() {
                       </div>
                     </div>
                   ) : citasCliente.length === 0 ? (
+
                     <div style={{ textAlign: 'center', padding: '20px 0' }}>
                       <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
                         No encontramos citas pendientes con ese número.
