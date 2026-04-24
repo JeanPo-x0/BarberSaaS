@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { getEstadoSuscripcion, getPortalBilling, cambiarPassword, cancelarSuscripcion, reactivarSuscripcion, forzarSyncSuscripcion } from '../services/api';
 
-const PLAN_LABEL = { basico: 'Básico', pro: 'Pro', premium: 'Premium' };
+const PLAN_LABEL = { basico: 'Trial', pro: 'Pro', premium: 'Premium' };
 const ESTADO_META = {
   trial:               { label: 'Trial activo',         color: '#C9A84C', bg: 'rgba(201,168,76,0.12)'  },
   activa:              { label: 'Activa',               color: '#4ade80', bg: 'rgba(74,222,128,0.1)'   },
@@ -251,20 +251,6 @@ export default function Cuenta() {
                     <Row label="Próxima renovación" value={new Date(sus.fecha_renovacion + 'Z').toLocaleDateString('es-CR')} />
                   )}
                   <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {/* Sincronizar si plan sigue en básico */}
-                    {sus.plan === 'basico' && (
-                      <button
-                        onClick={handleForzarSync}
-                        style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 8, width: 'fit-content',
-                          padding: '10px 20px', borderRadius: 10, cursor: 'pointer',
-                          background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.3)',
-                          color: '#60a5fa', fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans'",
-                        }}
-                      >
-                        Sincronizar plan con Stripe
-                      </button>
-                    )}
                     {/* Portal facturación */}
                     <button
                       onClick={handlePortal}

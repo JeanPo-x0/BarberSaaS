@@ -318,10 +318,29 @@ function PanelDueno() {
 
   const LIMITE_PLAN = { basico: 1, pro: 3, premium: null };
   const plan = suscripcion?.plan || 'basico';
+  const estadoSus = suscripcion?.estado || 'trial';
+  const suspendida = estadoSus === 'suspendida' || estadoSus === 'cancelada';
   const limiteBarberias = LIMITE_PLAN[plan];
   const puedeAgregarBarberia = limiteBarberias === null || barberias.length < limiteBarberias;
 
   const sectionCard = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '24px' };
+
+  if (suspendida) return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
+        <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.08em', color: '#fff', margin: '0 0 12px' }}>Suscripción requerida</h1>
+        <p style={{ color: '#666', fontSize: 14, margin: '0 0 28px', lineHeight: 1.7 }}>
+          Tu período de prueba ha finalizado. Elige un plan para seguir usando BarberSaaS.
+        </p>
+        <button onClick={() => navigate('/planes')} className="btn-gold" style={{ padding: '13px 32px', fontSize: 15 }}>
+          Ver planes →
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="bg-panel" style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif", display: 'flex', flexDirection: 'column' }}>
@@ -337,43 +356,35 @@ function PanelDueno() {
           <h1 style={{ fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.08em', margin: 0 }}>
             Panel
           </h1>
-          {suscripcion && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{
-                background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)',
-                borderRadius: 100, padding: '4px 14px',
-                fontSize: 12, fontWeight: 700, color: '#C9A84C', textTransform: 'capitalize',
-              }}>
-                Plan {suscripcion.plan}
-              </span>
-              {suscripcion.plan === 'basico' && (
-                <button
-                  onClick={handleForzarSync}
-                  title="Sincronizar con Stripe"
-                  style={{
-                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 100, padding: '4px 10px', fontSize: 11, color: 'var(--text-muted)',
-                    cursor: 'pointer', fontFamily: "'DM Sans'",
-                  }}
-                >
-                  Sincronizar plan
-                </button>
-              )}
-            </div>
+          {suscripcion && plan !== 'basico' && (
+            <span style={{
+              background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)',
+              borderRadius: 100, padding: '4px 14px',
+              fontSize: 12, fontWeight: 700, color: '#C9A84C', textTransform: 'capitalize',
+            }}>
+              {plan === 'pro' ? 'Pro' : 'Premium'}
+            </span>
+          )}
+          {suscripcion && plan === 'basico' && estadoSus === 'trial' && (
+            <span style={{
+              background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)',
+              borderRadius: 100, padding: '4px 14px',
+              fontSize: 12, fontWeight: 700, color: '#fbbf24',
+            }}>
+              Trial
+            </span>
           )}
         </div>
 
-        {/* Banner Mejorar plan — solo para basico y pro */}
-        {suscripcion && plan !== 'premium' && (
+        {/* Banner Mejorar plan — solo para pro */}
+        {suscripcion && plan === 'pro' && (
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)',
             borderRadius: 12, padding: '12px 18px', marginBottom: 24,
           }}>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
-              {plan === 'basico'
-                ? 'Pasa a Pro y agrega hasta 3 barberos, historial de clientes y más.'
-                : 'Pasa a Premium y desbloquea barberos ilimitados, reenganche y subdominio propio.'}
+              Pasa a Premium y desbloquea barberos ilimitados, reenganche y subdominio propio.
             </p>
             <button
               onClick={() => navigate('/planes')}
