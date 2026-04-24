@@ -335,8 +335,13 @@ function PanelDueno() {
         <p style={{ color: '#666', fontSize: 14, margin: '0 0 28px', lineHeight: 1.7 }}>
           Tu período de prueba ha finalizado. Elige un plan para seguir usando BarberSaaS.
         </p>
-        <button onClick={() => navigate('/planes')} className="btn-gold" style={{ padding: '13px 32px', fontSize: 15 }}>
-          Ver planes →
+        <button onClick={() => navigate('/planes')} className="btn-gold" style={{ padding: '13px 32px', fontSize: 15, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          Ver planes
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+            style={{ animation: 'slide-right 1.2s ease-in-out infinite' }}>
+            <path d="M5 12h14M13 6l6 6-6 6"/>
+          </svg>
+          <style>{`@keyframes slide-right { 0%,100%{transform:translateX(0)} 50%{transform:translateX(4px)} }`}</style>
         </button>
       </div>
     </div>

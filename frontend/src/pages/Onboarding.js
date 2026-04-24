@@ -22,8 +22,8 @@ const CHECK_LABELS = ['8+ caracteres', 'Mayúscula', 'Caracter especial', 'Núme
 const PASOS = ['Tu cuenta', 'Tu barberia', 'Listo'];
 
 const PLANES_INFO = {
-  pro:     { label: 'Pro',     color: '#C9A84C',  desc: '$29/mes · Hasta 3 barberos' },
-  premium: { label: 'Premium', color: '#a78bfa',  desc: '$59/mes · Barberos ilimitados' },
+  pro:     { label: 'Pro',     color: '#C9A84C', mensual: 29,  anual: 232,  desc_mensual: 'Hasta 3 barberos', desc_anual: 'Hasta 3 barberos · $19/mes' },
+  premium: { label: 'Premium', color: '#a78bfa', mensual: 59,  anual: 472,  desc_mensual: 'Barberos ilimitados', desc_anual: 'Barberos ilimitados · $39/mes' },
 };
 
 export default function Onboarding() {
@@ -35,6 +35,7 @@ export default function Onboarding() {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
   const [coupon, setCoupon] = useState('');
+  const [anual, setAnual] = useState(false);
   const [linkGenerado, setLinkGenerado] = useState('');
   const [tcAceptado, setTcAceptado] = useState(false);
   const [form, setForm] = useState({
@@ -72,7 +73,7 @@ export default function Onboarding() {
       setLinkGenerado(`${window.location.origin}/agendar/${bid}`);
       // Siempre redirige a Stripe para registrar tarjeta y activar el trial
       try {
-        const checkoutRes = await crearCheckout({ plan: form.plan, periodo: 'mensual', coupon: coupon.trim() || undefined });
+        const checkoutRes = await crearCheckout({ plan: form.plan, periodo: anual ? 'anual' : 'mensual', coupon: coupon.trim() || undefined });
         window.location.href = checkoutRes.data.checkout_url;
       } catch {
         // Si Stripe falla, igual avanza al paso de confirmación
@@ -203,9 +204,36 @@ export default function Onboarding() {
 
               {/* Plan selector */}
               <div>
-                <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
-                  Elegí tu plan — <span style={{ color: '#C9A84C' }}>14 días gratis</span>, cancelá cuando quieras
-                </label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <label style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    Elegí tu plan — <span style={{ color: '#C9A84C' }}>{anual ? 'ahorrás 33%' : '14 días gratis'}</span>
+                  </label>
+                  {/* Toggle mensual / anual */}
+                  <button
+                    onClick={() => setAnual(a => !a)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      background: anual ? 'rgba(74,222,128,0.08)' : 'var(--bg-secondary)',
+                      border: anual ? '1px solid rgba(74,222,128,0.25)' : '1px solid var(--border)',
+                      borderRadius: 100, padding: '3px 10px 3px 4px',
+                      cursor: 'pointer', fontFamily: "'DM Sans'", transition: 'all 0.2s',
+                    }}
+                  >
+                    <div style={{
+                      width: 18, height: 18, borderRadius: '50%',
+                      background: anual ? '#4ade80' : 'var(--border)',
+                      transition: 'background 0.2s',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {anual && <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
+                        <path d="M2 7l3.5 3.5L12 4" stroke="#0A0A0A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>}
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: anual ? '#4ade80' : 'var(--text-muted)' }}>
+                      {anual ? 'Anual' : 'Mensual'}
+                    </span>
+                  </button>
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {Object.entries(PLANES_INFO).map(([p, info]) => (
                     <button
@@ -222,7 +250,9 @@ export default function Onboarding() {
                       }}
                     >
                       <div>{info.label}</div>
-                      <div style={{ fontSize: 10, fontWeight: 400, marginTop: 2, opacity: 0.8 }}>{info.desc}</div>
+                      <div style={{ fontSize: 10, fontWeight: 400, marginTop: 2, opacity: 0.8 }}>
+                        {anual ? `$${info.anual}/año · ${info.desc_anual}` : `$${info.mensual}/mes · ${info.desc_mensual}`}
+                      </div>
                     </button>
                   ))}
                 </div>
