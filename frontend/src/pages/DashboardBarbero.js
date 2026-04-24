@@ -549,7 +549,8 @@ function DashboardBarbero() {
 
             {/* Bloquear nueva fecha */}
             <div style={{
-              background: 'var(--bg-card)', border: '1px solid var(--border)',
+              background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: 16, padding: '22px',
             }}>
               <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 18, letterSpacing: '0.06em', margin: '0 0 6px 0' }}>
@@ -597,7 +598,11 @@ function DashboardBarbero() {
             </div>
 
             {/* Lista de bloqueos */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '22px' }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 16, padding: '22px',
+            }}>
               <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 18, letterSpacing: '0.06em', margin: '0 0 14px 0' }}>
                 Días bloqueados
               </h2>
