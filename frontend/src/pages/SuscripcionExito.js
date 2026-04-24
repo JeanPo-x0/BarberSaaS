@@ -49,6 +49,7 @@ export default function SuscripcionExito() {
   const [params] = useSearchParams();
   const sincronizado = useRef(false);
   const [sincronizando, setSincronizando] = useState(true);
+  const [sincronizadoOk, setSincronizadoOk] = useState(false);
 
   useEffect(() => {
     if (sincronizado.current) return;
@@ -65,17 +66,18 @@ export default function SuscripcionExito() {
           if (i < 2) await new Promise(r => setTimeout(r, 4000));
         }
       }
-      // 2. Polling: esperar hasta que el estado local confirme "activa" (máx 40s)
-      const deadline = Date.now() + 40000;
+      // 2. Polling: esperar hasta que el estado local confirme "activa" (máx 120s)
+      const deadline = Date.now() + 120000;
+      let activado = false;
       while (Date.now() < deadline) {
         try {
           const res = await getEstadoSuscripcion();
-          if (res.data.estado === 'activa') break;
-          // Reintentar sync mientras siga en trial
+          if (res.data.estado === 'activa') { activado = true; break; }
           await forzarSyncSuscripcion().catch(() => {});
         } catch {}
-        await new Promise(r => setTimeout(r, 4000));
+        await new Promise(r => setTimeout(r, 5000));
       }
+      setSincronizadoOk(activado);
       setSincronizando(false);
     };
     sync();
@@ -109,9 +111,15 @@ export default function SuscripcionExito() {
               }}>
                 Pago exitoso
               </h1>
-              <p style={{ color: '#aaa', fontSize: 15, margin: '0 0 28px', lineHeight: 1.6 }}>
-                Tu suscripción quedó activada. Ya podés usar todas las funciones de tu plan.
-              </p>
+              {sincronizadoOk ? (
+                <p style={{ color: '#aaa', fontSize: 15, margin: '0 0 28px', lineHeight: 1.6 }}>
+                  Tu suscripción quedó activada. Ya podés usar todas las funciones de tu plan.
+                </p>
+              ) : (
+                <p style={{ color: '#aaa', fontSize: 14, margin: '0 0 20px', lineHeight: 1.6 }}>
+                  Tu pago fue procesado exitosamente. Si tu estado de cuenta no se actualiza de inmediato, usá el botón <strong style={{ color: '#C9A84C' }}>↻ Ya pagué</strong> en la sección Cuenta.
+                </p>
+              )}
               <button
                 onClick={() => navigate('/panel')}
                 className="btn-gold"

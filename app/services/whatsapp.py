@@ -34,75 +34,94 @@ def enviar_mensaje(telefono: str, mensaje: str, media_url: str = None):
     except Exception as e:
         print(f"[WhatsApp] ERROR enviando a {numero_wa}: {e}")
 
-def confirmar_cita(telefono: str, nombre: str, fecha_hora: str, servicio: str, barbero: str):
+
+def confirmar_cita(
+    telefono: str, nombre: str, fecha_hora: str,
+    servicio: str, barbero: str,
+    barberia_nombre: str = "", link_agendamiento: str = "",
+):
+    cancelar_info = "Para cancelar tu cita respondé *CANCELAR* a este mensaje."
     mensaje = (
-        f"Hola {nombre}! Tu cita ha sido agendada.\n\n"
-        f"Barbero: {barbero}\n"
-        f"Servicio: {servicio}\n"
-        f"Fecha y hora: {fecha_hora}\n\n"
-        f"Te esperamos. Si necesitas cancelar responde CANCELAR."
+        f"✅ *Reserva confirmada{f' en {barberia_nombre}' if barberia_nombre else ''}*\n\n"
+        f"Hola {nombre}, tu cita quedó agendada con éxito.\n\n"
+        f"📅 *Fecha y hora:* {fecha_hora}\n"
+        f"✂️ *Servicio:* {servicio}\n"
+        f"💈 *Barbero:* {barbero}\n\n"
+        f"{cancelar_info}"
     )
     enviar_mensaje(telefono, mensaje)
 
-def recordatorio_cita(telefono: str, nombre: str, fecha_hora: str):
+
+def recordatorio_cita(telefono: str, nombre: str, fecha_hora: str, barberia_nombre: str = ""):
     mensaje = (
-        f"Hola {nombre}! Te recordamos que manana tienes una cita.\n"
-        f"Hora: {fecha_hora}\n\n"
-        f"Si necesitas cancelar responde CANCELAR."
+        f"⏰ *Recordatorio de cita{f' — {barberia_nombre}' if barberia_nombre else ''}*\n\n"
+        f"Hola {nombre}, mañana tenés una cita reservada.\n\n"
+        f"📅 *Hora:* {fecha_hora}\n\n"
+        f"Si no podés asistir, respondé *CANCELAR* para liberar el turno."
     )
     enviar_mensaje(telefono, mensaje)
 
-def recordatorio_1h(telefono: str, nombre: str, fecha_hora: str):
+
+def recordatorio_1h(telefono: str, nombre: str, fecha_hora: str, barberia_nombre: str = ""):
     mensaje = (
-        f"Hola {nombre}! En 1 hora tienes tu cita.\n"
-        f"Hora: {fecha_hora}\n\n"
-        f"Te esperamos. Si necesitas cancelar responde CANCELAR."
+        f"🔔 *Tu cita comienza en 1 hora{f' — {barberia_nombre}' if barberia_nombre else ''}*\n\n"
+        f"Hola {nombre}, te recordamos que tu cita es a las *{fecha_hora}*.\n\n"
+        f"¡Te esperamos! Si no podés asistir, respondé *CANCELAR*."
     )
     enviar_mensaje(telefono, mensaje)
 
-def notificar_cancelacion(telefono: str, nombre: str, link_agendamiento: str = ""):
+
+def notificar_cancelacion(telefono: str, nombre: str, link_agendamiento: str = "", barberia_nombre: str = ""):
     mensaje = (
-        f"Hola {nombre}, tu cita ha sido cancelada por la barbería.\n\n"
-        f"Podés agendar una nueva cita desde la web cuando quieras"
+        f"Tu cita{f' en *{barberia_nombre}*' if barberia_nombre else ''} fue cancelada.\n\n"
+        f"Hola {nombre}, lamentamos informarte que tu cita fue cancelada por la barbería.\n\n"
+        f"Podés agendar una nueva cita cuando gustés"
         + (f":\n{link_agendamiento}" if link_agendamiento else ".")
     )
     enviar_mensaje(telefono, mensaje)
 
-def notificar_barbero_nueva_cita(telefono: str, nombre_barbero: str, cliente: str, servicio: str, fecha_hora: str):
+
+def notificar_barbero_nueva_cita(
+    telefono: str, nombre_barbero: str, cliente: str, servicio: str, fecha_hora: str,
+):
     mensaje = (
-        f"Nueva reserva, {nombre_barbero}!\n\n"
-        f"Cliente: {cliente}\n"
-        f"Servicio: {servicio}\n"
-        f"Fecha y hora: {fecha_hora}"
+        f"🔔 *Nueva reserva*\n\n"
+        f"Hola {nombre_barbero}, tenés una nueva cita agendada:\n\n"
+        f"👤 *Cliente:* {cliente}\n"
+        f"✂️ *Servicio:* {servicio}\n"
+        f"📅 *Fecha y hora:* {fecha_hora}"
     )
     enviar_mensaje(telefono, mensaje)
 
-def notificar_barbero_cancelacion(telefono: str, nombre_barbero: str, cliente: str, fecha_hora: str):
+
+def notificar_barbero_cancelacion(
+    telefono: str, nombre_barbero: str, cliente: str, fecha_hora: str,
+):
     mensaje = (
-        f"Cita cancelada, {nombre_barbero}.\n\n"
-        f"Cliente: {cliente}\n"
-        f"Fecha y hora: {fecha_hora}\n\n"
-        f"Ese horario quedo libre."
+        f"❌ *Cita cancelada*\n\n"
+        f"Hola {nombre_barbero}, {cliente} canceló su cita del *{fecha_hora}*.\n\n"
+        f"Ese horario quedó disponible para nuevas reservas."
     )
     enviar_mensaje(telefono, mensaje)
+
 
 def notificar_completada_cliente(telefono: str, nombre: str, barberia_nombre: str):
     mensaje = (
-        f"Tu cita en *{barberia_nombre}* fue completada. "
-        f"Gracias por visitarnos, {nombre}! "
-        f"Esperamos verte pronto. ✂️"
+        f"Hola {nombre}, tu visita a *{barberia_nombre}* fue registrada como completada. "
+        f"¡Gracias por elegirnos! Cuando quieras volver a reservar, estamos para servirte."
     )
     enviar_mensaje(telefono, mensaje)
 
 
-def notificar_lista_espera(telefono: str, nombre: str, barberia_nombre: str, link_agendamiento: str):
-    """Avisa al primero en lista de espera que se liberó un turno."""
+def notificar_lista_espera(
+    telefono: str, nombre: str, barberia_nombre: str, link_agendamiento: str,
+):
     mensaje = (
-        f"Hola {nombre}! Tenemos buenas noticias.\n\n"
-        f"Se libero un turno en *{barberia_nombre}*.\n"
-        f"Tienes 30 minutos para confirmar tu cita:\n"
+        f"🔔 *¡Turno disponible en {barberia_nombre}!*\n\n"
+        f"Hola {nombre}, se liberó un espacio en la agenda.\n\n"
+        f"Tenés *30 minutos* para confirmar tu cita:\n"
         f"{link_agendamiento}\n\n"
-        f"Si no confirmas, le avisaremos al siguiente en la lista."
+        f"Si no confirmás en ese tiempo, ofreceremos el turno al siguiente en lista."
     )
     enviar_mensaje(telefono, mensaje)
 
@@ -112,11 +131,11 @@ def notificar_comprobante_barbero(
     servicio: str, fecha_hora: str, monto: float, comprobante_url: str,
 ):
     mensaje = (
-        f"Comprobante SINPE recibido, {nombre_barbero}.\n\n"
-        f"Cliente: {cliente}\n"
-        f"Servicio: {servicio} — ₡{monto:,.0f}\n"
-        f"Fecha: {fecha_hora}\n\n"
-        f"Revisá la imagen y confirmá o rechazá el pago desde tu panel."
+        f"📋 *Comprobante SINPE recibido*\n\n"
+        f"Hola {nombre_barbero}, {cliente} envió un comprobante de pago.\n\n"
+        f"✂️ *Servicio:* {servicio} — ₡{monto:,.0f}\n"
+        f"📅 *Fecha:* {fecha_hora}\n\n"
+        f"Revisá la imagen adjunta y confirmá o rechazá el pago desde tu panel."
     )
     enviar_mensaje(telefono, mensaje, media_url=comprobante_url)
 
@@ -127,42 +146,48 @@ def notificar_pago_pendiente_barbero(
 ):
     metodo_label = "SINPE Móvil" if metodo == "sinpe" else "Efectivo"
     mensaje = (
-        f"Pago pendiente de verificar, {nombre_barbero}.\n\n"
-        f"Cliente: {cliente}\n"
-        f"Servicio: {servicio} — ₡{monto:,.0f}\n"
-        f"Método: {metodo_label}\n"
-        f"Fecha: {fecha_hora}\n\n"
-        f"Confirma o rechaza el pago desde tu panel."
+        f"🔔 *Pago pendiente de verificar*\n\n"
+        f"Hola {nombre_barbero}, hay un pago que requiere tu confirmación:\n\n"
+        f"👤 *Cliente:* {cliente}\n"
+        f"✂️ *Servicio:* {servicio} — ₡{monto:,.0f}\n"
+        f"💳 *Método:* {metodo_label}\n"
+        f"📅 *Fecha:* {fecha_hora}\n\n"
+        f"Confirmá o rechazá el pago desde tu panel."
     )
     enviar_mensaje(telefono, mensaje)
 
 
 def notificar_cita_confirmada_pago(
     telefono: str, nombre: str, servicio: str, fecha_hora: str,
+    barberia_nombre: str = "",
 ):
     mensaje = (
-        f"Hola {nombre}! Tu pago fue confirmado.\n\n"
-        f"Servicio: {servicio}\n"
-        f"Fecha y hora: {fecha_hora}\n\n"
-        f"Tu cita está confirmada. Te esperamos!"
+        f"✅ *Pago confirmado{f' — {barberia_nombre}' if barberia_nombre else ''}*\n\n"
+        f"Hola {nombre}, tu pago fue verificado exitosamente.\n\n"
+        f"✂️ *Servicio:* {servicio}\n"
+        f"📅 *Fecha y hora:* {fecha_hora}\n\n"
+        f"Tu cita está confirmada. ¡Te esperamos!"
     )
     enviar_mensaje(telefono, mensaje)
 
 
-def notificar_pago_rechazado(telefono: str, nombre: str):
+def notificar_pago_rechazado(telefono: str, nombre: str, barberia_nombre: str = ""):
     mensaje = (
-        f"Hola {nombre}, tu pago no pudo ser verificado y tu cita fue cancelada.\n\n"
-        f"Si crees que es un error, contacta directamente a la barbería."
+        f"Hola {nombre}, tu comprobante de pago no pudo ser verificado y tu cita fue cancelada.\n\n"
+        f"Si creés que es un error o querés intentarlo de nuevo, contactá directamente "
+        f"{'a *' + barberia_nombre + '*' if barberia_nombre else 'a la barbería'}."
     )
     enviar_mensaje(telefono, mensaje)
 
 
-def reenganche_cliente(telefono: str, nombre: str, barberia_nombre: str, link_agendamiento: str):
-    """WhatsApp de reenganche para clientes inactivos +30 días."""
+def reenganche_cliente(
+    telefono: str, nombre: str, barberia_nombre: str, link_agendamiento: str,
+):
     mensaje = (
-        f"Hola {nombre}! Te echamos de menos en *{barberia_nombre}* ✂️\n\n"
-        f"Ya paso un tiempo desde tu ultima visita. Agenda tu proximo corte rapido:\n"
+        f"✂️ *¡Te extrañamos en {barberia_nombre}!*\n\n"
+        f"Hola {nombre}, ya pasó un tiempo desde tu última visita. "
+        f"Agendá tu próximo corte en segundos:\n"
         f"{link_agendamiento}\n\n"
-        f"Te esperamos!"
+        f"¡Te esperamos cuando estés listo!"
     )
     enviar_mensaje(telefono, mensaje)

@@ -20,9 +20,13 @@ async def webhook_whatsapp(request: Request, background_tasks: BackgroundTasks, 
         return Response(content="Service unavailable", status_code=503)
     validator = RequestValidator(auth_token)
     signature = request.headers.get("X-Twilio-Signature", "")
-    # Render termina SSL antes del app — la URL interna puede llegar como http://
-    # Twilio firma siempre con https://, así que forzamos el esquema correcto
-    url = str(request.url).replace("http://", "https://", 1)
+    # Render termina SSL antes del app — reconstruir URL pública con el host del request
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host", "")
+    path = request.url.path
+    query = request.url.query
+    url = f"https://{host}{path}"
+    if query:
+        url += f"?{query}"
     if not validator.validate(url, form_dict, signature):
         return Response(content="Forbidden", status_code=403)
 
@@ -57,14 +61,15 @@ async def webhook_whatsapp(request: Request, background_tasks: BackgroundTasks, 
             else f"{settings.FRONTEND_URL}/agendar/{barberia.id}"
         )
         respuesta = (
-            f"Hola! 👋 Las citas en *{barberia.nombre}* se agendan desde el siguiente link:\n"
-            f"{link}\n\n"
-            f"Si querés *cancelar* una cita existente, simplemente respondé *CANCELAR* aquí y lo hacemos en segundos."
+            f"Hola, gracias por escribirnos a *{barberia.nombre}*.\n\n"
+            f"Podés reservar tu cita fácilmente desde este link:\n{link}\n\n"
+            f"Si querés *cancelar* una cita existente, respondé *CANCELAR* y lo gestionamos en segundos."
         )
     else:
         respuesta = (
-            "Hola! Las citas se agendan desde el link que te compartió tu barbería. "
-            "Para cancelar una cita existente respondé CANCELAR."
+            "Hola, gracias por escribirnos. "
+            "Para agendar una cita usá el link que te compartió tu barbería. "
+            "Si necesitás cancelar una cita existente, respondé *CANCELAR*."
         )
 
     twiml = (

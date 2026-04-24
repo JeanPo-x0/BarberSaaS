@@ -36,8 +36,8 @@ export default function Onboarding() {
   const [paso, setPaso] = useState(0);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
-  const [coupon, setCoupon] = useState('');
   const [anual, setAnual] = useState(anualInicial);
+  const [stripeError, setStripeError] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [linkGenerado, setLinkGenerado] = useState('');
   const [tcAceptado, setTcAceptado] = useState(false);
@@ -77,13 +77,15 @@ export default function Onboarding() {
       const bid = loginRes.data.usuario?.barberia_id;
       localStorage.setItem('usuario', JSON.stringify(loginRes.data.usuario));
       setLinkGenerado(`${window.location.origin}/agendar/${bid}`);
-      // Siempre redirige a Stripe para registrar tarjeta y activar el trial
+      // Redirigir a Stripe para activar el plan
       try {
-        const checkoutRes = await crearCheckout({ plan: form.plan, periodo: anual ? 'anual' : 'mensual', coupon: coupon.trim() || undefined });
+        const checkoutRes = await crearCheckout({ plan: form.plan, periodo: anual ? 'anual' : 'mensual' });
         window.location.href = checkoutRes.data.checkout_url;
       } catch {
-        // Si Stripe falla, igual avanza al paso de confirmación
-        setPaso(2);
+        // Stripe no respondió — mostrar error con opción de reintentar
+        setStripeError(true);
+        setCargando(false);
+        return;
       }
     } catch (err) {
       const status = err.response?.status;
@@ -308,10 +310,33 @@ export default function Onboarding() {
                 </div>
               )}
 
-              {form.plan !== 'basico' && (
-                <input type="text" placeholder="Codigo de descuento (opcional)"
-                  value={coupon} onChange={e => setCoupon(e.target.value)}
-                  className="input-dark" style={{ borderColor: 'rgba(201,168,76,0.3)' }} />
+              {stripeError && (
+                <div style={{
+                  background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.25)',
+                  borderRadius: 10, padding: '12px 14px', fontSize: 13, color: '#E63946',
+                }}>
+                  No se pudo conectar con el sistema de pago. Tu cuenta fue creada — intentá de nuevo para activar tu plan.
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setStripeError(false); setCargando(true);
+                      try {
+                        const r = await crearCheckout({ plan: form.plan, periodo: anual ? 'anual' : 'mensual' });
+                        window.location.href = r.data.checkout_url;
+                      } catch {
+                        setStripeError(true);
+                      } finally { setCargando(false); }
+                    }}
+                    style={{
+                      display: 'block', marginTop: 10, background: 'rgba(230,57,70,0.15)',
+                      border: '1px solid rgba(230,57,70,0.4)', borderRadius: 8,
+                      color: '#E63946', fontSize: 12, fontWeight: 700, padding: '7px 14px',
+                      cursor: 'pointer', fontFamily: "'DM Sans'",
+                    }}
+                  >
+                    Reintentar ir a Stripe
+                  </button>
+                </div>
               )}
 
               {/* Checkbox T&C */}

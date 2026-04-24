@@ -117,16 +117,25 @@ def _paso_inicio(db: Session, conv: ConversacionBot, barberia: Barberia) -> str:
     ).all()
 
     if not servicios:
-        return f"Hola! Soy el asistente de {barberia.nombre}. Por el momento no hay servicios disponibles. Intenta mas tarde."
+        return (
+            f"Hola, soy el asistente de *{barberia.nombre}*. "
+            f"En este momento no tenemos servicios disponibles para agendar. "
+            f"Intentá más tarde o contactá directamente a la barbería."
+        )
 
     conv.barberia_id = barberia.id
     conv.paso = "esperando_servicio"
     db.commit()
 
     lista = "\n".join(
-        [f"{i+1}. {s.nombre} — ${s.precio:.0f} ({s.duracion_minutos} min)" for i, s in enumerate(servicios)]
+        [f"{i+1}. {s.nombre} — ₡{s.precio:.0f} ({s.duracion_minutos} min)" for i, s in enumerate(servicios)]
     )
-    return f"Hola! Soy el asistente de {barberia.nombre}.\n\nQue servicio deseas?\n\n{lista}\n\nResponde con el numero."
+    return (
+        f"¡Hola! Soy el asistente de *{barberia.nombre}*. "
+        f"Podés agendar tu cita directamente desde aquí en unos pasos.\n\n"
+        f"¿Qué servicio querés reservar?\n\n{lista}\n\n"
+        f"Respondé con el número de tu elección."
+    )
 
 
 def _paso_servicio(db: Session, conv: ConversacionBot, mensaje: str) -> str:
@@ -154,9 +163,9 @@ def _paso_servicio(db: Session, conv: ConversacionBot, mensaje: str) -> str:
 
     lista = "\n".join([f"{i+1}. {b.nombre}" for i, b in enumerate(barberos)])
     return (
-        f"Elegiste: {servicio.nombre}\n\n"
-        f"Con que barbero?\n\n{lista}\n0. Cualquiera disponible\n\n"
-        f"Responde con el numero."
+        f"Seleccionaste: *{servicio.nombre}* (₡{servicio.precio:.0f})\n\n"
+        f"¿Con qué barbero preferís atenderte?\n\n{lista}\n0. Cualquiera disponible\n\n"
+        f"Respondé con el número."
     )
 
 
@@ -182,7 +191,7 @@ def _paso_barbero(db: Session, conv: ConversacionBot, mensaje: str) -> str:
 
     dias = _proximos_dias()
     lista = "\n".join([f"{i+1}. {_fmt_dia(d)}" for i, d in enumerate(dias)])
-    return f"Que dia prefieres?\n\n{lista}\n\nResponde con el numero."
+    return f"¿Qué día preferís?\n\n{lista}\n\nRespondé con el número."
 
 
 def _paso_fecha(db: Session, conv: ConversacionBot, mensaje: str) -> str:
@@ -277,13 +286,12 @@ def _paso_nombre(db: Session, conv: ConversacionBot, mensaje: str) -> str:
     db.commit()
 
     return (
-        f"Confirmas tu cita?\n\n"
-        f"Nombre: {conv.nombre_temp}\n"
-        f"Servicio: {servicio.nombre}\n"
-        f"Barbero: {barbero.nombre}\n"
-        f"Fecha y hora: {conv.fecha}\n"
-        f"Precio: ${servicio.precio:.0f}\n\n"
-        f"Responde SI para confirmar o NO para cancelar."
+        f"Perfecto, {conv.nombre_temp}. Revisá los detalles de tu cita:\n\n"
+        f"✂️ *Servicio:* {servicio.nombre}\n"
+        f"💈 *Barbero:* {barbero.nombre}\n"
+        f"📅 *Fecha y hora:* {conv.fecha}\n"
+        f"💰 *Precio:* ₡{servicio.precio:.0f}\n\n"
+        f"¿Confirmás la reserva? Respondé *SI* para confirmar o *NO* para cancelar."
     )
 
 
@@ -293,7 +301,7 @@ def _paso_confirmacion(db: Session, conv: ConversacionBot, telefono: str, mensaj
 
     if mensaje.upper() == "NO":
         _resetear(db, conv)
-        return "Cita cancelada. Escribe 'Hola' cuando quieras intentarlo de nuevo."
+        return "Entendido. Tu reserva no fue confirmada. Cuando quieras intentarlo de nuevo, escribí *Hola*."
 
     # Crear o encontrar el cliente por telefono
     cliente = db.query(Cliente).filter(Cliente.telefono == telefono).first()
@@ -307,7 +315,7 @@ def _paso_confirmacion(db: Session, conv: ConversacionBot, telefono: str, mensaj
         fecha_hora = datetime.strptime(conv.fecha, "%d/%m/%Y %H:%M")
     except ValueError:
         _resetear(db, conv)
-        return "Hubo un error con la fecha. Escribe 'Hola' para intentarlo de nuevo."
+        return "Hubo un problema al procesar la fecha. Escribí *Hola* para intentarlo de nuevo."
 
     nueva_cita = Cita(
         fecha_hora=fecha_hora,
@@ -343,7 +351,7 @@ def _paso_confirmacion(db: Session, conv: ConversacionBot, telefono: str, mensaj
         pass  # la cita se crea aunque fallen los mensajes
 
     _resetear(db, conv)
-    return f"Tu cita esta confirmada! Te hemos enviado los detalles. Hasta pronto, {cliente.nombre}!"
+    return f"✅ ¡Tu cita quedó confirmada, {cliente.nombre}! Te enviamos los detalles por aquí. ¡Hasta pronto!"
 
 
 # ---------- entrada principal ----------
@@ -408,10 +416,10 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
 
                 return msg_cancelacion, notificar_barbero
 
-            return "No encontramos una cita pendiente a tu nombre. Si creés que es un error, contactá directamente a tu barbería.", None
+            return "No encontramos ninguna cita pendiente asociada a tu número. Si creés que es un error, contactá directamente a tu barbería.", None
 
-        print(f"[CANCELAR] No se encontro cliente con telefono: {telefono!r}")
-        return "No encontramos tu número en el sistema. Asegurate de agendar siempre desde el mismo WhatsApp con el que vas a cancelar.", None
+    print(f"[CANCELAR] No se encontro cliente con telefono: {telefono!r}")
+    return "No encontramos tu número en el sistema. Asegurate de usar el mismo WhatsApp con el que agendaste tu cita.", None
 
     # Identificar la barberia por el numero Twilio al que escribio el cliente
     barberia = db.query(Barberia).filter(
@@ -419,7 +427,7 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
     ).first()
 
     if not barberia:
-        return "Este numero no esta configurado. Contacta a la barberia directamente.", None
+        return "Este número no está configurado con ninguna barbería activa. Contactá directamente al establecimiento.", None
 
     conv = _obtener_o_crear_conv(db, telefono)
 

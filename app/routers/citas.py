@@ -37,17 +37,26 @@ def crear_cita(request: Request, cita: CitaCreate, db: Session = Depends(get_db)
     if not barbero.activo:
         raise HTTPException(status_code=400, detail="El barbero no esta disponible")
 
-    margen = timedelta(minutes=30)
-    conflicto = db.query(Cita).filter(
-        and_(
-            Cita.barbero_id == cita.barbero_id,
-            Cita.estado != "cancelada",
-            Cita.fecha_hora >= cita.fecha_hora - margen,
-            Cita.fecha_hora <= cita.fecha_hora + margen
+    # Verificar conflicto usando solo citas pendientes (mismo criterio que ver_disponibilidad)
+    servicio_nuevo = db.query(Servicio).filter(Servicio.id == cita.servicio_id).first()
+    dur_nuevo = timedelta(minutes=servicio_nuevo.duracion_minutos if servicio_nuevo else 30)
+    citas_existentes = (
+        db.query(Cita, Servicio)
+        .outerjoin(Servicio, Servicio.id == Cita.servicio_id)
+        .filter(
+            and_(
+                Cita.barbero_id == cita.barbero_id,
+                Cita.estado == "pendiente",
+                Cita.fecha_hora >= cita.fecha_hora - timedelta(hours=4),
+                Cita.fecha_hora <= cita.fecha_hora + dur_nuevo,
+            )
         )
-    ).first()
-    if conflicto:
-        raise HTTPException(status_code=400, detail="El barbero ya tiene una cita en ese horario")
+        .all()
+    )
+    for c_ex, s_ex in citas_existentes:
+        dur_ex = timedelta(minutes=s_ex.duracion_minutos if s_ex else 30)
+        if c_ex.fecha_hora < cita.fecha_hora + dur_nuevo and c_ex.fecha_hora + dur_ex > cita.fecha_hora:
+            raise HTTPException(status_code=400, detail="El barbero ya tiene una cita en ese horario")
 
     # Determinar estado_pago según configuración de la barbería
     barberia_id = barbero.barberia_id
@@ -92,6 +101,13 @@ def crear_cita(request: Request, cita: CitaCreate, db: Session = Depends(get_db)
     try:
         cliente = db.query(Cliente).filter(Cliente.id == nueva.cliente_id).first()
         servicio = db.query(Servicio).filter(Servicio.id == nueva.servicio_id).first()
+        barberia_obj = db.query(Barberia).filter(Barberia.id == barberia_id).first()
+        barberia_nombre = barberia_obj.nombre if barberia_obj else "tu barbería"
+        link_ag = (
+            f"{settings.FRONTEND_URL}/b/{barberia_obj.slug}"
+            if barberia_obj and getattr(barberia_obj, "slug", None)
+            else f"{settings.FRONTEND_URL}/agendar/{barberia_id}"
+        )
         fecha_hora_str = nueva.fecha_hora.strftime("%d/%m/%y a las %H:%M")
         if cliente and cliente.telefono:
             confirmar_cita(
@@ -99,7 +115,9 @@ def crear_cita(request: Request, cita: CitaCreate, db: Session = Depends(get_db)
                 nombre=cliente.nombre,
                 fecha_hora=fecha_hora_str,
                 servicio=servicio.nombre if servicio else "Servicio",
-                barbero=barbero.nombre
+                barbero=barbero.nombre,
+                barberia_nombre=barberia_nombre,
+                link_agendamiento=link_ag,
             )
         if barbero.telefono:
             notificar_barbero_nueva_cita(
@@ -107,9 +125,8 @@ def crear_cita(request: Request, cita: CitaCreate, db: Session = Depends(get_db)
                 nombre_barbero=barbero.nombre,
                 cliente=cliente.nombre if cliente else "Cliente",
                 servicio=servicio.nombre if servicio else "Servicio",
-                fecha_hora=fecha_hora_str
+                fecha_hora=fecha_hora_str,
             )
-            # El barbero recibe notificación separada cuando el cliente sube el comprobante
         else:
             print(f"[WhatsApp] Barbero {barbero.id} ({barbero.nombre}) no tiene telefono guardado")
     except Exception as e:
@@ -279,12 +296,14 @@ def confirmar_pago(cita_id: int, usuario: Usuario = Depends(get_usuario_actual),
     try:
         cliente = db.query(Cliente).filter(Cliente.id == cita.cliente_id).first()
         servicio = db.query(Servicio).filter(Servicio.id == cita.servicio_id).first()
+        barberia_obj = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first()
         if cliente and cliente.telefono:
             notificar_cita_confirmada_pago(
                 telefono=cliente.telefono,
                 nombre=cliente.nombre,
                 servicio=servicio.nombre if servicio else "Servicio",
                 fecha_hora=cita.fecha_hora.strftime("%d/%m/%y a las %H:%M"),
+                barberia_nombre=barberia_obj.nombre if barberia_obj else "",
             )
     except Exception as e:
         print(f"[WhatsApp] ERROR confirmar pago: {e}")
