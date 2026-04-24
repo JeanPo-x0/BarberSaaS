@@ -239,6 +239,13 @@ export default function Planes() {
     getCouponActivo().then(r => setCouponActivo(r.data.activo)).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    const reset = () => setLoadingPlan(null);
+    window.addEventListener('focus', reset);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reset(); });
+    return () => window.removeEventListener('focus', reset);
+  }, []);
+
   const handleElegirPlan = async (planId) => {
     if (planId === 'enterprise') { setShowEnterprise(true); return; }
     if (!usuario) {
