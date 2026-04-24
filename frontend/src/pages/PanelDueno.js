@@ -6,7 +6,7 @@ import {
   getMisBarberos, crearBarbero, toggleBarbero, eliminarBarbero, invitarBarbero, editarBarbero,
   getMisServicios, crearServicio, toggleServicio, editarServicio, eliminarServicio,
   getMiBarberia, toggleBarberia, crearBarberiaAdicional,
-  getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio, actualizarMapsLink, actualizarTelefonoBarberia,
+  getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio, actualizarMapsLink, actualizarTelefonoBarberia, forzarSyncSuscripcion,
   getConfigPagos, updateConfigPagos,
 } from '../services/api';
 
@@ -135,6 +135,13 @@ function PanelDueno() {
 
   // Link copiado
   const [linkCopiado, setLinkCopiado] = useState(null);
+
+  const handleForzarSync = async () => {
+    try {
+      await forzarSyncSuscripcion();
+      getEstadoSuscripcion().then(r => setSuscripcion(r.data)).catch(() => {});
+    } catch (e) {}
+  };
 
   const cargarDatos = () => {
     getMisBarberos().then(r => setBarberos(r.data)).catch(() => {});
@@ -331,13 +338,28 @@ function PanelDueno() {
             Panel
           </h1>
           {suscripcion && (
-            <span style={{
-              background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)',
-              borderRadius: 100, padding: '4px 14px',
-              fontSize: 12, fontWeight: 700, color: '#C9A84C', textTransform: 'capitalize',
-            }}>
-              Plan {suscripcion.plan}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{
+                background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)',
+                borderRadius: 100, padding: '4px 14px',
+                fontSize: 12, fontWeight: 700, color: '#C9A84C', textTransform: 'capitalize',
+              }}>
+                Plan {suscripcion.plan}
+              </span>
+              {suscripcion.plan === 'basico' && (
+                <button
+                  onClick={handleForzarSync}
+                  title="Sincronizar con Stripe"
+                  style={{
+                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 100, padding: '4px 10px', fontSize: 11, color: 'var(--text-muted)',
+                    cursor: 'pointer', fontFamily: "'DM Sans'",
+                  }}
+                >
+                  Sincronizar plan
+                </button>
+              )}
+            </div>
           )}
         </div>
 

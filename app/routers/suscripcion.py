@@ -121,6 +121,59 @@ def reactivar_suscripcion(
     return {"ok": True, "mensaje": "Suscripcion reactivada correctamente."}
 
 
+@router.post("/forzar-sync")
+def forzar_sincronizacion(
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    """Lee las suscripciones activas del cliente en Stripe y actualiza la BD."""
+    import stripe as stripe_lib
+    sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == usuario.barberia_id).first()
+    if not sus or not sus.stripe_customer_id:
+        raise HTTPException(status_code=400, detail="No hay customer de Stripe")
+
+    subs = stripe_lib.Subscription.list(customer=sus.stripe_customer_id, limit=5, expand=["data.items.data.price"])
+    if not subs.data:
+        return {"ok": False, "razon": "Sin suscripciones en Stripe"}
+
+    sub = subs.data[0]
+    meta = sub.get("metadata", {})
+    plan = meta.get("plan", "pro")
+    if plan not in ("pro", "premium"):
+        plan = "pro"
+    status = sub.get("status")
+    items = sub.get("items", {}).get("data", [])
+    interval = items[0]["price"]["recurring"]["interval"] if items else "month"
+
+    sus.stripe_subscription_id = sub["id"]
+    sus.stripe_price_id = items[0]["price"]["id"] if items else sus.stripe_price_id
+    sus.plan = plan
+    sus.periodo = "anual" if interval == "year" else "mensual"
+
+    barberia = db.query(Barberia).filter(Barberia.id == usuario.barberia_id).first()
+
+    if status == "trialing":
+        sus.estado = "trial"
+        trial_end = sub.get("trial_end")
+        if trial_end:
+            sus.fecha_trial_fin = datetime.utcfromtimestamp(trial_end)
+        if barberia:
+            barberia.plan = plan
+            barberia.activa = True
+    elif status == "active":
+        sus.estado = "activa"
+        if barberia:
+            barberia.plan = plan
+            barberia.activa = True
+
+    ts = sub.get("current_period_end")
+    if ts:
+        sus.fecha_renovacion = datetime.utcfromtimestamp(ts)
+
+    db.commit()
+    return {"ok": True, "plan": plan, "estado": sus.estado, "periodo": sus.periodo}
+
+
 @router.post("/sincronizar")
 def sincronizar_desde_checkout(
     datos: dict,
