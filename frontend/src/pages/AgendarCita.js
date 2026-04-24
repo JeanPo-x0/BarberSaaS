@@ -1658,64 +1658,93 @@ function AgendarCita() {
                     const d = new Date(c.fecha_hora);
                     const fechaStr = d.toLocaleDateString('es-CR', { weekday: 'long', day: '2-digit', month: 'long' });
                     const horaStr = d.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+                    const tieneDeposito = c.estado_pago === 'confirmado';
+                    const esEfectivo = c.estado_pago === 'por_cobrar';
                     const horasLimite = configPagos?.cancelacion_horas_minimo ?? 24;
                     const pctDeposito = configPagos?.deposito_porcentaje ?? 50;
                     const pctRetencion = configPagos?.cancelacion_porcentaje ?? 0;
                     const horasAnticipacion = Math.floor((d - new Date()) / 3600000);
-                    const aplicaReembolso = horasAnticipacion >= horasLimite;
+                    const aplicaReembolso = tieneDeposito && horasAnticipacion >= horasLimite;
                     const waNum = (barberia?.telefono || '').replace(/\D/g, '');
-                    let mensajeWA;
-                    if (aplicaReembolso) {
-                      mensajeWA = `Hola ${barberia?.nombre || ''}, quisiera cancelar y solicitar el reembolso de mi cita del ${fechaStr} a las ${horaStr} con ${c.barbero_nombre}.\n\nEstoy cancelando con *${horasAnticipacion} horas de anticipación*, superando el mínimo requerido de ${horasLimite}h. Según su política, me corresponde el reembolso del depósito (${pctDeposito}% del total). ¿Pueden coordinarlo? Gracias.`;
-                    } else {
-                      mensajeWA = `Hola ${barberia?.nombre || ''}, quisiera consultar sobre el reembolso de mi cita del ${fechaStr} a las ${horaStr} con ${c.barbero_nombre}.\n\nEstoy cancelando con *${horasAnticipacion} horas de anticipación* (mínimo requerido: ${horasLimite}h). Según su política, en este caso se retiene el ${pctRetencion}% del depósito. Igualmente quisiera conversarlo con ustedes. Gracias.`;
+                    let mensajeWA = '';
+                    if (tieneDeposito) {
+                      if (aplicaReembolso) {
+                        mensajeWA = `Hola ${barberia?.nombre || ''}, quisiera cancelar y solicitar el reembolso de mi cita del ${fechaStr} a las ${horaStr} con ${c.barbero_nombre}.\n\nEstoy cancelando con *${horasAnticipacion} horas de anticipación*, superando el mínimo requerido de ${horasLimite}h. Según su política, me corresponde el reembolso del depósito (${pctDeposito}% del total). ¿Pueden coordinarlo? Gracias.`;
+                      } else {
+                        mensajeWA = `Hola ${barberia?.nombre || ''}, quisiera consultar sobre el reembolso de mi cita del ${fechaStr} a las ${horaStr} con ${c.barbero_nombre}.\n\nEstoy cancelando con *${horasAnticipacion} horas de anticipación* (mínimo requerido: ${horasLimite}h). Según su política, en este caso se retiene el ${pctRetencion}% del depósito. Igualmente quisiera conversarlo con ustedes. Gracias.`;
+                      }
                     }
                     return (
                       <div key={c.id} style={{
                         background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
                         borderRadius: 12, padding: '14px 16px',
                       }}>
-                        <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 3px 0', textTransform: 'capitalize' }}>
-                          {fechaStr} a las {horaStr}
-                        </p>
-                        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
-                          {c.barbero_nombre} · {c.servicio_nombre}
-                        </p>
-                        <div style={{
-                          borderRadius: 8, padding: '10px 12px', marginBottom: 10, fontSize: 12, lineHeight: 1.55,
-                          background: aplicaReembolso ? 'rgba(74,222,128,0.05)' : 'rgba(251,191,36,0.05)',
-                          border: `1px solid ${aplicaReembolso ? 'rgba(74,222,128,0.2)' : 'rgba(251,191,36,0.2)'}`,
-                          color: aplicaReembolso ? '#4ade80' : '#fbbf24',
-                        }}>
-                          {aplicaReembolso ? (
-                            <>
-                              <strong>Aplica reembolso</strong> — cancelás con {horasAnticipacion}h de anticipación (mínimo requerido: {horasLimite}h).<br/>
-                              Te corresponde el reembolso del depósito ({pctDeposito}% del total).
-                            </>
-                          ) : (
-                            <>
-                              <strong>Fuera del plazo</strong> — cancelás con {horasAnticipacion}h de anticipación (mínimo requerido: {horasLimite}h).<br/>
-                              Según la política, la barbería retiene el {pctRetencion}% del depósito ({pctDeposito}% del total).
-                            </>
-                          )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+                          <div>
+                            <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 2px 0', textTransform: 'capitalize' }}>
+                              {fechaStr} a las {horaStr}
+                            </p>
+                            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                              {c.barbero_nombre} · {c.servicio_nombre}
+                            </p>
+                          </div>
+                          <span style={{
+                            fontSize: 10, fontWeight: 700, flexShrink: 0, borderRadius: 100, padding: '3px 9px',
+                            background: tieneDeposito ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.05)',
+                            border: `1px solid ${tieneDeposito ? 'rgba(74,222,128,0.25)' : 'rgba(255,255,255,0.1)'}`,
+                            color: tieneDeposito ? '#4ade80' : 'var(--text-muted)',
+                          }}>
+                            {tieneDeposito ? 'Depósito pagado' : esEfectivo ? 'Efectivo' : 'Sin depósito'}
+                          </span>
                         </div>
-                        {waNum && (
-                          <a
-                            href={`https://wa.me/${waNum}?text=${encodeURIComponent(mensajeWA)}`}
-                            target="_blank" rel="noopener noreferrer"
-                            style={{
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                              padding: '9px 14px', borderRadius: 9,
-                              background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.25)',
-                              color: '#25D366', fontSize: 12, fontWeight: 700, textDecoration: 'none',
-                            }}
-                          >
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                              <path d="M20.52 3.48A11.93 11.93 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.18-1.57A11.96 11.96 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.22-3.48-8.52z" fill="#25D366"/>
-                              <path d="M17.5 14.4c-.3-.15-1.77-.87-2.04-.97s-.47-.15-.67.15-.77.97-.94 1.17-.35.22-.65.07c-.3-.15-1.27-.47-2.42-1.49-.89-.8-1.5-1.78-1.67-2.08s-.02-.46.13-.61c.13-.13.3-.35.45-.52s.2-.3.3-.5.05-.37-.03-.52-.67-1.62-.92-2.22c-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37s-1.04 1.02-1.04 2.48 1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.1 4.49.71.31 1.27.49 1.7.62.72.23 1.37.2 1.88.12.57-.09 1.77-.72 2.02-1.42s.25-1.3.17-1.42c-.07-.12-.27-.2-.57-.35z" fill="#fff"/>
-                            </svg>
-                            Enviar solicitud por WhatsApp
-                          </a>
+
+                        {tieneDeposito ? (
+                          <>
+                            <div style={{
+                              borderRadius: 8, padding: '10px 12px', marginBottom: 10, fontSize: 12, lineHeight: 1.55,
+                              background: aplicaReembolso ? 'rgba(74,222,128,0.05)' : 'rgba(251,191,36,0.05)',
+                              border: `1px solid ${aplicaReembolso ? 'rgba(74,222,128,0.2)' : 'rgba(251,191,36,0.2)'}`,
+                              color: aplicaReembolso ? '#4ade80' : '#fbbf24',
+                            }}>
+                              {aplicaReembolso ? (
+                                <>
+                                  <strong>Aplica reembolso</strong> — cancelás con {horasAnticipacion}h de anticipación (mínimo: {horasLimite}h).<br/>
+                                  Te corresponde el depósito ({pctDeposito}% del total).
+                                </>
+                              ) : (
+                                <>
+                                  <strong>Fuera del plazo</strong> — cancelás con {horasAnticipacion}h de anticipación (mínimo: {horasLimite}h).<br/>
+                                  La barbería retiene el {pctRetencion}% del depósito ({pctDeposito}% del total).
+                                </>
+                              )}
+                            </div>
+                            {waNum && (
+                              <a
+                                href={`https://wa.me/${waNum}?text=${encodeURIComponent(mensajeWA)}`}
+                                target="_blank" rel="noopener noreferrer"
+                                style={{
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                                  padding: '9px 14px', borderRadius: 9,
+                                  background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.25)',
+                                  color: '#25D366', fontSize: 12, fontWeight: 700, textDecoration: 'none',
+                                }}
+                              >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                                  <path d="M20.52 3.48A11.93 11.93 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.18-1.57A11.96 11.96 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.22-3.48-8.52z" fill="#25D366"/>
+                                  <path d="M17.5 14.4c-.3-.15-1.77-.87-2.04-.97s-.47-.15-.67.15-.77.97-.94 1.17-.35.22-.65.07c-.3-.15-1.27-.47-2.42-1.49-.89-.8-1.5-1.78-1.67-2.08s-.02-.46.13-.61c.13-.13.3-.35.45-.52s.2-.3.3-.5.05-.37-.03-.52-.67-1.62-.92-2.22c-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37s-1.04 1.02-1.04 2.48 1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.1 4.49.71.31 1.27.49 1.7.62.72.23 1.37.2 1.88.12.57-.09 1.77-.72 2.02-1.42s.25-1.3.17-1.42c-.07-.12-.27-.2-.57-.35z" fill="#fff"/>
+                                </svg>
+                                Enviar solicitud por WhatsApp
+                              </a>
+                            )}
+                          </>
+                        ) : (
+                          <p style={{
+                            fontSize: 12, color: 'var(--text-muted)', margin: 0,
+                            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+                            borderRadius: 8, padding: '10px 12px',
+                          }}>
+                            Esta cita es en efectivo — no hay depósito previo que reembolsar. Podés cancelarla desde el panel de cancelación.
+                          </p>
                         )}
                       </div>
                     );
