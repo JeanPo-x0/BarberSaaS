@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { sincronizarSuscripcion, forzarSyncSuscripcion } from '../services/api';
+import { sincronizarSuscripcion, forzarSyncSuscripcion, getEstadoSuscripcion } from '../services/api';
 
 const CHECK_ANIM = `
 @keyframes draw-circle {
@@ -55,15 +55,26 @@ export default function SuscripcionExito() {
     sincronizado.current = true;
     const session_id = params.get('session_id');
     const sync = async () => {
-      // Intentar sincronizar hasta 3 veces con delay (cubre cold start de Render ~30s)
+      // 1. Forzar sync con Stripe
       for (let i = 0; i < 3; i++) {
         try {
           if (session_id) await sincronizarSuscripcion(session_id);
           await forzarSyncSuscripcion();
           break;
         } catch {
-          if (i < 2) await new Promise(r => setTimeout(r, 5000));
+          if (i < 2) await new Promise(r => setTimeout(r, 4000));
         }
+      }
+      // 2. Polling: esperar hasta que el estado local confirme "activa" (máx 40s)
+      const deadline = Date.now() + 40000;
+      while (Date.now() < deadline) {
+        try {
+          const res = await getEstadoSuscripcion();
+          if (res.data.estado === 'activa') break;
+          // Reintentar sync mientras siga en trial
+          await forzarSyncSuscripcion().catch(() => {});
+        } catch {}
+        await new Promise(r => setTimeout(r, 4000));
       }
       setSincronizando(false);
     };
