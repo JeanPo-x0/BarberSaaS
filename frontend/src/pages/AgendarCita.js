@@ -942,24 +942,24 @@ function AgendarCita() {
                 {serviciosIds.length > 0 && (
                   <div style={{
                     marginTop: 16,
-                    borderTop: '1px solid rgba(255,255,255,0.06)',
-                    paddingTop: 14,
+                    background: 'linear-gradient(135deg, rgba(201,168,76,0.15) 0%, rgba(201,168,76,0.05) 100%)',
+                    border: '1px solid rgba(201,168,76,0.4)',
+                    borderLeft: '3px solid #C9A84C',
+                    borderRadius: 12,
+                    padding: '14px 16px',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   }}>
                     <div>
-                      <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)', margin: '0 0 3px' }}>
+                      <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#C9A84C', margin: '0 0 4px' }}>
                         Total a pagar
                       </p>
-                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
                         {serviciosIds.length} servicio{serviciosIds.length > 1 ? 's' : ''} · {totalDuracion} min
                       </p>
                     </div>
                     <span style={{
-                      fontFamily: "'Bebas Neue'", fontSize: 28, letterSpacing: '0.05em',
-                      color: '#C9A84C',
-                      background: 'rgba(201,168,76,0.08)',
-                      border: '1px solid rgba(201,168,76,0.25)',
-                      borderRadius: 10, padding: '4px 14px',
+                      fontFamily: "'Bebas Neue'", fontSize: 30, letterSpacing: '0.05em',
+                      color: '#fff',
                     }}>
                       ₡{totalPrecio.toLocaleString()}
                     </span>
