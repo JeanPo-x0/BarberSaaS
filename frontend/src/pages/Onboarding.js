@@ -40,6 +40,7 @@ export default function Onboarding() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [linkGenerado, setLinkGenerado] = useState('');
   const [tcAceptado, setTcAceptado] = useState(false);
+  const [verificacionPendiente, setVerificacionPendiente] = useState(false);
   const [form, setForm] = useState({
     email: '', password: '',
     nombre_barberia: '', direccion: '', telefono: '',
@@ -92,7 +93,9 @@ export default function Onboarding() {
         const msg = Array.isArray(detail) ? detail.map(e => e.msg || JSON.stringify(e)).join(', ') : 'Datos invalidos.';
         setError(msg);
       } else if (typeof detail === 'string') {
-        if (detail.toLowerCase().includes('ya esta registrado') || detail.toLowerCase().includes('already')) {
+        if (detail === 'EMAIL_NO_VERIFICADO') {
+          setVerificacionPendiente(true);
+        } else if (detail.toLowerCase().includes('ya esta registrado') || detail.toLowerCase().includes('already')) {
           setError('Este email ya esta registrado. Inicia sesion o usa otro email.');
         } else {
           setError(detail);
@@ -370,12 +373,22 @@ export default function Onboarding() {
                   inputMode="numeric"
                 />
               </div>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0', lineHeight: 1.6 }}>
-                {anual
-                  ? <>Al continuar serás redirigido a Stripe para completar el pago de <strong style={{ color: '#C9A84C' }}>${form.plan === 'premium' ? '472' : '232'}/año</strong>. El acceso se activa de inmediato.</>
-                  : <>Al continuar te pediremos una tarjeta para activar los <strong style={{ color: '#C9A84C' }}>14 días gratis</strong>. No se realiza ningún cobro hasta que termine el trial. Cancelá antes sin costo.</>
-                }
-              </p>
+              <div style={{
+                background: anual ? 'rgba(201,168,76,0.06)' : 'rgba(74,222,128,0.06)',
+                border: `1px solid ${anual ? 'rgba(201,168,76,0.2)' : 'rgba(74,222,128,0.2)'}`,
+                borderRadius: 10, padding: '12px 14px',
+                display: 'flex', alignItems: 'flex-start', gap: 10,
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={anual ? '#C9A84C' : '#4ade80'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <p style={{ fontSize: 12, color: anual ? '#C9A84C' : '#4ade80', margin: 0, lineHeight: 1.7, opacity: 0.9 }}>
+                  {anual
+                    ? <>Serás redirigido a Stripe para completar el pago de <strong>${form.plan === 'premium' ? '472' : '232'}/año</strong>. El acceso se activa de inmediato.</>
+                    : <>Te pediremos una tarjeta para activar los <strong>14 días gratis</strong>. No se realiza ningún cobro hasta que termine el trial. Cancelá antes sin costo.</>
+                  }
+                </p>
+              </div>
               <button onClick={handleBarberia} disabled={cargando} className="btn-gold"
                 style={{ width: '100%', opacity: cargando ? 0.7 : 1 }}>
                 {cargando ? 'Creando tu barberia...' : 'Crear mi barberia'}
@@ -385,6 +398,38 @@ export default function Onboarding() {
                 fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans'",
               }}>
                 Atras
+              </button>
+            </div>
+          )}
+
+          {/* Verificación de email pendiente */}
+          {verificacionPendiente && (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: '50%',
+                background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 20px',
+              }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              </div>
+              <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 26, letterSpacing: '0.06em', color: '#F5F5F5', margin: '0 0 10px 0' }}>
+                Verificá tu email
+              </h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: '0 0 6px 0', lineHeight: 1.7 }}>
+                Tu cuenta fue creada. Te enviamos un email a
+              </p>
+              <p style={{ color: '#C9A84C', fontSize: 14, fontWeight: 700, margin: '0 0 20px 0' }}>
+                {form.email}
+              </p>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '0 0 24px 0', lineHeight: 1.7 }}>
+                Hacé clic en el enlace del email para activar tu cuenta y luego iniciá sesión para completar el proceso.
+              </p>
+              <button onClick={() => navigate('/login')} className="btn-gold" style={{ width: '100%' }}>
+                Ir al login
               </button>
             </div>
           )}
