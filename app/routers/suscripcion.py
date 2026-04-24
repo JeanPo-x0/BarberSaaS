@@ -134,12 +134,16 @@ def forzar_sincronizacion(
         if not sus or not sus.stripe_customer_id:
             raise HTTPException(status_code=400, detail="No hay customer de Stripe registrado")
 
-        subs = stripe_lib.Subscription.list(customer=sus.stripe_customer_id, limit=10)
-        if not subs.data:
-            raise HTTPException(status_code=400, detail="No se encontraron suscripciones en Stripe para este cliente")
-
-        sub_raw = next((s for s in subs.data if s["status"] in ("active", "trialing")), subs.data[0])
-        sub = stripe_lib.Subscription.retrieve(sub_raw["id"], expand=["items.data.price"])
+        # Intentar con sub_id guardado primero; si no, listar
+        if sus.stripe_subscription_id:
+            sub = stripe_lib.Subscription.retrieve(sus.stripe_subscription_id, expand=["items.data.price"])
+        else:
+            result = stripe_lib.Subscription.list(customer=sus.stripe_customer_id, limit=10)
+            data = result["data"] if isinstance(result, dict) else list(result.auto_paging_iter())
+            if not data:
+                raise HTTPException(status_code=400, detail="No se encontraron suscripciones en Stripe")
+            sub_raw = next((s for s in data if s["status"] in ("active", "trialing")), data[0])
+            sub = stripe_lib.Subscription.retrieve(sub_raw["id"], expand=["items.data.price"])
 
         meta = sub.get("metadata") or {}
         plan = meta.get("plan", "pro")
