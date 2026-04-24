@@ -1476,7 +1476,7 @@ function AgendarCita() {
                                   setCancelando(c.id);
                                   try {
                                     const r = await cancelarCitaCliente(c.id, { telefono: telCancelar });
-                                    setCanceladaInfo({ fecha: fechaStr, hora: horaStr, pagado: r.data.estado_pago === 'confirmado' });
+                                    setCanceladaInfo({ fecha: fechaStr, hora: horaStr, pagado: r.data.estado_pago === 'confirmado', fechaHora: c.fecha_hora });
                                   } catch (err) {
                                     alert(err.response?.data?.detail || 'Error al cancelar');
                                   } finally {
@@ -1503,8 +1503,26 @@ function AgendarCita() {
                     </div>
                   )}
                 </>
-              ) : (
-                /* ── Estado: cita cancelada ── */
+              ) : (() => {
+                /* ── Estado: cita cancelada — calcular si aplica reembolso ── */
+                const horasLimite = configPagos?.cancelacion_horas_minimo || 24;
+                const pctDeposito = configPagos?.deposito_porcentaje || 0;
+                const horasAnticipacion = canceladaInfo.fechaHora
+                  ? Math.floor((new Date(canceladaInfo.fechaHora) - new Date()) / 3600000)
+                  : null;
+                const aplicaReembolso = horasAnticipacion !== null && horasAnticipacion >= horasLimite;
+                const waNum = (barberia?.telefono || '').replace(/\D/g, '');
+
+                let mensajeWA;
+                if (aplicaReembolso) {
+                  mensajeWA = `Hola ${barberia?.nombre || ''}, cancelé mi cita del ${canceladaInfo.fecha} a las ${canceladaInfo.hora}.\n\nLa cancelé con *${horasAnticipacion} horas de anticipación*, que supera el límite mínimo de ${horasLimite} horas establecido. Por lo tanto, solicito el reembolso del depósito (${pctDeposito}%) según su política. ¿Pueden coordinarlo? Gracias.`;
+                } else if (horasAnticipacion !== null) {
+                  mensajeWA = `Hola ${barberia?.nombre || ''}, cancelé mi cita del ${canceladaInfo.fecha} a las ${canceladaInfo.hora}.\n\nEntiendo que la cancelé con *${horasAnticipacion} horas de anticipación* (menos de las ${horasLimite} horas requeridas), por lo que puede no aplicar reembolso según su política. Igualmente quisiera consultarlo. Gracias.`;
+                } else {
+                  mensajeWA = `Hola ${barberia?.nombre || ''}, cancelé mi cita del ${canceladaInfo.fecha} a las ${canceladaInfo.hora} y quisiera consultar sobre el reembolso de mi depósito.`;
+                }
+
+                return (
                 <div style={{ textAlign: 'center', padding: '8px 0' }}>
                   <div style={{
                     width: 48, height: 48, borderRadius: '50%', margin: '0 auto 14px',
@@ -1515,28 +1533,30 @@ function AgendarCita() {
                       <path d="M5 12l5 5L20 7" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 4px 0' }}>
-                    Cita cancelada
-                  </p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 4px 0' }}>Cita cancelada</p>
                   <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 16px 0' }}>
                     {canceladaInfo.fecha} a las {canceladaInfo.hora}
                   </p>
 
-                  {canceladaInfo.pagado && barberia?.telefono && (
+                  {canceladaInfo.pagado && waNum && (
                     <div style={{
-                      background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)',
                       borderRadius: 12, padding: '14px 16px', marginBottom: 14, textAlign: 'left',
+                      background: aplicaReembolso ? 'rgba(74,222,128,0.05)' : 'rgba(251,191,36,0.05)',
+                      border: `1px solid ${aplicaReembolso ? 'rgba(74,222,128,0.2)' : 'rgba(251,191,36,0.2)'}`,
                     }}>
-                      <p style={{ fontSize: 12, fontWeight: 700, color: '#fbbf24', margin: '0 0 6px 0' }}>
-                        Tenías un depósito confirmado
+                      <p style={{ fontSize: 12, fontWeight: 700, color: aplicaReembolso ? '#4ade80' : '#fbbf24', margin: '0 0 4px 0' }}>
+                        {aplicaReembolso ? '✓ Tenés derecho a reembolso' : '⚠ Puede no aplicar reembolso'}
                       </p>
                       <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px 0', lineHeight: 1.6 }}>
-                        Para coordinar el reembolso de tu depósito, contactá directamente a la barbería por WhatsApp.
+                        {horasAnticipacion !== null
+                          ? aplicaReembolso
+                            ? `Cancelaste con ${horasAnticipacion}h de anticipación (mínimo requerido: ${horasLimite}h). Según la política, podés reclamar el depósito.`
+                            : `Cancelaste con ${horasAnticipacion}h de anticipación (mínimo requerido: ${horasLimite}h). La barbería definirá si aplica reembolso.`
+                          : 'Contactá a la barbería para coordinar el reembolso de tu depósito.'}
                       </p>
                       <a
-                        href={`https://wa.me/${(barberia.telefono || '').replace(/\D/g,'')}?text=${encodeURIComponent(`Hola, cancelé mi cita del ${canceladaInfo.fecha} a las ${canceladaInfo.hora} y quisiera coordinar el reembolso de mi depósito.`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={`https://wa.me/${waNum}?text=${encodeURIComponent(mensajeWA)}`}
+                        target="_blank" rel="noopener noreferrer"
                         style={{
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                           padding: '10px', borderRadius: 10,
@@ -1548,7 +1568,7 @@ function AgendarCita() {
                           <path d="M20.52 3.48A11.93 11.93 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.18-1.57A11.96 11.96 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.22-3.48-8.52z" fill="#25D366"/>
                           <path d="M17.5 14.4c-.3-.15-1.77-.87-2.04-.97s-.47-.15-.67.15-.77.97-.94 1.17-.35.22-.65.07c-.3-.15-1.27-.47-2.42-1.49-.89-.8-1.5-1.78-1.67-2.08s-.02-.46.13-.61c.13-.13.3-.35.45-.52s.2-.3.3-.5.05-.37-.03-.52-.67-1.62-.92-2.22c-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37s-1.04 1.02-1.04 2.48 1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.1 4.49.71.31 1.27.49 1.7.62.72.23 1.37.2 1.88.12.57-.09 1.77-.72 2.02-1.42s.25-1.3.17-1.42c-.07-.12-.27-.2-.57-.35z" fill="#fff"/>
                         </svg>
-                        Solicitar reembolso por WhatsApp
+                        Enviar solicitud por WhatsApp
                       </a>
                     </div>
                   )}
@@ -1558,7 +1578,8 @@ function AgendarCita() {
                     Cerrar
                   </button>
                 </div>
-              )}
+                );
+              })()}
             </div>
           )}
         </div>
