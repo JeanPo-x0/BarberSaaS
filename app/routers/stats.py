@@ -35,7 +35,7 @@ def _verificar_plan(usuario: Usuario, db: Session):
     sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia.id).first()
     plan = sus.plan if sus else barberia.plan
     estado = sus.estado if sus else "trial"
-    if plan not in PLANES_CON_DASHBOARD and estado not in ("activa", "trial"):
+    if plan not in PLANES_CON_DASHBOARD or estado not in ("activa", "trial", "cancelacion_pendiente"):
         raise HTTPException(status_code=403, detail="Esta funcion requiere plan Pro o Premium")
     return barberia
 

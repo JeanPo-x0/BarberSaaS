@@ -311,11 +311,14 @@ function PanelDueno() {
   };
 
   const LIMITE_PLAN = { basico: 1, pro: 3, premium: null };
+  const LIMITE_BARBEROS_PLAN = { basico: 1, pro: 3, premium: null };
   const plan = suscripcion?.plan || 'basico';
   const estadoSus = suscripcion?.estado || 'trial';
   const suspendida = estadoSus === 'suspendida' || estadoSus === 'cancelada';
   const limiteBarberias = LIMITE_PLAN[plan];
   const puedeAgregarBarberia = limiteBarberias === null || barberias.length < limiteBarberias;
+  const limiteBarberos = LIMITE_BARBEROS_PLAN[plan];
+  const puedeAgregarBarbero = limiteBarberos === null || barberos.length < limiteBarberos;
 
   const sectionCard = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '24px' };
 
@@ -408,9 +411,22 @@ function PanelDueno() {
         {tab === 'barberos' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={sectionCard}>
-              <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.06em', margin: '0 0 16px 0' }}>
-                Agregar barbero
-              </h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.06em', margin: 0 }}>
+                  Agregar barbero
+                </h2>
+                {limiteBarberos !== null && (
+                  <span style={{ fontSize: 12, color: puedeAgregarBarbero ? 'var(--text-muted)' : '#E63946', fontWeight: 600 }}>
+                    {barberos.length}/{limiteBarberos} barberos
+                  </span>
+                )}
+              </div>
+              {!puedeAgregarBarbero ? (
+                <div style={{ background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.2)', borderRadius: 10, padding: '12px 16px', fontSize: 13, color: '#E63946', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Límite de {limiteBarberos} barbero(s) alcanzado para tu plan {plan}.</span>
+                  <button onClick={() => navigate('/planes')} style={{ background: 'none', border: 'none', color: '#C9A84C', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans'" }}>Mejorar plan</button>
+                </div>
+              ) : (
               <form onSubmit={handleCrearBarbero} className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <input value={nomBarbero} onChange={e => setNomBarbero(e.target.value)} placeholder="Nombre *" required
                   className="input-dark" style={{ gridColumn: '1 / -1' }} />
@@ -435,6 +451,7 @@ function PanelDueno() {
                   Agregar barbero
                 </button>
               </form>
+              )}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

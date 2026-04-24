@@ -15,6 +15,8 @@ from typing import List
 import hashlib, secrets
 from datetime import datetime, timedelta
 
+LIMITE_BARBEROS_PLAN = {"basico": 1, "pro": 3, "premium": None}
+
 router = APIRouter(prefix="/barberos", tags=["Barberos"])
 
 @router.post("/", response_model=BarberoResponse)
@@ -24,6 +26,7 @@ def crear_barbero(
     db: Session = Depends(get_db),
 ):
     from app.models.barberia import Barberia
+    from app.models.suscripcion import Suscripcion
     barberia = db.query(Barberia).filter(
         Barberia.id == barbero.barberia_id,
         Barberia.dueno_id == usuario.id,
@@ -35,6 +38,13 @@ def crear_barbero(
         ).first()
     if not barberia:
         raise HTTPException(status_code=403, detail="No tienes permiso sobre esa barberia")
+    sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia.id).first()
+    plan = sus.plan if sus else "basico"
+    limite = LIMITE_BARBEROS_PLAN.get(plan, 1)
+    if limite is not None:
+        count = db.query(Barbero).filter(Barbero.barberia_id == barberia.id).count()
+        if count >= limite:
+            raise HTTPException(status_code=403, detail=f"Tu plan {plan} permite hasta {limite} barbero(s). Mejora tu plan para agregar mas.")
     datos = barbero.model_dump()
     if datos.get('telefono'):
         datos['telefono'] = formatear_telefono(datos['telefono'])
