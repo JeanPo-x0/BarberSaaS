@@ -68,7 +68,8 @@ def consultar_citas_cliente(request: Request, data: ConsultaCitasRequest, db: Se
     if not cliente:
         return []
 
-    ahora = datetime.utcnow()
+    # Las fechas se guardan en hora CR (UTC-6). Usar hora CR para el filtro.
+    ahora_cr = datetime.utcnow() - timedelta(hours=6)
     rows = (
         db.query(Cita, Barbero, Servicio)
         .join(Barbero, Barbero.id == Cita.barbero_id)
@@ -76,7 +77,7 @@ def consultar_citas_cliente(request: Request, data: ConsultaCitasRequest, db: Se
         .filter(
             Cita.cliente_id == cliente.id,
             Cita.estado == "pendiente",
-            Cita.fecha_hora > ahora - timedelta(hours=6),
+            Cita.fecha_hora > ahora_cr - timedelta(hours=6),
         )
         .order_by(Cita.fecha_hora.asc())
         .limit(5)

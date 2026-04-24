@@ -99,8 +99,8 @@ def crear_cita(request: Request, cita: CitaCreate, db: Session = Depends(get_db)
         barberia_obj = db.query(Barberia).filter(Barberia.id == barberia_id).first()
         barberia_nombre = barberia_obj.nombre if barberia_obj else "tu barbería"
         link_ag = (
-            f"{settings.FRONTEND_URL}/b/{barberia_obj.slug}"
-            if barberia_obj and getattr(barberia_obj, "slug", None)
+            f"{settings.FRONTEND_URL}/b/{barberia_obj.subdominio}"
+            if barberia_obj and getattr(barberia_obj, "subdominio", None)
             else f"{settings.FRONTEND_URL}/agendar/{barberia_id}"
         )
         fecha_hora_str = nueva.fecha_hora.strftime("%d/%m/%y a las %H:%M")

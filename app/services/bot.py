@@ -395,8 +395,8 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -
                     barberia_obj = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first()
                     if barberia_obj:
                         link_ag = (
-                            f"{settings.FRONTEND_URL}/b/{barberia_obj.slug}"
-                            if barberia_obj.slug
+                            f"{settings.FRONTEND_URL}/b/{barberia_obj.subdominio}"
+                            if getattr(barberia_obj, "subdominio", None)
                             else f"{settings.FRONTEND_URL}/agendar/{barberia_obj.id}"
                         )
 
