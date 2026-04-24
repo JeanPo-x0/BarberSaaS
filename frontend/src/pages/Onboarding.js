@@ -94,6 +94,7 @@ export default function Onboarding() {
         setError(msg);
       } else if (typeof detail === 'string') {
         if (detail === 'EMAIL_NO_VERIFICADO' || detail === 'Datos de registro invalidos') {
+          localStorage.setItem('pendingCheckout', JSON.stringify({ plan: form.plan, periodo: anual ? 'anual' : 'mensual' }));
           setVerificacionPendiente(true);
         } else if (detail.toLowerCase().includes('ya esta registrado') || detail.toLowerCase().includes('already')) {
           setError('Este email ya esta registrado. Inicia sesion o usa otro email.');
