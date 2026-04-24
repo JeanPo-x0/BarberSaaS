@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { sincronizarSuscripcion } from '../services/api';
+import { sincronizarSuscripcion, forzarSyncSuscripcion } from '../services/api';
 
 const CHECK_ANIM = `
 @keyframes draw-circle {
@@ -48,14 +48,22 @@ export default function SuscripcionExito() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const sincronizado = useRef(false);
+  const [sincronizando, setSincronizando] = useState(true);
 
   useEffect(() => {
     if (sincronizado.current) return;
     sincronizado.current = true;
     const session_id = params.get('session_id');
-    if (session_id) {
-      sincronizarSuscripcion(session_id).catch(() => {});
-    }
+    const sync = async () => {
+      try {
+        if (session_id) await sincronizarSuscripcion(session_id);
+      } catch {}
+      try {
+        await forzarSyncSuscripcion();
+      } catch {}
+      setSincronizando(false);
+    };
+    sync();
   }, [params]);
 
   return (
@@ -71,23 +79,33 @@ export default function SuscripcionExito() {
       }}>
         <div style={{ height: 3, background: 'linear-gradient(90deg, transparent, #C9A84C 40%, #e8c96a 60%, transparent)' }} />
         <div style={{ padding: '40px 32px' }}>
-          <AnimatedCheck />
-          <h1 style={{
-            fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.06em',
-            color: '#C9A84C', margin: '0 0 12px',
-          }}>
-            Pago exitoso
-          </h1>
-          <p style={{ color: '#aaa', fontSize: 15, margin: '0 0 28px', lineHeight: 1.6 }}>
-            Tu suscripción quedó activada. Ya podés usar todas las funciones de tu plan.
-          </p>
-          <button
-            onClick={() => navigate('/panel')}
-            className="btn-gold"
-            style={{ padding: '13px 32px', fontSize: 15 }}
-          >
-            Ir al Panel →
-          </button>
+          {sincronizando ? (
+            <>
+              <div style={{ width: 56, height: 56, margin: '0 auto 20px', borderRadius: '50%', border: '3px solid rgba(201,168,76,0.2)', borderTop: '3px solid #C9A84C', animation: 'spin 0.8s linear infinite' }} />
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+              <p style={{ color: '#aaa', fontSize: 15 }}>Activando tu plan...</p>
+            </>
+          ) : (
+            <>
+              <AnimatedCheck />
+              <h1 style={{
+                fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.06em',
+                color: '#C9A84C', margin: '0 0 12px',
+              }}>
+                Pago exitoso
+              </h1>
+              <p style={{ color: '#aaa', fontSize: 15, margin: '0 0 28px', lineHeight: 1.6 }}>
+                Tu suscripción quedó activada. Ya podés usar todas las funciones de tu plan.
+              </p>
+              <button
+                onClick={() => navigate('/panel')}
+                className="btn-gold"
+                style={{ padding: '13px 32px', fontSize: 15 }}
+              >
+                Ir al Panel →
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
