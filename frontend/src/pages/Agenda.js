@@ -3,7 +3,7 @@ import {
   getMisCitas, cancelarCita, completarCita,
   getMisBarberos, getMisServicios,
   buscarOCrearCliente, crearCita, getDisponibilidad,
-  confirmarPago, rechazarPago,
+  confirmarPago, rechazarPago, marcarCobrado,
 } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -18,9 +18,10 @@ const ESTADO = {
 };
 
 const PAGO_BADGE = {
-  pendiente:   { bg: 'rgba(251,191,36,0.1)',  color: '#fbbf24', border: 'rgba(251,191,36,0.25)', label: 'Pago pendiente' },
+  pendiente:   { bg: 'rgba(251,191,36,0.1)',  color: '#fbbf24', border: 'rgba(251,191,36,0.25)', label: 'Comprobante pendiente' },
   confirmado:  { bg: 'rgba(74,222,128,0.08)', color: '#4ade80', border: 'rgba(74,222,128,0.2)',  label: 'Pago confirmado' },
   rechazado:   { bg: 'rgba(230,57,70,0.08)',  color: '#E63946', border: 'rgba(230,57,70,0.2)',   label: 'Pago rechazado' },
+  por_cobrar:  { bg: 'rgba(96,165,250,0.08)', color: '#60a5fa', border: 'rgba(96,165,250,0.2)',  label: 'Cobro en efectivo' },
 };
 
 function fmt(fecha_hora) {
@@ -60,12 +61,13 @@ function SkeletonCard() {
 }
 
 /* ── Cita card ───────────────────────────────────────── */
-function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPago }) {
+function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPago, onMarcarCobrado }) {
   const est = ESTADO[cita.estado] || ESTADO.pendiente;
   const { hora, fecha } = fmt(cita.fecha_hora);
   const esPendiente = cita.estado === 'pendiente';
   const pagoBadge = PAGO_BADGE[cita.estado_pago];
   const pagoAcciones = cita.estado_pago === 'pendiente';
+  const esEfectivoPendiente = cita.estado_pago === 'por_cobrar' && cita.estado === 'pendiente';
 
   return (
     <div className="anim-item agenda-cita-card" style={{
@@ -158,7 +160,7 @@ function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPa
         </div>
 
         {/* Acciones — solo desktop (se esconden en mobile con CSS) */}
-        {(esPendiente || pagoAcciones) && (
+        {(esPendiente || pagoAcciones || esEfectivoPendiente) && (
           <div className="agenda-card-actions-desktop" style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
             {pagoAcciones && (
               <>
@@ -173,7 +175,7 @@ function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPa
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.2)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.1)'}
                 >
-                  ✓ Pago recibido
+                  ✓ Comprobante OK
                 </button>
                 <button
                   onClick={() => onRechazarPago(cita.id)}
@@ -186,11 +188,26 @@ function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPa
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,57,70,0.18)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'rgba(230,57,70,0.08)'}
                 >
-                  Rechazar pago
+                  Rechazar
                 </button>
               </>
             )}
-            {esPendiente && !pagoAcciones && (
+            {esEfectivoPendiente && (
+              <button
+                onClick={() => onMarcarCobrado(cita.id)}
+                style={{
+                  padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: "'DM Sans'",
+                  background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.3)',
+                  color: '#60a5fa', transition: 'background 0.15s', whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(96,165,250,0.2)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(96,165,250,0.1)'}
+              >
+                💵 Cobrado
+              </button>
+            )}
+            {esPendiente && !pagoAcciones && !esEfectivoPendiente && (
               <>
                 <button
                   onClick={() => onCompletar(cita.id)}
@@ -225,7 +242,7 @@ function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPa
       </div>
 
       {/* Acciones mobile — fila separada, ancho completo */}
-      {(esPendiente || pagoAcciones) && (
+      {(esPendiente || pagoAcciones || esEfectivoPendiente) && (
         <div className="agenda-card-actions-mobile" style={{
           display: 'none',
           borderTop: '1px solid var(--border)',
@@ -243,7 +260,7 @@ function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPa
                   color: '#fbbf24',
                 }}
               >
-                ✓ Pago recibido
+                ✓ Comprobante OK
               </button>
               <button
                 onClick={() => onRechazarPago(cita.id)}
@@ -257,6 +274,18 @@ function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPa
                 Rechazar
               </button>
             </>
+          ) : esEfectivoPendiente ? (
+            <button
+              onClick={() => onMarcarCobrado(cita.id)}
+              style={{
+                flex: 1, padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                cursor: 'pointer', fontFamily: "'DM Sans'",
+                background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.3)',
+                color: '#60a5fa',
+              }}
+            >
+              💵 Cobrado
+            </button>
           ) : (
             <>
               <button
@@ -290,7 +319,7 @@ function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPa
 }
 
 /* ── Seccion con label ───────────────────────────────── */
-function Seccion({ label, citas, onCancelar, onCompletar, onConfirmarPago, onRechazarPago }) {
+function Seccion({ label, citas, onCancelar, onCompletar, onConfirmarPago, onRechazarPago, onMarcarCobrado }) {
   if (citas.length === 0) return null;
   return (
     <div style={{ marginBottom: 24 }}>
@@ -304,7 +333,7 @@ function Seccion({ label, citas, onCancelar, onCompletar, onConfirmarPago, onRec
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {citas.map(c => (
           <CitaCard key={c.id} cita={c} onCancelar={onCancelar} onCompletar={onCompletar}
-            onConfirmarPago={onConfirmarPago} onRechazarPago={onRechazarPago} />
+            onConfirmarPago={onConfirmarPago} onRechazarPago={onRechazarPago} onMarcarCobrado={onMarcarCobrado} />
         ))}
       </div>
     </div>
@@ -378,6 +407,13 @@ function Agenda() {
     if (!window.confirm('Rechazar el pago y cancelar esta cita?')) return;
     await rechazarPago(id);
     cargarCitas();
+  };
+
+  const handleMarcarCobrado = async (id) => {
+    await marcarCobrado(id);
+    cargarCitas();
+    setToastMsg('Efectivo cobrado registrado.');
+    setTimeout(() => setToastMsg(''), 3000);
   };
 
   const handleCrearCita = async (e) => {
@@ -692,9 +728,9 @@ function Agenda() {
           </div>
         ) : (
           <>
-            <Seccion label="Hoy"    citas={hoy}     onCancelar={handleCancelar} onCompletar={handleCompletar} onConfirmarPago={handleConfirmarPago} onRechazarPago={handleRechazarPago} />
-            <Seccion label="Mañana" citas={manana}   onCancelar={handleCancelar} onCompletar={handleCompletar} onConfirmarPago={handleConfirmarPago} onRechazarPago={handleRechazarPago} />
-            <Seccion label="Proximas" citas={futuras} onCancelar={handleCancelar} onCompletar={handleCompletar} onConfirmarPago={handleConfirmarPago} onRechazarPago={handleRechazarPago} />
+            <Seccion label="Hoy"    citas={hoy}     onCancelar={handleCancelar} onCompletar={handleCompletar} onConfirmarPago={handleConfirmarPago} onRechazarPago={handleRechazarPago} onMarcarCobrado={handleMarcarCobrado} />
+            <Seccion label="Mañana" citas={manana}   onCancelar={handleCancelar} onCompletar={handleCompletar} onConfirmarPago={handleConfirmarPago} onRechazarPago={handleRechazarPago} onMarcarCobrado={handleMarcarCobrado} />
+            <Seccion label="Proximas" citas={futuras} onCancelar={handleCancelar} onCompletar={handleCompletar} onConfirmarPago={handleConfirmarPago} onRechazarPago={handleRechazarPago} onMarcarCobrado={handleMarcarCobrado} />
           </>
         )}
       </div>

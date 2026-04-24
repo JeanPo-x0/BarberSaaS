@@ -56,9 +56,12 @@ def crear_cita(request: Request, cita: CitaCreate, db: Session = Depends(get_db)
     ).first()
 
     metodo = cita.metodo_pago
-    estado_pago = "exento"
-    if config_pagos and config_pagos.deposito_requerido and metodo in ("sinpe", "efectivo"):
+    if metodo == "efectivo":
+        estado_pago = "por_cobrar"
+    elif metodo == "sinpe" and config_pagos and config_pagos.deposito_requerido:
         estado_pago = "pendiente"
+    else:
+        estado_pago = "exento"
 
     datos = cita.model_dump()
     datos["estado_pago"] = estado_pago
@@ -307,6 +310,20 @@ def rechazar_pago(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), 
             notificar_pago_rechazado(telefono=cliente.telefono, nombre=cliente.nombre)
     except Exception as e:
         print(f"[WhatsApp] ERROR rechazar pago: {e}")
+    return cita
+
+
+@router.patch("/{cita_id}/marcar-cobrado", response_model=CitaResponse)
+def marcar_cobrado(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
+    cita = db.query(Cita).filter(Cita.id == cita_id).first()
+    if not cita:
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+    barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
+    if not barbero or barbero.barberia_id != usuario.barberia_id:
+        raise HTTPException(status_code=403, detail="No tienes permiso sobre esta cita")
+    cita.estado_pago = "confirmado"
+    db.commit()
+    db.refresh(cita)
     return cita
 
 

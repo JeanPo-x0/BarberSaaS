@@ -147,7 +147,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     data = evento["data"]["object"]
 
     # Suscripción activada (trial o pago exitoso)
-    if tipo == "customer.subscription.updated":
+    if tipo in ("customer.subscription.created", "customer.subscription.updated"):
         sub_id = data["id"]
         status = data["status"]
         barberia_id = int(data.get("metadata", {}).get("barberia_id", 0))

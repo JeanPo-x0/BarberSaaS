@@ -45,6 +45,10 @@ def buscar_o_crear_cliente(request: Request, cliente: ClienteCreate, db: Session
     telefono_normalizado = formatear_telefono(cliente.telefono)
     existente = db.query(Cliente).filter(Cliente.telefono == telefono_normalizado).first()
     if existente:
+        if cliente.nombre and cliente.nombre.strip() and cliente.nombre.strip() != existente.nombre:
+            existente.nombre = cliente.nombre.strip()
+            db.commit()
+            db.refresh(existente)
         return existente
     datos = cliente.model_dump()
     datos['telefono'] = telefono_normalizado
