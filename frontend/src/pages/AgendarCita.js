@@ -250,7 +250,7 @@ function AgendarCita() {
       setError('Seleccioná un método de pago para continuar.');
       return;
     }
-    if (metodoPago === 'sinpe' && configPagos?.deposito_requerido && !comprobante) {
+    if (metodoPago === 'sinpe' && configPagos?.sinpe_numero && !comprobante) {
       setError('Debés subir el comprobante de SINPE para confirmar la cita.');
       return;
     }

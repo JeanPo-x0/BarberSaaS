@@ -68,7 +68,7 @@ def consultar_citas_cliente(request: Request, data: ConsultaCitasRequest, db: Se
     rows = (
         db.query(Cita, Barbero, Servicio)
         .join(Barbero, Barbero.id == Cita.barbero_id)
-        .join(Servicio, Servicio.id == Cita.servicio_id)
+        .outerjoin(Servicio, Servicio.id == Cita.servicio_id)
         .filter(
             Cita.cliente_id == cliente.id,
             Cita.estado == "pendiente",
@@ -83,7 +83,7 @@ def consultar_citas_cliente(request: Request, data: ConsultaCitasRequest, db: Se
             id=cita.id,
             fecha_hora=cita.fecha_hora,
             barbero_nombre=barbero.nombre,
-            servicio_nombre=servicio.nombre,
+            servicio_nombre=servicio.nombre if servicio else "Servicio",
             estado=cita.estado,
             estado_pago=cita.estado_pago,
         )

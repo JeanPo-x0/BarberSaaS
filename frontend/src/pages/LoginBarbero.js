@@ -27,8 +27,9 @@ function LoginBarbero() {
     setCargando(true);
     try {
       const res = await loginBarbero({ email: email.trim().toLowerCase(), password });
-      // El token llega en cookie HttpOnly — no se guarda en localStorage
-      // Solo guardamos info no sensible para el interceptor de 401
+      // Guardamos el token en localStorage para que DashboardBarbero pueda leer el payload
+      // El token también llega en cookie HttpOnly para las llamadas API (withCredentials)
+      localStorage.setItem('token', res.data.access_token);
       localStorage.setItem('usuario', JSON.stringify({ email: res.data.barbero.email, rol: 'barbero', nombre: res.data.barbero.nombre }));
       navigate('/barbero/agenda');
     } catch (err) {

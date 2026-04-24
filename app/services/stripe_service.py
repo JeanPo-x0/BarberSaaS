@@ -26,17 +26,19 @@ def crear_checkout_session(
     periodo: str,
     barberia_id: int,
     coupon: str = None,
+    es_nuevo: bool = True,
 ) -> str:
     price_id = PRECIOS[plan][periodo]
+    sub_data = {"metadata": {"barberia_id": str(barberia_id), "plan": plan}}
+    # Solo aplicar trial a registros nuevos; upgrades/cambios cobran de inmediato
+    if es_nuevo:
+        sub_data["trial_period_days"] = 14
     params = {
         "customer": customer_id,
         "payment_method_types": ["card"],
         "line_items": [{"price": price_id, "quantity": 1}],
         "mode": "subscription",
-        "subscription_data": {
-            "trial_period_days": 14,
-            "metadata": {"barberia_id": str(barberia_id), "plan": plan},
-        },
+        "subscription_data": sub_data,
         "success_url": f"{settings.FRONTEND_URL}/suscripcion/exito?session_id={{CHECKOUT_SESSION_ID}}",
         "cancel_url": f"{settings.FRONTEND_URL}/planes",
         "metadata": {"barberia_id": str(barberia_id), "plan": plan, "periodo": periodo},

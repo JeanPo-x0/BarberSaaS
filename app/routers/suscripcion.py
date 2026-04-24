@@ -60,9 +60,11 @@ def crear_checkout(
     sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia.id).first()
 
     # Crear cliente Stripe si no existe
+    es_nuevo = False
     if not sus or not sus.stripe_customer_id:
         customer_id = stripe_service.crear_cliente(barberia.email or usuario.email, barberia.nombre)
         if not sus:
+            es_nuevo = True
             sus = Suscripcion(
                 barberia_id=barberia.id,
                 plan="basico",
@@ -76,6 +78,9 @@ def crear_checkout(
             sus.stripe_customer_id = customer_id
         db.commit()
         db.refresh(sus)
+    # Ya tiene suscripción: no es cliente nuevo, no aplica trial
+    elif sus.estado in ("trial",):
+        es_nuevo = True  # aún en trial: mantiene los días restantes
 
     url = stripe_service.crear_checkout_session(
         customer_id=sus.stripe_customer_id,
@@ -83,6 +88,7 @@ def crear_checkout(
         periodo=datos.periodo,
         barberia_id=barberia.id,
         coupon=datos.coupon,
+        es_nuevo=es_nuevo,
     )
     return {"checkout_url": url}
 

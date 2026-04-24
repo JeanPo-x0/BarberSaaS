@@ -37,15 +37,24 @@ function ProtectedRoute({ children }) {
 function AppRoutes() {
   const [bloqueado, setBloqueado] = useState(false);
 
-  useEffect(() => {
-    wakeUpServer();
-    // Check geo directo desde el browser — sin pasar por el backend
-    // ipapi.co detecta la IP real del usuario (VPN incluida), 30k req/mes gratis
+  const checkGeo = () => {
     fetch('https://ipapi.co/country/', { signal: AbortSignal.timeout(5000) })
       .then(r => r.text())
       .then(country => { if (country.trim() !== 'CR') setBloqueado(true); })
-      .catch(() => {}); // fail open si la API no responde
-  }, []);
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    wakeUpServer();
+    checkGeo();
+
+    // Re-evaluar cuando el usuario vuelve al tab (ej: activó VPN y regresó)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') checkGeo();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (bloqueado) return <GeoBlock />;
 
