@@ -159,24 +159,6 @@ function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPa
           </div>
         </div>
 
-        {/* Comprobante SINPE — miniatura clicable */}
-        {pagoAcciones && cita.comprobante_url && (
-          <a href={cita.comprobante_url} target="_blank" rel="noopener noreferrer"
-            title="Ver comprobante completo"
-            style={{ flexShrink: 0, display: 'block' }}>
-            <img
-              src={cita.comprobante_url}
-              alt="Comprobante"
-              onError={e => { e.currentTarget.style.display = 'none'; }}
-              style={{
-                width: 54, height: 54, objectFit: 'cover',
-                borderRadius: 8, border: '1px solid rgba(251,191,36,0.4)',
-                cursor: 'pointer',
-              }}
-            />
-          </a>
-        )}
-
         {/* Acciones — solo desktop (se esconden en mobile con CSS) */}
         {(esPendiente || pagoAcciones || esEfectivoPendiente) && (
           <div className="agenda-card-actions-desktop" style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>

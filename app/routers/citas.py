@@ -430,7 +430,8 @@ async def subir_comprobante(request: Request, cita_id: int, file: UploadFile = F
     with open(dest, "wb") as f:
         f.write(data)
 
-    comprobante_url = f"{settings.BACKEND_URL}/comprobantes/{filename}"
+    backend_base = (os.getenv("RENDER_EXTERNAL_URL") or settings.BACKEND_URL).rstrip("/")
+    comprobante_url = f"{backend_base}/comprobantes/{filename}"
     cita.comprobante_url = comprobante_url
     cita.estado_pago = "pendiente"
     db.commit()
