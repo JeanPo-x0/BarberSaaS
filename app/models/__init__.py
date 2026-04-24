@@ -9,3 +9,4 @@ from app.models.conversacion_bot import ConversacionBot
 from app.models.suscripcion import Suscripcion
 from app.models.lista_espera import ListaEspera
 from app.models.bloqueo import BloqueoDisponibilidad
+from app.models.email_verification import EmailVerificationToken

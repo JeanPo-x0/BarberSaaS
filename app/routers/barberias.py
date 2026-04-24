@@ -14,6 +14,9 @@ import re
 class SubdominioUpdate(BaseModel):
     subdominio: str
 
+class TelefonoUpdate(BaseModel):
+    telefono: str
+
 router = APIRouter(prefix="/barberias", tags=["Barberias"])
 
 LIMITE_POR_PLAN = {"basico": 1, "pro": 3, "premium": None}  # None = ilimitado
@@ -174,6 +177,30 @@ def actualizar_maps_link(
     if not barberia:
         raise HTTPException(status_code=404, detail="Barberia no encontrada")
     barberia.maps_link = datos.maps_link
+    db.commit()
+    db.refresh(barberia)
+    return barberia
+
+
+@router.patch("/{barberia_id}/telefono", response_model=BarberiaResponse)
+def actualizar_telefono(
+    barberia_id: int,
+    datos: TelefonoUpdate,
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    barberia = db.query(Barberia).filter(
+        Barberia.id == barberia_id,
+        Barberia.dueno_id == usuario.id
+    ).first()
+    if not barberia:
+        barberia = db.query(Barberia).filter(
+            Barberia.id == barberia_id,
+            Barberia.id == usuario.barberia_id
+        ).first()
+    if not barberia:
+        raise HTTPException(status_code=404, detail="Barberia no encontrada")
+    barberia.telefono = datos.telefono
     db.commit()
     db.refresh(barberia)
     return barberia

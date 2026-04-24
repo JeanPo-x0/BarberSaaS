@@ -53,6 +53,7 @@ export const getBarberia = (id) => API.get(`/barberias/${id}`);
 export const actualizarSubdominio = (id, subdominio) => API.patch(`/barberias/${id}/subdominio`, { subdominio });
 export const eliminarSubdominio = (id) => API.delete(`/barberias/${id}/subdominio`);
 export const actualizarMapsLink = (id, maps_link) => API.patch(`/barberias/${id}/maps-link`, { maps_link });
+export const actualizarTelefonoBarberia = (id, telefono) => API.patch(`/barberias/${id}/telefono`, { telefono });
 export const getBarberiaBySlug = (slug) => API.get(`/barberias/slug/${slug}`);
 
 // Auth
@@ -64,6 +65,8 @@ export const onboarding = (data) => API.post('/auth/onboarding', data);
 export const recuperarPassword = (data) => API.post('/auth/recuperar-password', data);
 export const resetPassword = (data) => API.post('/auth/reset-password', data);
 export const cambiarPassword = (data) => API.patch('/auth/cambiar-password', data);
+export const verificarEmail = (token) => API.get(`/auth/verificar-email?token=${token}`);
+export const reenviarVerificacion = (data) => API.post('/auth/reenviar-verificacion', data);
 
 // Barberos
 export const getBarberos = () => API.get('/barberos/');

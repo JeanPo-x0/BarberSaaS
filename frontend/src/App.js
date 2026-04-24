@@ -22,6 +22,7 @@ import Privacidad from './pages/Privacidad';
 import Soporte from './pages/Soporte';
 import Cuenta from './pages/Cuenta';
 import NotFound from './pages/NotFound';
+import VerificarEmail from './pages/VerificarEmail';
 import ActivarBarbero from './pages/ActivarBarbero';
 import LoginBarbero from './pages/LoginBarbero';
 import DashboardBarbero from './pages/DashboardBarbero';
@@ -70,6 +71,7 @@ function AppRoutes() {
         <Route path="/agendar" element={<AgendarCita />} />
         <Route path="/agendar/:barberia_id" element={<AgendarCita />} />
         <Route path="/b/:slug" element={<AgendarCita />} />
+        <Route path="/verificar-email" element={<VerificarEmail />} />
         <Route path="/recuperar-password" element={<RecuperarPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/terminos" element={<Terminos />} />

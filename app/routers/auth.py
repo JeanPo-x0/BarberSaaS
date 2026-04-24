@@ -11,12 +11,13 @@ from app.models.usuario import Usuario
 from app.models.barberia import Barberia
 from app.models.suscripcion import Suscripcion
 from app.models.password_reset import PasswordResetToken
+from app.models.email_verification import EmailVerificationToken
 from app.schemas import UsuarioCreate, UsuarioResponse, LoginRequest, TokenResponse, OnboardingCreate
 from app.core.security import hash_password, verify_password, crear_token, crear_refresh_token, verificar_token
 import re as _re
 from app.core.config import settings
 from app.core.deps import get_usuario_actual
-from app.services.email import enviar_reset_password, enviar_bienvenida
+from app.services.email import enviar_reset_password, enviar_bienvenida, enviar_verificacion_email
 from app.core.limiter import limiter
 
 # ── Dominios de email permitidos ─────────────────────────────
@@ -64,6 +65,22 @@ def validar_dominio_email(email: str):
         )
 
 router = APIRouter(prefix="/auth", tags=["Autenticacion"])
+
+
+def _crear_token_verificacion(email: str, db: Session) -> str:
+    db.query(EmailVerificationToken).filter(
+        EmailVerificationToken.email == email,
+        EmailVerificationToken.usado == False
+    ).update({"usado": True})
+    token_plano = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(token_plano.encode()).hexdigest()
+    db.add(EmailVerificationToken(
+        email=email,
+        token_hash=token_hash,
+        expires_at=datetime.utcnow() + timedelta(hours=24),
+    ))
+    db.commit()
+    return token_plano
 
 class EmailRequest(BaseModel):
     email: str
@@ -120,6 +137,8 @@ def login(request: Request, response: Response, datos: LoginRequest, db: Session
     usuario = db.query(Usuario).filter(Usuario.email == datos.email.lower().strip()).first()
     if not usuario or not verify_password(datos.password, usuario.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales invalidas")
+    if not usuario.email_verificado:
+        raise HTTPException(status_code=403, detail="EMAIL_NO_VERIFICADO")
     token_payload = {"sub": usuario.email, "rol": usuario.rol, "barberia_id": usuario.barberia_id}
     access_token = crear_token(token_payload)
     response.set_cookie(
@@ -209,15 +228,47 @@ def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(
     db.commit()
     db.refresh(usuario)
 
-    # Email de bienvenida
-    link_agendamiento = f"{settings.FRONTEND_URL}/agendar/{barberia.id}"
-    datos.email = email  # normalizar para el email de bienvenida
+    # Enviar verificación de email
     try:
-        enviar_bienvenida(datos.email, datos.nombre_barberia, link_agendamiento)
+        token_verificacion = _crear_token_verificacion(email, db)
+        enviar_verificacion_email(email, token_verificacion, settings.FRONTEND_URL)
     except Exception:
-        pass  # No bloquear el registro si el email falla
+        pass
 
     return usuario
+
+
+@router.get("/verificar-email")
+def verificar_email(token: str, db: Session = Depends(get_db)):
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    registro = db.query(EmailVerificationToken).filter(
+        EmailVerificationToken.token_hash == token_hash,
+        EmailVerificationToken.usado == False,
+        EmailVerificationToken.expires_at > datetime.utcnow()
+    ).first()
+    if not registro:
+        raise HTTPException(status_code=400, detail="Token invalido o expirado")
+    usuario = db.query(Usuario).filter(Usuario.email == registro.email).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    usuario.email_verificado = True
+    registro.usado = True
+    db.commit()
+    return {"ok": True, "mensaje": "Email verificado correctamente"}
+
+
+@router.post("/reenviar-verificacion")
+@limiter.limit("3/minute")
+def reenviar_verificacion(request: Request, datos: EmailRequest, db: Session = Depends(get_db)):
+    usuario = db.query(Usuario).filter(Usuario.email == datos.email.lower().strip()).first()
+    if not usuario or usuario.email_verificado:
+        return {"mensaje": "Si el email existe y no está verificado, recibirás un correo"}
+    try:
+        token_plano = _crear_token_verificacion(datos.email.lower().strip(), db)
+        enviar_verificacion_email(datos.email.lower().strip(), token_plano, settings.FRONTEND_URL)
+    except Exception:
+        pass
+    return {"mensaje": "Si el email existe y no está verificado, recibirás un correo"}
 
 
 @router.post("/recuperar-password")

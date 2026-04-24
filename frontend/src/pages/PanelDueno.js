@@ -6,7 +6,7 @@ import {
   getMisBarberos, crearBarbero, toggleBarbero, eliminarBarbero, invitarBarbero, editarBarbero,
   getMisServicios, crearServicio, toggleServicio, editarServicio, eliminarServicio,
   getMiBarberia, toggleBarberia, crearBarberiaAdicional,
-  getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio, actualizarMapsLink,
+  getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio, actualizarMapsLink, actualizarTelefonoBarberia,
   getConfigPagos, updateConfigPagos,
 } from '../services/api';
 
@@ -113,6 +113,12 @@ function PanelDueno() {
   const [mapsInput, setMapsInput] = useState('');
   const [mapsError, setMapsError] = useState('');
   const [mapsCargando, setMapsCargando] = useState(false);
+
+  // Teléfono barbería
+  const [editandoTelBarberia, setEditandoTelBarberia] = useState(null);
+  const [telBarberiaInput, setTelBarberiaInput] = useState('');
+  const [telBarberiaError, setTelBarberiaError] = useState('');
+  const [telBarberiaCargando, setTelBarberiaCargando] = useState(false);
 
   // Invitar barbero
   const [invitandoBarbero, setInvitandoBarbero] = useState(null);
@@ -231,6 +237,20 @@ function PanelDueno() {
       setSlugError(err.response?.data?.detail || 'Error al guardar');
     } finally {
       setSlugCargando(false);
+    }
+  };
+
+  const handleGuardarTelBarberia = async (barberiaId) => {
+    setTelBarberiaError(''); setTelBarberiaCargando(true);
+    try {
+      const tel = formatearTelefono(telBarberiaInput);
+      await actualizarTelefonoBarberia(barberiaId, tel);
+      getMiBarberia().then(r => setBarberias(r.data));
+      setEditandoTelBarberia(null); setTelBarberiaInput('');
+    } catch (err) {
+      setTelBarberiaError(err.response?.data?.detail || 'Error al guardar');
+    } finally {
+      setTelBarberiaCargando(false);
     }
   };
 
@@ -735,6 +755,74 @@ function PanelDueno() {
                       </button>
                       <button onClick={() => handleGuardarSlug(b.id)} disabled={slugCargando || slugInput.length < 3} className="btn-gold" style={{ flex: 1, padding: '8px', fontSize: 13 }}>
                         {slugCargando ? 'Guardando...' : 'Guardar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Teléfono WhatsApp barbería */}
+                {b.telefono && editandoTelBarberia !== b.id ? (
+                  <div style={{
+                    background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.2)',
+                    borderRadius: 8, padding: '8px 12px',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  }}>
+                    <span style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.65 3.18 2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6.29 6.29l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                      </svg>
+                      WhatsApp: {b.telefono}
+                    </span>
+                    <button onClick={() => { setEditandoTelBarberia(b.id); setTelBarberiaInput(b.telefono); setTelBarberiaError(''); }}
+                      style={{ ...deleteBtn, color: 'var(--text-muted)', background: 'none', border: '1px solid var(--border)' }}>
+                      Editar
+                    </button>
+                  </div>
+                ) : editandoTelBarberia !== b.id ? (
+                  <button
+                    onClick={() => { setEditandoTelBarberia(b.id); setTelBarberiaInput(''); setTelBarberiaError(''); }}
+                    style={{
+                      width: '100%', background: 'none', cursor: 'pointer',
+                      border: '1px dashed rgba(255,255,255,0.1)',
+                      borderRadius: 8, padding: '8px', marginTop: 4,
+                      fontSize: 12, color: 'var(--text-muted)', fontFamily: "'DM Sans'",
+                      transition: 'border-color 0.2s, color 0.2s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#C9A84C'; e.currentTarget.style.color = '#C9A84C'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                  >
+                    + Agregar teléfono WhatsApp de la barbería
+                  </button>
+                ) : null}
+
+                {editandoTelBarberia === b.id && (
+                  <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px', marginTop: 4 }}>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+                      Este número se usa para que los clientes te contacten por WhatsApp al solicitar un reembolso.
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                      <span style={{
+                        padding: '9px 10px', background: 'var(--bg-card)', border: '1px solid var(--border)',
+                        borderRight: 'none', borderRadius: '8px 0 0 8px',
+                        fontSize: 13, color: 'var(--text-muted)', flexShrink: 0,
+                      }}>+506</span>
+                      <input
+                        value={telBarberiaInput}
+                        onChange={e => { setTelBarberiaInput(formatearInput(e.target.value)); setTelBarberiaError(''); }}
+                        placeholder="8888 8888"
+                        className="input-dark"
+                        style={{ borderRadius: '0 8px 8px 0' }}
+                        inputMode="numeric"
+                        autoFocus
+                      />
+                    </div>
+                    {telBarberiaError && <p style={{ color: '#E63946', fontSize: 12, margin: '0 0 8px 0' }}>{telBarberiaError}</p>}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => { setEditandoTelBarberia(null); setTelBarberiaError(''); }} className="btn-outline" style={{ flex: 1, padding: '8px', fontSize: 13 }}>
+                        Cancelar
+                      </button>
+                      <button onClick={() => handleGuardarTelBarberia(b.id)} disabled={telBarberiaCargando || !telBarberiaInput.trim()} className="btn-gold" style={{ flex: 1, padding: '8px', fontSize: 13 }}>
+                        {telBarberiaCargando ? 'Guardando...' : 'Guardar'}
                       </button>
                     </div>
                   </div>

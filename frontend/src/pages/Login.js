@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { login, wakeUpServer } from '../services/api';
+import { login, wakeUpServer, reenviarVerificacion } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 function StoreIcon() {
@@ -18,13 +18,28 @@ function Login() {
   const [error, setError]               = useState('');
   const [cargando, setCargando]         = useState(false);
   const [estadoConexion, setEstadoConexion] = useState('');
+  const [emailNoVerificado, setEmailNoVerificado] = useState(false);
+  const [reenviadoOk, setReenviadoOk]   = useState(false);
+  const [reenviadoCargando, setReenviadoCargando] = useState(false);
   const [showPass, setShowPass]         = useState(false);
   const { iniciarSesion }               = useAuth();
   const navigate                        = useNavigate();
 
+  const handleReenviar = async () => {
+    setReenviadoCargando(true);
+    try {
+      await reenviarVerificacion({ email });
+      setReenviadoOk(true);
+    } catch {
+      setReenviadoOk(true);
+    } finally {
+      setReenviadoCargando(false);
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(''); setEstadoConexion('');
+    setError(''); setEstadoConexion(''); setEmailNoVerificado(false); setReenviadoOk(false);
     setCargando(true);
 
     const intentarLogin = async () => {
@@ -51,6 +66,8 @@ function Login() {
             ? 'El servidor no responde. Intenta de nuevo en unos segundos.'
             : 'Email o contraseña incorrectos.');
         }
+      } else if (err.response?.status === 403 && err.response?.data?.detail === 'EMAIL_NO_VERIFICADO') {
+        setEmailNoVerificado(true);
       } else {
         setError('Email o contraseña incorrectos.');
       }
@@ -174,6 +191,35 @@ function Login() {
                   borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#C9A84C', textAlign: 'center',
                 }}>
                   {estadoConexion}
+                </div>
+              )}
+
+              {emailNoVerificado && (
+                <div style={{
+                  background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.3)',
+                  borderRadius: 10, padding: '12px 14px', fontSize: 13, color: '#C9A84C',
+                }}>
+                  <p style={{ margin: '0 0 8px 0', fontWeight: 600 }}>Verificá tu email antes de ingresar.</p>
+                  <p style={{ margin: '0 0 10px 0', fontSize: 12, color: 'rgba(201,168,76,0.7)' }}>
+                    Revisá tu bandeja de entrada (y la carpeta de spam).
+                  </p>
+                  {reenviadoOk ? (
+                    <p style={{ margin: 0, fontSize: 12, color: '#4ade80' }}>Email de verificación reenviado.</p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleReenviar}
+                      disabled={reenviadoCargando}
+                      style={{
+                        background: 'none', border: '1px solid rgba(201,168,76,0.4)',
+                        borderRadius: 7, padding: '6px 14px', cursor: 'pointer',
+                        color: '#C9A84C', fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans'",
+                        opacity: reenviadoCargando ? 0.6 : 1,
+                      }}
+                    >
+                      {reenviadoCargando ? 'Enviando...' : 'Reenviar email de verificación'}
+                    </button>
+                  )}
                 </div>
               )}
 

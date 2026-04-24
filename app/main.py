@@ -23,7 +23,7 @@ import app.models  # noqa: F401 — asegura que todos los modelos están registr
 from app.models.cita import Cita
 from app.models.barbero import Barbero
 from app.services.whatsapp import recordatorio_cita, recordatorio_1h
-from sqlalchemy import and_
+from sqlalchemy import and_, text
 
 def limpiar_citas_antiguas():
     db = SessionLocal()
@@ -231,7 +231,12 @@ scheduler.add_job(verificar_trials_vencidos, "interval", hours=6)
 
 @asynccontextmanager
 async def lifespan(app):
-    Base.metadata.create_all(bind=engine)  # crea tablas nuevas sin tocar las existentes
+    Base.metadata.create_all(bind=engine)
+    # Migraciones manuales idempotentes
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email_verificado BOOLEAN NOT NULL DEFAULT false"))
+        conn.execute(text("UPDATE usuarios SET email_verificado = true WHERE email_verificado = false"))
+        conn.commit()
     scheduler.start()
     yield
     scheduler.shutdown()

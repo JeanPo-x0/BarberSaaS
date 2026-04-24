@@ -95,6 +95,19 @@ def enviar_invitacion_barbero(email: str, nombre_barbero: str, nombre_barberia: 
     enviar_email(email, f"Activá tu cuenta en BarberSaaS — {nombre_barberia}", cuerpo)
 
 
+def enviar_verificacion_email(email: str, token: str, base_url: str):
+    link = f"{base_url}/verificar-email?token={token}"
+    cuerpo = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; background:#111; color:#fff; padding:32px; border-radius:12px;">
+        <h2 style="color:#C9A84C; margin-bottom:4px;">Verificá tu email</h2>
+        <p style="color:#ccc;">Solo un paso más para activar tu cuenta en BarberSaaS.</p>
+        <a href="{link}" style="display:inline-block;background:#C9A84C;color:#111;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px;margin:20px 0;">Verificar mi email</a>
+        <p style="color:#888; font-size:12px; margin-top:24px;">Este link expira en 24 horas. Si no creaste una cuenta, podés ignorar este correo.</p>
+    </div>
+    """
+    enviar_email(email, "Verificá tu email — BarberSaaS", cuerpo)
+
+
 def enviar_reset_password(email: str, token: str, base_url: str):
     link = f"{base_url}/reset-password?token={token}"
     cuerpo = f"""
