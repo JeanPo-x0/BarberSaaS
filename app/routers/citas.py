@@ -13,9 +13,9 @@ from app.models.servicio import Servicio
 from app.models.usuario import Usuario
 from app.schemas import CitaCreate, CitaResponse
 from app.services.whatsapp import (
-    confirmar_cita, notificar_cancelacion,
+    confirmar_cita, confirmar_cita_pago_pendiente, notificar_cancelacion,
     notificar_barbero_nueva_cita, notificar_barbero_cancelacion,
-    notificar_lista_espera, notificar_completada_cliente,
+    notificar_lista_espera, notificar_completada_cliente, notificar_cobro_efectivo,
     notificar_pago_pendiente_barbero, notificar_cita_confirmada_pago,
     notificar_pago_rechazado, notificar_comprobante_barbero,
 )
@@ -104,24 +104,46 @@ def crear_cita(request: Request, cita: CitaCreate, db: Session = Depends(get_db)
             else f"{settings.FRONTEND_URL}/agendar/{barberia_id}"
         )
         fecha_hora_str = nueva.fecha_hora.strftime("%d/%m/%y a las %H:%M")
+        servicio_nombre = servicio.nombre if servicio else "Servicio"
         if cliente and cliente.telefono:
-            confirmar_cita(
-                telefono=cliente.telefono,
-                nombre=cliente.nombre,
-                fecha_hora=fecha_hora_str,
-                servicio=servicio.nombre if servicio else "Servicio",
-                barbero=barbero.nombre,
-                barberia_nombre=barberia_nombre,
-                link_agendamiento=link_ag,
-            )
+            if estado_pago == "pendiente":
+                confirmar_cita_pago_pendiente(
+                    telefono=cliente.telefono,
+                    nombre=cliente.nombre,
+                    fecha_hora=fecha_hora_str,
+                    servicio=servicio_nombre,
+                    barbero=barbero.nombre,
+                    barberia_nombre=barberia_nombre,
+                )
+            else:
+                confirmar_cita(
+                    telefono=cliente.telefono,
+                    nombre=cliente.nombre,
+                    fecha_hora=fecha_hora_str,
+                    servicio=servicio_nombre,
+                    barbero=barbero.nombre,
+                    barberia_nombre=barberia_nombre,
+                    link_agendamiento=link_ag,
+                )
         if barbero.telefono:
-            notificar_barbero_nueva_cita(
-                telefono=barbero.telefono,
-                nombre_barbero=barbero.nombre,
-                cliente=cliente.nombre if cliente else "Cliente",
-                servicio=servicio.nombre if servicio else "Servicio",
-                fecha_hora=fecha_hora_str,
-            )
+            if estado_pago == "pendiente":
+                notificar_pago_pendiente_barbero(
+                    telefono=barbero.telefono,
+                    nombre_barbero=barbero.nombre,
+                    cliente=cliente.nombre if cliente else "Cliente",
+                    servicio=servicio_nombre,
+                    metodo="sinpe",
+                    fecha_hora=fecha_hora_str,
+                    monto=float(servicio.precio) if servicio else 0,
+                )
+            else:
+                notificar_barbero_nueva_cita(
+                    telefono=barbero.telefono,
+                    nombre_barbero=barbero.nombre,
+                    cliente=cliente.nombre if cliente else "Cliente",
+                    servicio=servicio_nombre,
+                    fecha_hora=fecha_hora_str,
+                )
         else:
             print(f"[WhatsApp] Barbero {barbero.id} ({barbero.nombre}) no tiene telefono guardado")
     except Exception as e:
@@ -340,6 +362,20 @@ def marcar_cobrado(cita_id: int, usuario: Usuario = Depends(get_usuario_actual),
     cita.estado_pago = "confirmado"
     db.commit()
     db.refresh(cita)
+    try:
+        cliente = db.query(Cliente).filter(Cliente.id == cita.cliente_id).first()
+        servicio = db.query(Servicio).filter(Servicio.id == cita.servicio_id).first()
+        barberia = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first()
+        if cliente and cliente.telefono and servicio:
+            notificar_cobro_efectivo(
+                telefono=cliente.telefono,
+                nombre=cliente.nombre,
+                servicio=servicio.nombre,
+                monto=float(servicio.precio),
+                barberia_nombre=barberia.nombre if barberia else "",
+            )
+    except Exception as e:
+        print(f"[WhatsApp] ERROR en notificacion cobro: {e}")
     return cita
 
 

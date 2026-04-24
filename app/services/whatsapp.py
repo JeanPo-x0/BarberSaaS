@@ -40,14 +40,31 @@ def confirmar_cita(
     servicio: str, barbero: str,
     barberia_nombre: str = "", link_agendamiento: str = "",
 ):
-    cancelar_info = "Para cancelar tu cita respondé *CANCELAR* a este mensaje."
     mensaje = (
         f"✅ *Reserva confirmada{f' en {barberia_nombre}' if barberia_nombre else ''}*\n\n"
         f"Hola {nombre}, tu cita quedó agendada con éxito.\n\n"
         f"📅 *Fecha y hora:* {fecha_hora}\n"
         f"✂️ *Servicio:* {servicio}\n"
         f"💈 *Barbero:* {barbero}\n\n"
-        f"{cancelar_info}"
+        f"Para cancelar tu cita respondé *CANCELAR* a este mensaje."
+    )
+    enviar_mensaje(telefono, mensaje)
+
+
+def confirmar_cita_pago_pendiente(
+    telefono: str, nombre: str, fecha_hora: str,
+    servicio: str, barbero: str,
+    barberia_nombre: str = "",
+):
+    mensaje = (
+        f"⏳ *Reserva recibida{f' en {barberia_nombre}' if barberia_nombre else ''}*\n\n"
+        f"Hola {nombre}, recibimos tu solicitud de cita.\n\n"
+        f"📅 *Fecha y hora:* {fecha_hora}\n"
+        f"✂️ *Servicio:* {servicio}\n"
+        f"💈 *Barbero:* {barbero}\n\n"
+        f"💳 Tu pago SINPE está *pendiente de verificación*. Una vez que el equipo confirme "
+        f"el comprobante, tu cita quedará reservada definitivamente.\n\n"
+        f"Si querés cancelar antes de que se confirme, respondé *CANCELAR*."
     )
     enviar_mensaje(telefono, mensaje)
 
@@ -105,10 +122,23 @@ def notificar_barbero_cancelacion(
     enviar_mensaje(telefono, mensaje)
 
 
-def notificar_completada_cliente(telefono: str, nombre: str, barberia_nombre: str):
+def notificar_completada_cliente(telefono: str, nombre: str, barberia_nombre: str, link_agendamiento: str = ""):
     mensaje = (
-        f"Hola {nombre}, tu visita a *{barberia_nombre}* fue registrada como completada. "
-        f"¡Gracias por elegirnos! Cuando quieras volver a reservar, estamos para servirte."
+        f"✅ *¡Gracias por tu visita a {barberia_nombre}!*\n\n"
+        f"Hola {nombre}, fue un placer atenderte. Tu cita quedó registrada como completada.\n\n"
+        f"Cuando quieras reservar de nuevo, estamos para servirte"
+        + (f":\n{link_agendamiento}" if link_agendamiento else ".")
+    )
+    enviar_mensaje(telefono, mensaje)
+
+
+def notificar_cobro_efectivo(telefono: str, nombre: str, servicio: str, monto: float, barberia_nombre: str = ""):
+    mensaje = (
+        f"✅ *Pago en efectivo registrado{f' — {barberia_nombre}' if barberia_nombre else ''}*\n\n"
+        f"Hola {nombre}, el pago de tu cita fue registrado exitosamente.\n\n"
+        f"✂️ *Servicio:* {servicio}\n"
+        f"💵 *Monto:* ₡{monto:,.0f}\n\n"
+        f"¡Gracias por elegirnos! Hasta la próxima."
     )
     enviar_mensaje(telefono, mensaje)
 

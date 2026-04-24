@@ -20,13 +20,18 @@ async def webhook_whatsapp(request: Request, background_tasks: BackgroundTasks, 
         return Response(content="Service unavailable", status_code=503)
     validator = RequestValidator(auth_token)
     signature = request.headers.get("X-Twilio-Signature", "")
-    # Render termina SSL antes del app — reconstruir URL pública con el host del request
-    host = request.headers.get("x-forwarded-host") or request.headers.get("host", "")
+    # Render expone RENDER_EXTERNAL_URL con la URL pública exacta del servicio
+    base = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
     path = request.url.path
     query = request.url.query
-    url = f"https://{host}{path}"
+    if base:
+        url = f"{base}{path}"
+    else:
+        host = request.headers.get("x-forwarded-host") or request.headers.get("host", "")
+        url = f"https://{host}{path}"
     if query:
         url += f"?{query}"
+    print(f"[Webhook] URL validando: {url!r} | sig: {signature[:20]!r}...")
     if not validator.validate(url, form_dict, signature):
         return Response(content="Forbidden", status_code=403)
 
