@@ -139,7 +139,9 @@ def forzar_sincronizacion(
         data = result.data  # atributo directo, funciona en todas las versiones del SDK
         if not data:
             raise HTTPException(status_code=400, detail="No hay suscripciones en Stripe para este cliente")
-        sub_raw = next((s for s in data if s.status in ("active", "trialing")), data[0])
+        sub_raw = next((s for s in data if s.status in ("active", "trialing")), None)
+        if not sub_raw:
+            raise HTTPException(status_code=400, detail="No hay suscripción activa en Stripe")
         sub = stripe_lib.Subscription.retrieve(sub_raw.id, expand=["items.data.price"])
 
         meta = getattr(sub, "metadata", {}) or {}

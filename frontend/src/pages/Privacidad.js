@@ -70,9 +70,14 @@ Si considera que sus derechos han sido vulnerados, puede presentar una denuncia 
     title: '5. Seguridad de los Datos',
     content: `BarberSaaS implementa medidas técnicas y organizativas razonables para proteger los datos personales contra acceso no autorizado, pérdida, destrucción o alteración. Entre estas medidas se incluyen:
 
-- Conexiones cifradas mediante HTTPS/TLS.
+- Conexiones cifradas mediante HTTPS/TLS con HSTS (HTTP Strict Transport Security) activo.
 - Contraseñas almacenadas con algoritmos de hash seguros (bcrypt).
-- Acceso restringido a los datos según el rol del usuario (dueño, administrador).
+- Verificación de correo electrónico obligatoria al registrarse.
+- Tokens de sesión con expiración automática.
+- Acceso restringido a los datos según el rol del usuario (dueño, barbero).
+- Encabezados de seguridad HTTP (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy).
+- Limitación de acceso geográfico: el servicio opera únicamente desde Costa Rica.
+- Límites de tasa (rate limiting) en endpoints sensibles para prevenir abuso.
 - Copias de seguridad periódicas de la base de datos.
 
 Ningún sistema es 100% infalible. En caso de una brecha de seguridad que afecte sus datos, le notificaremos en un plazo razonable y tomaremos las medidas correctivas pertinentes.`,
