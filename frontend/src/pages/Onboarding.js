@@ -31,12 +31,13 @@ export default function Onboarding() {
   const location = useLocation();
   const navigate = useNavigate();
   const planInicial = location.state?.plan || 'pro';
+  const anualInicial = location.state?.anual || false;
 
   const [paso, setPaso] = useState(0);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
   const [coupon, setCoupon] = useState('');
-  const [anual, setAnual] = useState(false);
+  const [anual, setAnual] = useState(anualInicial);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [linkGenerado, setLinkGenerado] = useState('');
   const [tcAceptado, setTcAceptado] = useState(false);
