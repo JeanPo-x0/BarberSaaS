@@ -257,6 +257,16 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 GEO_BYPASS_PREFIXES = ("/webhook", "/health")
 
 @app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
+
+
+@app.middleware("http")
 async def geo_block_middleware(request: Request, call_next):
     path = request.url.path
 
