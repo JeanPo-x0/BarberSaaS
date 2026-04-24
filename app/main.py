@@ -268,27 +268,29 @@ async def security_headers_middleware(request: Request, call_next):
 
 @app.middleware("http")
 async def geo_block_middleware(request: Request, call_next):
-    path = request.url.path
-
-    # Excluir webhooks, health check y docs internos
-    if any(path.startswith(p) for p in GEO_BYPASS_PREFIXES):
+    # Dejar pasar preflight CORS y rutas excluidas sin verificar geo
+    if request.method == "OPTIONS" or any(request.url.path.startswith(p) for p in GEO_BYPASS_PREFIXES):
         return await call_next(request)
 
     ip = get_real_ip(request)
 
-    # Permitir localhost en desarrollo
     if ip in ("127.0.0.1", "::1"):
         return await call_next(request)
 
-    geo = await obtener_geo(ip)
+    try:
+        geo = await obtener_geo(ip)
+        country = geo.get("country", "CR")
+        org = geo.get("org", "")
+    except Exception:
+        return await call_next(request)
 
-    if geo["country"] != "CR":
+    if country != "CR":
         return JSONResponse(
             status_code=403,
             content={"detail": "Servicio disponible unicamente en Costa Rica"},
         )
 
-    if es_vpn(geo["org"]):
+    if es_vpn(org):
         return JSONResponse(
             status_code=403,
             content={"detail": "El uso de VPN no esta permitido"},
