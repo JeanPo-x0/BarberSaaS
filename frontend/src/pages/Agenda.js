@@ -204,7 +204,12 @@ function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPa
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(96,165,250,0.2)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(96,165,250,0.1)'}
               >
-                💵 Cobrado
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 5, verticalAlign: 'middle' }}>
+                  <rect x="2" y="6" width="20" height="12" rx="2"/>
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M6 12h.01M18 12h.01"/>
+                </svg>
+                Cobrado
               </button>
             )}
             {esPendiente && !pagoAcciones && !esEfectivoPendiente && (
@@ -284,7 +289,12 @@ function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPa
                 color: '#60a5fa',
               }}
             >
-              💵 Cobrado
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6, verticalAlign: 'middle' }}>
+                <rect x="2" y="6" width="20" height="12" rx="2"/>
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M6 12h.01M18 12h.01"/>
+              </svg>
+              Cobrado
             </button>
           ) : (
             <>
@@ -449,7 +459,8 @@ function Agenda() {
   // Agrupar citas activas — excluir fechas pasadas de "Próximas"
   const ahora = new Date();
   const hoyStr = ahora.toISOString().split('T')[0];
-  const activas = citas.filter(c => c.estado !== 'cancelada' && c.estado !== 'completada');
+  const citasUnicas = citas.filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i);
+  const activas = citasUnicas.filter(c => c.estado !== 'cancelada' && c.estado !== 'completada');
   const hoy     = activas.filter(c => esHoy(c.fecha_hora));
   const manana  = activas.filter(c => esMañana(c.fecha_hora));
   const futuras = activas.filter(c => {

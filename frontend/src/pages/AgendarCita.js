@@ -215,6 +215,11 @@ function AgendarCita() {
   const [cancelando, setCancelando] = useState(null);
   const [canceladaInfo, setCanceladaInfo] = useState(null);
 
+  const [panelReembolso, setPanelReembolso] = useState(false);
+  const [telReembolso, setTelReembolso] = useState('');
+  const [buscandoReembolso, setBuscandoReembolso] = useState(false);
+  const [citasReembolso, setCitasReembolso] = useState(null);
+
   useEffect(() => {
     const resolveId = slug
       ? getBarberiaBySlug(slug).then(r => { setBarberia(r.data); return r.data.id; })
@@ -1328,10 +1333,10 @@ function AgendarCita() {
 
         {/* ── Panel: Mis citas / Cancelar ── */}
         <div style={{ marginTop: 20 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: panelCancelar ? 0 : undefined }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: (panelCancelar || panelReembolso) ? 0 : undefined }}>
             <button
               type="button"
-              onClick={() => { setPanelCancelar(o => !o); setCitasCliente(null); setCanceladaInfo(null); setTelCancelar(''); }}
+              onClick={() => { setPanelCancelar(o => !o); setPanelReembolso(false); setCitasCliente(null); setCanceladaInfo(null); setTelCancelar(''); }}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 padding: '12px 14px',
@@ -1346,26 +1351,21 @@ function AgendarCita() {
               </svg>
               <span style={{ fontSize: 13, fontWeight: 600, color: panelCancelar ? '#E63946' : 'var(--text-muted)' }}>Cancelar mi cita</span>
             </button>
-            {barberia?.telefono ? (
-              <a
-                href={`https://wa.me/${barberia.telefono.replace(/\D/g,'')}?text=${encodeURIComponent('Hola, quisiera solicitar un reembolso por mi cita.')}`}
-                target="_blank" rel="noopener noreferrer"
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  padding: '12px 14px', borderRadius: 12,
-                  background: 'rgba(37,211,102,0.05)', border: '1px solid rgba(37,211,102,0.2)',
-                  color: '#25D366', fontSize: 13, fontWeight: 600, textDecoration: 'none',
-                  fontFamily: "'DM Sans'", transition: 'all 0.2s',
-                }}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="#25D366"><path d="M20.52 3.48A11.93 11.93 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.18-1.57A11.96 11.96 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.22-3.48-8.52z"/><path d="M17.5 14.4c-.3-.15-1.77-.87-2.04-.97s-.47-.15-.67.15-.77.97-.94 1.17-.35.22-.65.07c-.3-.15-1.27-.47-2.42-1.49-.89-.8-1.5-1.78-1.67-2.08s-.02-.46.13-.61c.13-.13.3-.35.45-.52s.2-.3.3-.5.05-.37-.03-.52-.67-1.62-.92-2.22c-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37s-1.04 1.02-1.04 2.48 1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.1 4.49.71.31 1.27.49 1.7.62.72.23 1.37.2 1.88.12.57-.09 1.77-.72 2.02-1.42s.25-1.3.17-1.42c-.07-.12-.27-.2-.57-.35z" fill="#fff"/></svg>
-                Solicitar reembolso
-              </a>
-            ) : (
-              <div style={{ borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 14px' }}>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Reembolso vía barbería</span>
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => { setPanelReembolso(o => !o); setPanelCancelar(false); setCitasReembolso(null); setTelReembolso(''); }}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                padding: '12px 14px',
+                background: panelReembolso ? 'rgba(37,211,102,0.06)' : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${panelReembolso ? 'rgba(37,211,102,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                borderRadius: panelReembolso ? '12px 12px 0 0' : 12,
+                cursor: 'pointer', fontFamily: "'DM Sans'", transition: 'all 0.2s',
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="#25D366"><path d="M20.52 3.48A11.93 11.93 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.18-1.57A11.96 11.96 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.22-3.48-8.52z"/><path d="M17.5 14.4c-.3-.15-1.77-.87-2.04-.97s-.47-.15-.67.15-.77.97-.94 1.17-.35.22-.65.07c-.3-.15-1.27-.47-2.42-1.49-.89-.8-1.5-1.78-1.67-2.08s-.02-.46.13-.61c.13-.13.3-.35.45-.52s.2-.3.3-.5.05-.37-.03-.52-.67-1.62-.92-2.22c-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37s-1.04 1.02-1.04 2.48 1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.1 4.49.71.31 1.27.49 1.7.62.72.23 1.37.2 1.88.12.57-.09 1.77-.72 2.02-1.42s.25-1.3.17-1.42c-.07-.12-.27-.2-.57-.35z" fill="#fff"/></svg>
+              <span style={{ fontSize: 13, fontWeight: 600, color: panelReembolso ? '#25D366' : 'var(--text-muted)' }}>Solicitar reembolso</span>
+            </button>
           </div>
 
           {panelCancelar && (
@@ -1580,6 +1580,142 @@ function AgendarCita() {
                 </div>
                 );
               })()}
+            </div>
+          )}
+
+          {/* ── Panel reembolso ── */}
+          {panelReembolso && (
+            <div style={{
+              background: 'rgba(17,17,17,0.9)', border: '1px solid rgba(37,211,102,0.15)',
+              borderTop: 'none', borderRadius: '0 0 14px 14px',
+              padding: '20px 18px',
+            }}>
+              {!citasReembolso ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+                    Ingresá el número con el que agendaste para ver los detalles de tu solicitud.
+                  </p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{ display: 'flex', flex: 1 }}>
+                      <span style={{
+                        padding: '0 10px', height: '42px', lineHeight: '42px',
+                        background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                        borderRight: 'none', borderRadius: '8px 0 0 8px',
+                        fontSize: 13, color: 'var(--text-muted)', flexShrink: 0,
+                      }}>+506</span>
+                      <input
+                        value={telReembolso}
+                        onChange={e => setTelReembolso(formatearInput(e.target.value))}
+                        placeholder="8888 8888"
+                        className="input-dark"
+                        inputMode="numeric"
+                        style={{ borderRadius: '0 8px 8px 0', fontSize: 14, width: '100%' }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!telReembolso.trim()) return;
+                        setBuscandoReembolso(true);
+                        try {
+                          const r = await consultarCitasCliente({ telefono: telReembolso });
+                          setCitasReembolso(r.data);
+                        } catch {
+                          setCitasReembolso([]);
+                        } finally {
+                          setBuscandoReembolso(false);
+                        }
+                      }}
+                      disabled={buscandoReembolso || !telReembolso.trim()}
+                      style={{
+                        padding: '0 16px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                        background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)',
+                        color: '#C9A84C', cursor: 'pointer', fontFamily: "'DM Sans'",
+                        flexShrink: 0, opacity: (!telReembolso.trim() || buscandoReembolso) ? 0.5 : 1,
+                      }}
+                    >
+                      {buscandoReembolso ? '...' : 'Buscar'}
+                    </button>
+                  </div>
+                </div>
+              ) : citasReembolso.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
+                    No encontramos citas pendientes con ese número.
+                  </p>
+                  <button type="button" onClick={() => { setCitasReembolso(null); setTelReembolso(''); }}
+                    style={{ fontSize: 12, color: '#C9A84C', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                    Intentar con otro número
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+                    Seleccioná la cita para la que querés solicitar reembolso:
+                  </p>
+                  {citasReembolso.map(c => {
+                    const d = new Date(c.fecha_hora);
+                    const fechaStr = d.toLocaleDateString('es-CR', { weekday: 'long', day: '2-digit', month: 'long' });
+                    const horaStr = d.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+                    const horasLimite = configPagos?.cancelacion_horas_minimo || 24;
+                    const pctDeposito = configPagos?.deposito_porcentaje || 0;
+                    const horasAnticipacion = Math.floor((d - new Date()) / 3600000);
+                    const aplicaReembolso = horasAnticipacion >= horasLimite;
+                    const waNum = (barberia?.telefono || '').replace(/\D/g, '');
+                    let mensajeWA;
+                    if (aplicaReembolso) {
+                      mensajeWA = `Hola ${barberia?.nombre || ''}, quisiera cancelar y solicitar reembolso de mi cita del ${fechaStr} a las ${horaStr} con ${c.barbero_nombre}.\n\nLa estoy cancelando con *${horasAnticipacion} horas de anticipación*, superando el mínimo requerido de ${horasLimite} horas. Según su política, me correspondería el reembolso del depósito (${pctDeposito}%). ¿Pueden coordinarlo? Gracias.`;
+                    } else {
+                      mensajeWA = `Hola ${barberia?.nombre || ''}, quisiera consultar sobre un reembolso para mi cita del ${fechaStr} a las ${horaStr} con ${c.barbero_nombre}.\n\nEntiendo que estoy solicitando con *${horasAnticipacion} horas de anticipación* (mínimo requerido: ${horasLimite}h), por lo que puede no aplicar reembolso según su política. Igualmente quisiera consultarlo. Gracias.`;
+                    }
+                    return (
+                      <div key={c.id} style={{
+                        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+                        borderRadius: 12, padding: '14px 16px',
+                      }}>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 3px 0', textTransform: 'capitalize' }}>
+                          {fechaStr} a las {horaStr}
+                        </p>
+                        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+                          {c.barbero_nombre} · {c.servicio_nombre}
+                        </p>
+                        <div style={{
+                          borderRadius: 8, padding: '8px 12px', marginBottom: 10, fontSize: 12,
+                          background: aplicaReembolso ? 'rgba(74,222,128,0.05)' : 'rgba(251,191,36,0.05)',
+                          border: `1px solid ${aplicaReembolso ? 'rgba(74,222,128,0.2)' : 'rgba(251,191,36,0.2)'}`,
+                          color: aplicaReembolso ? '#4ade80' : '#fbbf24',
+                        }}>
+                          {aplicaReembolso
+                            ? `Cancelás con ${horasAnticipacion}h de anticipación — según la política, te corresponde el reembolso.`
+                            : `Cancelás con ${horasAnticipacion}h de anticipación (mínimo: ${horasLimite}h) — puede no aplicar reembolso.`}
+                        </div>
+                        {waNum && (
+                          <a
+                            href={`https://wa.me/${waNum}?text=${encodeURIComponent(mensajeWA)}`}
+                            target="_blank" rel="noopener noreferrer"
+                            style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                              padding: '9px 14px', borderRadius: 9,
+                              background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.25)',
+                              color: '#25D366', fontSize: 12, fontWeight: 700, textDecoration: 'none',
+                            }}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                              <path d="M20.52 3.48A11.93 11.93 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.17 1.6 5.98L0 24l6.18-1.57A11.96 11.96 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.22-3.48-8.52z" fill="#25D366"/>
+                              <path d="M17.5 14.4c-.3-.15-1.77-.87-2.04-.97s-.47-.15-.67.15-.77.97-.94 1.17-.35.22-.65.07c-.3-.15-1.27-.47-2.42-1.49-.89-.8-1.5-1.78-1.67-2.08s-.02-.46.13-.61c.13-.13.3-.35.45-.52s.2-.3.3-.5.05-.37-.03-.52-.67-1.62-.92-2.22c-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37s-1.04 1.02-1.04 2.48 1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.1 4.49.71.31 1.27.49 1.7.62.72.23 1.37.2 1.88.12.57-.09 1.77-.72 2.02-1.42s.25-1.3.17-1.42c-.07-.12-.27-.2-.57-.35z" fill="#fff"/>
+                            </svg>
+                            Enviar solicitud por WhatsApp
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <button type="button" onClick={() => { setCitasReembolso(null); setTelReembolso(''); }}
+                    style={{ fontSize: 12, color: '#555', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textAlign: 'left', marginTop: 4 }}>
+                    Buscar con otro número
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

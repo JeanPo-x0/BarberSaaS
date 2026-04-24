@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timedelta
 from pydantic import BaseModel
 from app.database import get_db
 from app.models.cliente import Cliente
@@ -76,7 +76,7 @@ def consultar_citas_cliente(request: Request, data: ConsultaCitasRequest, db: Se
         .filter(
             Cita.cliente_id == cliente.id,
             Cita.estado == "pendiente",
-            Cita.fecha_hora > ahora,
+            Cita.fecha_hora > ahora - timedelta(hours=6),
         )
         .order_by(Cita.fecha_hora.asc())
         .limit(5)

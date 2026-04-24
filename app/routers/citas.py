@@ -177,6 +177,7 @@ def listar_mis_citas(usuario: Usuario = Depends(get_usuario_actual), db: Session
         db.query(Cita)
         .join(Barbero, Cita.barbero_id == Barbero.id)
         .filter(Barbero.barberia_id == usuario.barberia_id)
+        .distinct()
         .order_by(Cita.fecha_hora.asc())
         .all()
     )
