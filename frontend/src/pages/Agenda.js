@@ -373,7 +373,7 @@ function Agenda() {
     setCargandoCitas(true);
     getMisCitas()
       .then(res => setCitas(res.data))
-      .catch(() => {})
+      .catch(err => console.error('[Agenda] Error cargando citas:', err?.response?.status, err?.response?.data))
       .finally(() => setCargandoCitas(false));
   };
 

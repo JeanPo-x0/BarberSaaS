@@ -240,6 +240,9 @@ def sincronizar_desde_checkout(
         items, interval, price_id = [], "month", None
 
     sus.stripe_subscription_id = sub.id
+    customer_id = getattr(session, "customer", None)
+    if customer_id and isinstance(customer_id, str):
+        sus.stripe_customer_id = customer_id
     if price_id:
         sus.stripe_price_id = price_id
     sus.plan = plan

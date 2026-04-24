@@ -190,6 +190,8 @@ def ver_disponibilidad(request: Request, barbero_id: int, fecha: str, db: Sessio
 
 @router.get("/mias", response_model=List[CitaResponse])
 def listar_mis_citas(usuario: Usuario = Depends(get_usuario_actual), db: Session = Depends(get_db)):
+    if not usuario.barberia_id:
+        return []
     return (
         db.query(Cita)
         .join(Barbero, Cita.barbero_id == Barbero.id)
