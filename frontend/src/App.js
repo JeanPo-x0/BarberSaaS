@@ -39,9 +39,9 @@ function AppRoutes() {
   const [bloqueado, setBloqueado] = useState(false);
 
   const checkGeo = () => {
-    fetch('https://ipapi.co/country/', { signal: AbortSignal.timeout(5000) })
-      .then(r => r.text())
-      .then(country => { if (country.trim() !== 'CR') setBloqueado(true); })
+    fetch('https://api.country.is/', { signal: AbortSignal.timeout(5000) })
+      .then(r => r.json())
+      .then(d => { if (d.country && d.country !== 'CR') setBloqueado(true); })
       .catch(() => {});
   };
 
