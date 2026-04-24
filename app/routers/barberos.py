@@ -176,7 +176,7 @@ def login_barbero(request: Request, datos: LoginBarberoRequest, db: Session = De
     if not barbero.cuenta_activa:
         raise HTTPException(status_code=403, detail="Cuenta no activada. Revisá tu email.")
     payload = {"sub": barbero.email, "rol": "barbero", "barbero_id": barbero.id, "barberia_id": barbero.barberia_id, "nombre": barbero.nombre}
-    token = crear_token(payload)
+    token = crear_token(payload, expire_minutes=480)  # 8 horas — sesión de trabajo del día
     from fastapi.responses import JSONResponse
     from app.core.config import settings
     response = JSONResponse({
@@ -190,7 +190,7 @@ def login_barbero(request: Request, datos: LoginBarberoRequest, db: Session = De
         httponly=True,
         secure=True,
         samesite="none",
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        max_age=480 * 60,
     )
     return response
 

@@ -42,7 +42,7 @@ function AppRoutes() {
     fetch('https://ipapi.co/country/', { signal: AbortSignal.timeout(5000) })
       .then(r => r.text())
       .then(country => { if (country.trim() !== 'CR') setBloqueado(true); })
-      .catch(() => { setBloqueado(true); });
+      .catch(() => {});
   };
 
   useEffect(() => {

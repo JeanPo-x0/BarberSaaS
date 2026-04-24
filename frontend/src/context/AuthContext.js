@@ -20,9 +20,7 @@ export function AuthProvider({ children }) {
           setUsuario(datos);
         })
         .catch(() => {
-          localStorage.removeItem('usuario');
-          localStorage.removeItem('token');
-          setUsuario(null);
+          // No cerrar sesión si falla la red — mantener sesión existente
         });
     }
 

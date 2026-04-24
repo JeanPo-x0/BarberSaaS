@@ -370,7 +370,7 @@ function DashboardBarbero() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: "'DM Sans', sans-serif", position: 'relative' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary, #0A0A0A)', fontFamily: "'DM Sans', sans-serif", position: 'relative' }}>
 
       {/* Header */}
       <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '0 20px', position: 'relative', zIndex: 1 }}>
