@@ -12,6 +12,8 @@ from app.models.suscripcion import Suscripcion
 from app.models.cita import Cita
 from app.models.barbero import Barbero
 from app.models.servicio import Servicio
+from app.models.email_verification import EmailVerificationToken
+from app.models.password_reset import PasswordResetToken
 
 router = APIRouter(prefix="/admin", tags=["SuperAdmin"])
 
@@ -129,3 +131,35 @@ def reactivar_barberia(
         sus.estado = "activa"
     db.commit()
     return {"ok": True, "mensaje": f"Barberia {barberia.nombre} reactivada"}
+
+
+@router.delete("/barberias/{barberia_id}")
+def eliminar_barberia(
+    barberia_id: int,
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    _verificar_superadmin(usuario)
+    barberia = db.query(Barberia).filter(Barberia.id == barberia_id).first()
+    if not barberia:
+        raise HTTPException(status_code=404, detail="Barberia no encontrada")
+
+    # Borrar en orden por dependencias FK
+    db.query(Cita).filter(
+        Cita.barbero_id.in_(
+            db.query(Barbero.id).filter(Barbero.barberia_id == barberia_id)
+        )
+    ).delete(synchronize_session=False)
+    db.query(Barbero).filter(Barbero.barberia_id == barberia_id).delete(synchronize_session=False)
+    db.query(Servicio).filter(Servicio.barberia_id == barberia_id).delete(synchronize_session=False)
+    db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia_id).delete(synchronize_session=False)
+
+    dueno = db.query(Usuario).filter(Usuario.barberia_id == barberia_id).first()
+    if dueno:
+        db.query(EmailVerificationToken).filter(EmailVerificationToken.usuario_id == dueno.id).delete(synchronize_session=False)
+        db.query(PasswordResetToken).filter(PasswordResetToken.usuario_id == dueno.id).delete(synchronize_session=False)
+        db.delete(dueno)
+
+    db.delete(barberia)
+    db.commit()
+    return {"ok": True, "eliminado": barberia_id}
