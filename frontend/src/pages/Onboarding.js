@@ -348,7 +348,7 @@ export default function Onboarding() {
           )}
 
           {/* Paso 1: Barberia */}
-          {paso === 1 && (
+          {paso === 1 && !verificacionPendiente && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 24, letterSpacing: '0.06em', margin: 0 }}>
                 Configura tu barberia
