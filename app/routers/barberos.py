@@ -15,7 +15,7 @@ from typing import List
 import hashlib, secrets
 from datetime import datetime, timedelta
 
-LIMITE_BARBEROS_PLAN = {"basico": 1, "pro": 3, "premium": None}
+LIMITE_BARBEROS_PLAN = {"basico": 3, "pro": 3, "premium": None}
 
 router = APIRouter(prefix="/barberos", tags=["Barberos"])
 

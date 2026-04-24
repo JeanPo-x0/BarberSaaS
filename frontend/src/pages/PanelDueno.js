@@ -310,8 +310,8 @@ function PanelDueno() {
     }
   };
 
-  const LIMITE_PLAN = { basico: 1, pro: 3, premium: null };
-  const LIMITE_BARBEROS_PLAN = { basico: 1, pro: 3, premium: null };
+  const LIMITE_PLAN = { basico: 3, pro: 3, premium: null };
+  const LIMITE_BARBEROS_PLAN = { basico: 3, pro: 3, premium: null };
   const plan = suscripcion?.plan || 'basico';
   const estadoSus = suscripcion?.estado || 'trial';
   const suspendida = estadoSus === 'suspendida' || estadoSus === 'cancelada';

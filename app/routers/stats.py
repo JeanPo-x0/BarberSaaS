@@ -25,7 +25,7 @@ class ReengancharRequest(BaseModel):
 
 router = APIRouter(prefix="/stats", tags=["Stats"])
 
-PLANES_CON_DASHBOARD = ("pro", "premium")
+PLANES_CON_DASHBOARD = ("basico", "pro", "premium")  # basico = trial pre-pago, accede igual que pro
 
 
 def _verificar_plan(usuario: Usuario, db: Session):

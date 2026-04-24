@@ -19,7 +19,7 @@ class TelefonoUpdate(BaseModel):
 
 router = APIRouter(prefix="/barberias", tags=["Barberias"])
 
-LIMITE_POR_PLAN = {"basico": 1, "pro": 3, "premium": None}  # None = ilimitado
+LIMITE_POR_PLAN = {"basico": 3, "pro": 3, "premium": None}  # basico = estado trial pre-pago, mismo límite que pro
 
 
 
