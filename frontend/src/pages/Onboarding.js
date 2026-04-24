@@ -94,11 +94,11 @@ export default function Onboarding() {
         const msg = Array.isArray(detail) ? detail.map(e => e.msg || JSON.stringify(e)).join(', ') : 'Datos invalidos.';
         setError(msg);
       } else if (typeof detail === 'string') {
-        if (detail === 'EMAIL_NO_VERIFICADO' || detail === 'Datos de registro invalidos') {
+        if (detail === 'Datos de registro invalidos' || detail.toLowerCase().includes('ya esta registrado') || detail.toLowerCase().includes('already')) {
+          setError('Este email ya está registrado. Iniciá sesión o usá otro email.');
+        } else if (detail === 'EMAIL_NO_VERIFICADO') {
           localStorage.setItem('pendingCheckout', JSON.stringify({ plan: form.plan, periodo: anual ? 'anual' : 'mensual' }));
           setVerificacionPendiente(true);
-        } else if (detail.toLowerCase().includes('ya esta registrado') || detail.toLowerCase().includes('already')) {
-          setError('Este email ya esta registrado. Inicia sesion o usa otro email.');
         } else {
           setError(detail);
         }
@@ -419,25 +419,36 @@ export default function Onboarding() {
                 </svg>
               </div>
               <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 26, letterSpacing: '0.06em', color: '#F5F5F5', margin: '0 0 10px 0' }}>
-                Verificá tu email
+                Revisá tu email
               </h2>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: '0 0 6px 0', lineHeight: 1.7 }}>
-                Tu cuenta fue creada. Te enviamos un email a
+                Te mandamos un enlace de activación a
               </p>
-              <p style={{ color: '#C9A84C', fontSize: 14, fontWeight: 700, margin: '0 0 20px 0' }}>
+              <p style={{ color: '#C9A84C', fontSize: 14, fontWeight: 700, margin: '0 0 12px 0' }}>
                 {form.email}
               </p>
               <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '0 0 24px 0', lineHeight: 1.7 }}>
-                Hacé clic en el enlace del email para activar tu cuenta y luego iniciá sesión para completar el proceso.
+                Abrí el email y hacé clic en el enlace para activar tu cuenta. Después podés iniciar sesión normalmente.
               </p>
-              <button onClick={() => navigate('/login')} className="btn-gold" style={{ width: '100%', marginBottom: 10 }}>
-                Ir al login
+              <button
+                onClick={async () => {
+                  try {
+                    await reenviarVerificacion({ email: form.email });
+                    alert('Email reenviado. Revisá también la carpeta de spam.');
+                  } catch {
+                    alert('No se pudo reenviar. Intentá de nuevo en unos minutos.');
+                  }
+                }}
+                className="btn-gold"
+                style={{ width: '100%', marginBottom: 12 }}
+              >
+                Reenviar email de activación
               </button>
               <button
-                onClick={async () => { try { await reenviarVerificacion({ email: form.email }); alert('Email reenviado. Revisá tu bandeja.'); } catch { alert('No se pudo reenviar. Intentá de nuevo.'); } }}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans'", textDecoration: 'underline' }}
+                onClick={() => { setVerificacionPendiente(false); setPaso(0); }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans'" }}
               >
-                No me llegó — reenviar email
+                Usar otro email
               </button>
             </div>
           )}
