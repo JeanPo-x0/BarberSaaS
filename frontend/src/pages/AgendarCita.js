@@ -941,14 +941,26 @@ function AgendarCita() {
                 {/* Resumen total */}
                 {serviciosIds.length > 0 && (
                   <div style={{
-                    marginTop: 12, background: 'rgba(201,168,76,0.06)',
-                    border: '1px solid rgba(201,168,76,0.2)', borderRadius: 12,
-                    padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    marginTop: 16,
+                    borderTop: '1px solid rgba(255,255,255,0.06)',
+                    paddingTop: 14,
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   }}>
-                    <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                      {serviciosIds.length} servicio{serviciosIds.length > 1 ? 's' : ''} · {totalDuracion} min
-                    </span>
-                    <span style={{ fontFamily: "'Bebas Neue'", fontSize: 22, color: '#C9A84C', letterSpacing: '0.05em' }}>
+                    <div>
+                      <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)', margin: '0 0 3px' }}>
+                        Total a pagar
+                      </p>
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+                        {serviciosIds.length} servicio{serviciosIds.length > 1 ? 's' : ''} · {totalDuracion} min
+                      </p>
+                    </div>
+                    <span style={{
+                      fontFamily: "'Bebas Neue'", fontSize: 28, letterSpacing: '0.05em',
+                      color: '#C9A84C',
+                      background: 'rgba(201,168,76,0.08)',
+                      border: '1px solid rgba(201,168,76,0.25)',
+                      borderRadius: 10, padding: '4px 14px',
+                    }}>
                       ₡{totalPrecio.toLocaleString()}
                     </span>
                   </div>
