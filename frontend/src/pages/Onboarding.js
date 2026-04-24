@@ -136,7 +136,7 @@ export default function Onboarding() {
             <p style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.1em', color: '#C9A84C', margin: 0, lineHeight: 1 }}>
               Registrá tu barbería
             </p>
-            <p style={{ fontSize: 11, color: '#555', margin: 0, letterSpacing: '0.04em' }}>BarberSaaS · 14 días gratis</p>
+            <p style={{ fontSize: 11, color: '#555', margin: 0, letterSpacing: '0.04em' }}>BarberSaaS · {anual ? 'acceso inmediato' : '14 días gratis'}</p>
           </div>
         </div>
 
@@ -354,9 +354,10 @@ export default function Onboarding() {
                 />
               </div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0', lineHeight: 1.6 }}>
-                Al continuar te pediremos una tarjeta para activar los{' '}
-                <strong style={{ color: '#C9A84C' }}>14 días gratis</strong>.
-                {' '}No se realiza ningún cobro hasta que termine el trial. Cancelá antes sin costo.
+                {anual
+                  ? <>Al continuar serás redirigido a Stripe para completar el pago de <strong style={{ color: '#C9A84C' }}>${form.plan === 'premium' ? '472' : '232'}/año</strong>. El acceso se activa de inmediato.</>
+                  : <>Al continuar te pediremos una tarjeta para activar los <strong style={{ color: '#C9A84C' }}>14 días gratis</strong>. No se realiza ningún cobro hasta que termine el trial. Cancelá antes sin costo.</>
+                }
               </p>
               <button onClick={handleBarberia} disabled={cargando} className="btn-gold"
                 style={{ width: '100%', opacity: cargando ? 0.7 : 1 }}>
