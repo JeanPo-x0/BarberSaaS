@@ -1505,8 +1505,9 @@ function AgendarCita() {
                 </>
               ) : (() => {
                 /* ── Estado: cita cancelada — calcular si aplica reembolso ── */
-                const horasLimite = configPagos?.cancelacion_horas_minimo || 24;
-                const pctDeposito = configPagos?.deposito_porcentaje || 0;
+                const horasLimite = configPagos?.cancelacion_horas_minimo ?? 24;
+                const pctDeposito = configPagos?.deposito_porcentaje ?? 50;
+                const pctRetencion = configPagos?.cancelacion_porcentaje ?? 0;
                 const horasAnticipacion = canceladaInfo.fechaHora
                   ? Math.floor((new Date(canceladaInfo.fechaHora) - new Date()) / 3600000)
                   : null;
@@ -1515,11 +1516,11 @@ function AgendarCita() {
 
                 let mensajeWA;
                 if (aplicaReembolso) {
-                  mensajeWA = `Hola ${barberia?.nombre || ''}, cancelé mi cita del ${canceladaInfo.fecha} a las ${canceladaInfo.hora}.\n\nLa cancelé con *${horasAnticipacion} horas de anticipación*, que supera el límite mínimo de ${horasLimite} horas establecido. Por lo tanto, solicito el reembolso del depósito (${pctDeposito}%) según su política. ¿Pueden coordinarlo? Gracias.`;
+                  mensajeWA = `Hola ${barberia?.nombre || ''}, cancelé mi cita del ${canceladaInfo.fecha} a las ${canceladaInfo.hora}.\n\nLa cancelé con *${horasAnticipacion} horas de anticipación*, superando el mínimo requerido de ${horasLimite}h. Según su política, me corresponde el reembolso del depósito (${pctDeposito}% del total). ¿Pueden coordinarlo? Gracias.`;
                 } else if (horasAnticipacion !== null) {
-                  mensajeWA = `Hola ${barberia?.nombre || ''}, cancelé mi cita del ${canceladaInfo.fecha} a las ${canceladaInfo.hora}.\n\nEntiendo que la cancelé con *${horasAnticipacion} horas de anticipación* (menos de las ${horasLimite} horas requeridas), por lo que puede no aplicar reembolso según su política. Igualmente quisiera consultarlo. Gracias.`;
+                  mensajeWA = `Hola ${barberia?.nombre || ''}, cancelé mi cita del ${canceladaInfo.fecha} a las ${canceladaInfo.hora}.\n\nLa cancelé con *${horasAnticipacion} horas de anticipación* (mínimo requerido: ${horasLimite}h). Según su política, en este caso se retiene el ${pctRetencion}% del depósito (${pctDeposito}% del total). Igualmente quisiera conversarlo con ustedes. Gracias.`;
                 } else {
-                  mensajeWA = `Hola ${barberia?.nombre || ''}, cancelé mi cita del ${canceladaInfo.fecha} a las ${canceladaInfo.hora} y quisiera consultar sobre el reembolso de mi depósito.`;
+                  mensajeWA = `Hola ${barberia?.nombre || ''}, cancelé mi cita del ${canceladaInfo.fecha} a las ${canceladaInfo.hora} y quisiera consultar sobre el reembolso de mi depósito (${pctDeposito}% del total).`;
                 }
 
                 return (
@@ -1544,15 +1545,15 @@ function AgendarCita() {
                       background: aplicaReembolso ? 'rgba(74,222,128,0.05)' : 'rgba(251,191,36,0.05)',
                       border: `1px solid ${aplicaReembolso ? 'rgba(74,222,128,0.2)' : 'rgba(251,191,36,0.2)'}`,
                     }}>
-                      <p style={{ fontSize: 12, fontWeight: 700, color: aplicaReembolso ? '#4ade80' : '#fbbf24', margin: '0 0 4px 0' }}>
-                        {aplicaReembolso ? '✓ Tenés derecho a reembolso' : '⚠ Puede no aplicar reembolso'}
+                      <p style={{ fontSize: 12, fontWeight: 700, color: aplicaReembolso ? '#4ade80' : '#fbbf24', margin: '0 0 6px 0' }}>
+                        {aplicaReembolso ? 'Aplica reembolso' : 'Fuera del plazo de reembolso'}
                       </p>
                       <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px 0', lineHeight: 1.6 }}>
                         {horasAnticipacion !== null
                           ? aplicaReembolso
-                            ? `Cancelaste con ${horasAnticipacion}h de anticipación (mínimo requerido: ${horasLimite}h). Según la política, podés reclamar el depósito.`
-                            : `Cancelaste con ${horasAnticipacion}h de anticipación (mínimo requerido: ${horasLimite}h). La barbería definirá si aplica reembolso.`
-                          : 'Contactá a la barbería para coordinar el reembolso de tu depósito.'}
+                            ? `Cancelaste con ${horasAnticipacion}h de anticipación (mínimo requerido: ${horasLimite}h). Te corresponde el reembolso del depósito (${pctDeposito}% del total).`
+                            : `Cancelaste con ${horasAnticipacion}h de anticipación (mínimo requerido: ${horasLimite}h). Según la política, la barbería retiene el ${pctRetencion}% del depósito (${pctDeposito}% del total).`
+                          : `Contactá a la barbería para coordinar el reembolso de tu depósito (${pctDeposito}% del total).`}
                       </p>
                       <a
                         href={`https://wa.me/${waNum}?text=${encodeURIComponent(mensajeWA)}`}
@@ -1657,16 +1658,17 @@ function AgendarCita() {
                     const d = new Date(c.fecha_hora);
                     const fechaStr = d.toLocaleDateString('es-CR', { weekday: 'long', day: '2-digit', month: 'long' });
                     const horaStr = d.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
-                    const horasLimite = configPagos?.cancelacion_horas_minimo || 24;
-                    const pctDeposito = configPagos?.deposito_porcentaje || 0;
+                    const horasLimite = configPagos?.cancelacion_horas_minimo ?? 24;
+                    const pctDeposito = configPagos?.deposito_porcentaje ?? 50;
+                    const pctRetencion = configPagos?.cancelacion_porcentaje ?? 0;
                     const horasAnticipacion = Math.floor((d - new Date()) / 3600000);
                     const aplicaReembolso = horasAnticipacion >= horasLimite;
                     const waNum = (barberia?.telefono || '').replace(/\D/g, '');
                     let mensajeWA;
                     if (aplicaReembolso) {
-                      mensajeWA = `Hola ${barberia?.nombre || ''}, quisiera cancelar y solicitar reembolso de mi cita del ${fechaStr} a las ${horaStr} con ${c.barbero_nombre}.\n\nLa estoy cancelando con *${horasAnticipacion} horas de anticipación*, superando el mínimo requerido de ${horasLimite} horas. Según su política, me correspondería el reembolso del depósito (${pctDeposito}%). ¿Pueden coordinarlo? Gracias.`;
+                      mensajeWA = `Hola ${barberia?.nombre || ''}, quisiera cancelar y solicitar el reembolso de mi cita del ${fechaStr} a las ${horaStr} con ${c.barbero_nombre}.\n\nEstoy cancelando con *${horasAnticipacion} horas de anticipación*, superando el mínimo requerido de ${horasLimite}h. Según su política, me corresponde el reembolso del depósito (${pctDeposito}% del total). ¿Pueden coordinarlo? Gracias.`;
                     } else {
-                      mensajeWA = `Hola ${barberia?.nombre || ''}, quisiera consultar sobre un reembolso para mi cita del ${fechaStr} a las ${horaStr} con ${c.barbero_nombre}.\n\nEntiendo que estoy solicitando con *${horasAnticipacion} horas de anticipación* (mínimo requerido: ${horasLimite}h), por lo que puede no aplicar reembolso según su política. Igualmente quisiera consultarlo. Gracias.`;
+                      mensajeWA = `Hola ${barberia?.nombre || ''}, quisiera consultar sobre el reembolso de mi cita del ${fechaStr} a las ${horaStr} con ${c.barbero_nombre}.\n\nEstoy cancelando con *${horasAnticipacion} horas de anticipación* (mínimo requerido: ${horasLimite}h). Según su política, en este caso se retiene el ${pctRetencion}% del depósito. Igualmente quisiera conversarlo con ustedes. Gracias.`;
                     }
                     return (
                       <div key={c.id} style={{
@@ -1680,14 +1682,22 @@ function AgendarCita() {
                           {c.barbero_nombre} · {c.servicio_nombre}
                         </p>
                         <div style={{
-                          borderRadius: 8, padding: '8px 12px', marginBottom: 10, fontSize: 12,
+                          borderRadius: 8, padding: '10px 12px', marginBottom: 10, fontSize: 12, lineHeight: 1.55,
                           background: aplicaReembolso ? 'rgba(74,222,128,0.05)' : 'rgba(251,191,36,0.05)',
                           border: `1px solid ${aplicaReembolso ? 'rgba(74,222,128,0.2)' : 'rgba(251,191,36,0.2)'}`,
                           color: aplicaReembolso ? '#4ade80' : '#fbbf24',
                         }}>
-                          {aplicaReembolso
-                            ? `Cancelás con ${horasAnticipacion}h de anticipación — según la política, te corresponde el reembolso.`
-                            : `Cancelás con ${horasAnticipacion}h de anticipación (mínimo: ${horasLimite}h) — puede no aplicar reembolso.`}
+                          {aplicaReembolso ? (
+                            <>
+                              <strong>Aplica reembolso</strong> — cancelás con {horasAnticipacion}h de anticipación (mínimo requerido: {horasLimite}h).<br/>
+                              Te corresponde el reembolso del depósito ({pctDeposito}% del total).
+                            </>
+                          ) : (
+                            <>
+                              <strong>Fuera del plazo</strong> — cancelás con {horasAnticipacion}h de anticipación (mínimo requerido: {horasLimite}h).<br/>
+                              Según la política, la barbería retiene el {pctRetencion}% del depósito ({pctDeposito}% del total).
+                            </>
+                          )}
                         </div>
                         {waNum && (
                           <a
