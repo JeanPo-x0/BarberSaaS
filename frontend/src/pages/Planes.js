@@ -307,7 +307,7 @@ export default function Planes() {
             Planes y Precios
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 16, margin: '0 0 10px 0' }}>
-            14 días gratis con cualquier plan. Sin cobros hasta que termine el trial.
+            {!anual ? '14 días gratis en planes mensuales. Sin cobros hasta que termine el trial.' : 'Plan anual: acceso inmediato, sin período de prueba.'}
           </p>
           {anual && (
             <p style={{ fontSize: 13, color: '#FB923C', fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
@@ -435,7 +435,12 @@ export default function Planes() {
                   className={plan.popular ? 'btn-gold' : 'btn-outline'}
                   style={{ width: '100%', opacity: cargando ? 0.7 : 1, cursor: cargando ? 'wait' : 'pointer' }}
                 >
-                  {cargando ? 'Procesando...' : usuario ? `Mejorar a ${plan.nombre}` : `Empezar con ${plan.nombre}`}
+                  {cargando ? 'Procesando...' : usuario
+                    ? `Mejorar a ${plan.nombre}`
+                    : anual
+                      ? `Suscribirme — ${plan.nombre} Anual`
+                      : `Probar gratis 14 días`
+                  }
                 </button>
               </div>
             );
