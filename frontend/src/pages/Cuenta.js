@@ -167,7 +167,7 @@ export default function Cuenta() {
       const r = await getEstadoSuscripcion();
       setSus(r.data);
     } catch (err) {
-      alert('No se pudo sincronizar con Stripe');
+      alert(err.response?.data?.detail || err.message || 'Error desconocido');
     }
   };
 
