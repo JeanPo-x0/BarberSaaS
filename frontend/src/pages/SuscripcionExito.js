@@ -1,5 +1,47 @@
 import { useNavigate } from 'react-router-dom';
 
+const CHECK_ANIM = `
+@keyframes draw-circle {
+  from { stroke-dashoffset: 220; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes draw-check {
+  from { stroke-dashoffset: 80; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes fade-glow {
+  0%   { opacity: 0; transform: scale(0.85); }
+  60%  { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+`;
+
+function AnimatedCheck() {
+  return (
+    <>
+      <style>{CHECK_ANIM}</style>
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none"
+        style={{ animation: 'fade-glow 0.4s ease forwards', display: 'block', margin: '0 auto 16px' }}>
+        <circle cx="40" cy="40" r="34"
+          stroke="#C9A84C" strokeWidth="3" fill="none"
+          strokeDasharray="220" strokeDashoffset="220"
+          strokeLinecap="round"
+          style={{ animation: 'draw-circle 0.6s ease 0.1s forwards' }}
+        />
+        <circle cx="40" cy="40" r="34"
+          stroke="rgba(201,168,76,0.12)" strokeWidth="1" fill="none"
+        />
+        <polyline points="24,41 35,52 56,30"
+          stroke="#C9A84C" strokeWidth="3.5" fill="none"
+          strokeLinecap="round" strokeLinejoin="round"
+          strokeDasharray="80" strokeDashoffset="80"
+          style={{ animation: 'draw-check 0.4s ease 0.55s forwards' }}
+        />
+      </svg>
+    </>
+  );
+}
+
 export default function SuscripcionExito() {
   const navigate = useNavigate();
   return (
@@ -15,7 +57,7 @@ export default function SuscripcionExito() {
       }}>
         <div style={{ height: 3, background: 'linear-gradient(90deg, transparent, #C9A84C 40%, #e8c96a 60%, transparent)' }} />
         <div style={{ padding: '40px 32px' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
+          <AnimatedCheck />
           <h1 style={{
             fontFamily: "'Bebas Neue'", fontSize: 32, letterSpacing: '0.06em',
             color: '#C9A84C', margin: '0 0 12px',
