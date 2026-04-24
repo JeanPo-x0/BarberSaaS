@@ -127,54 +127,61 @@ def forzar_sincronizacion(
     db: Session = Depends(get_db),
 ):
     """Lee las suscripciones activas del cliente en Stripe y actualiza la BD."""
-    import stripe as stripe_lib
-    sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == usuario.barberia_id).first()
-    if not sus or not sus.stripe_customer_id:
-        raise HTTPException(status_code=400, detail="No hay customer de Stripe")
+    try:
+        import stripe as stripe_lib
 
-    subs = stripe_lib.Subscription.list(customer=sus.stripe_customer_id, limit=5, status="all")
-    if not subs.data:
-        return {"ok": False, "razon": "Sin suscripciones en Stripe"}
+        sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == usuario.barberia_id).first()
+        if not sus or not sus.stripe_customer_id:
+            raise HTTPException(status_code=400, detail="No hay customer de Stripe registrado")
 
-    # Tomar la más reciente activa o en trial; si no, la primera
-    sub_raw = next((s for s in subs.data if s["status"] in ("active", "trialing")), subs.data[0])
-    # Expandir items para obtener el precio
-    sub = stripe_lib.Subscription.retrieve(sub_raw["id"], expand=["items.data.price"])
-    meta = sub.get("metadata", {})
-    plan = meta.get("plan", "pro")
-    if plan not in ("pro", "premium"):
-        plan = "pro"
-    status = sub.get("status")
-    items = sub.get("items", {}).get("data", [])
-    interval = items[0]["price"]["recurring"]["interval"] if items else "month"
+        subs = stripe_lib.Subscription.list(customer=sus.stripe_customer_id, limit=10)
+        if not subs.data:
+            raise HTTPException(status_code=400, detail="No se encontraron suscripciones en Stripe para este cliente")
 
-    sus.stripe_subscription_id = sub["id"]
-    sus.stripe_price_id = items[0]["price"]["id"] if items else sus.stripe_price_id
-    sus.plan = plan
-    sus.periodo = "anual" if interval == "year" else "mensual"
+        sub_raw = next((s for s in subs.data if s["status"] in ("active", "trialing")), subs.data[0])
+        sub = stripe_lib.Subscription.retrieve(sub_raw["id"], expand=["items.data.price"])
 
-    barberia = db.query(Barberia).filter(Barberia.id == usuario.barberia_id).first()
+        meta = sub.get("metadata") or {}
+        plan = meta.get("plan", "pro")
+        if plan not in ("pro", "premium"):
+            plan = "pro"
 
-    if status == "trialing":
-        sus.estado = "trial"
-        trial_end = sub.get("trial_end")
-        if trial_end:
-            sus.fecha_trial_fin = datetime.utcfromtimestamp(trial_end)
-        if barberia:
-            barberia.plan = plan
-            barberia.activa = True
-    elif status == "active":
-        sus.estado = "activa"
-        if barberia:
-            barberia.plan = plan
-            barberia.activa = True
+        status = sub["status"]
+        items = (sub.get("items") or {}).get("data") or []
+        price = items[0]["price"] if items else {}
+        interval = (price.get("recurring") or {}).get("interval", "month")
 
-    ts = sub.get("current_period_end")
-    if ts:
-        sus.fecha_renovacion = datetime.utcfromtimestamp(ts)
+        sus.stripe_subscription_id = sub["id"]
+        if price.get("id"):
+            sus.stripe_price_id = price["id"]
+        sus.plan = plan
+        sus.periodo = "anual" if interval == "year" else "mensual"
 
-    db.commit()
-    return {"ok": True, "plan": plan, "estado": sus.estado, "periodo": sus.periodo}
+        barberia = db.query(Barberia).filter(Barberia.id == usuario.barberia_id).first()
+
+        if status == "trialing":
+            sus.estado = "trial"
+            if sub.get("trial_end"):
+                sus.fecha_trial_fin = datetime.utcfromtimestamp(sub["trial_end"])
+            if barberia:
+                barberia.plan = plan
+                barberia.activa = True
+        elif status == "active":
+            sus.estado = "activa"
+            if barberia:
+                barberia.plan = plan
+                barberia.activa = True
+
+        if sub.get("current_period_end"):
+            sus.fecha_renovacion = datetime.utcfromtimestamp(sub["current_period_end"])
+
+        db.commit()
+        return {"ok": True, "plan": plan, "estado": sus.estado, "periodo": sus.periodo}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error Stripe: {str(e)}")
 
 
 @router.post("/sincronizar")
