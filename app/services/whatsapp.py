@@ -203,9 +203,11 @@ def notificar_cita_confirmada_pago(
 
 def notificar_pago_rechazado(telefono: str, nombre: str, barberia_nombre: str = ""):
     mensaje = (
-        f"Hola {nombre}, tu comprobante de pago no pudo ser verificado y tu cita fue cancelada.\n\n"
-        f"Si creés que es un error o querés intentarlo de nuevo, contactá directamente "
-        f"{'a *' + barberia_nombre + '*' if barberia_nombre else 'a la barbería'}."
+        f"❌ *Comprobante no verificado{f' — {barberia_nombre}' if barberia_nombre else ''}*\n\n"
+        f"Hola {nombre}, lamentamos informarte que tu comprobante de pago no pudo ser verificado "
+        f"y tu cita fue cancelada.\n\n"
+        f"Si creés que hubo un error, o querés intentar reservar de nuevo, "
+        f"{'contactá directamente a *' + barberia_nombre + '*' if barberia_nombre else 'contactá a la barbería'}."
     )
     enviar_mensaje(telefono, mensaje)
 
