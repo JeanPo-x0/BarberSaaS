@@ -189,9 +189,12 @@ def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(
     validar_password(datos.password)
     existente = db.query(Usuario).filter(Usuario.email == email).first()
     if existente:
-        if existente.email_verificado:
+        # Bloquear solo si ya tiene suscripción pagada (stripe_subscription_id presente)
+        sus_existente = db.query(Suscripcion).filter(Suscripcion.barberia_id == existente.barberia_id).first() if existente.barberia_id else None
+        ha_pagado = bool(sus_existente and sus_existente.stripe_subscription_id)
+        if ha_pagado:
             raise HTTPException(status_code=400, detail="Datos de registro invalidos")
-        # Email no verificado — limpiar cuenta incompleta y permitir re-registro
+        # Sin pago completado — limpiar cuenta incompleta y permitir re-registro
         if existente.barberia_id:
             bid = existente.barberia_id
             db.query(Suscripcion).filter(Suscripcion.barberia_id == bid).delete(synchronize_session=False)
