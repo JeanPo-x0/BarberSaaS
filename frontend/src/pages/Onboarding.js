@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { onboarding, login, crearCheckout } from '../services/api';
 import { NavLogo } from '../components/LogoLink';
 import { formatearInput, formatearTelefono } from '../utils/phone';
+import PasswordInput from '../components/PasswordInput';
 
 function calcularFortaleza(pwd) {
   const checks = [
@@ -36,6 +37,7 @@ export default function Onboarding() {
   const [error, setError] = useState('');
   const [coupon, setCoupon] = useState('');
   const [anual, setAnual] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [linkGenerado, setLinkGenerado] = useState('');
   const [tcAceptado, setTcAceptado] = useState(false);
   const [form, setForm] = useState({
@@ -55,6 +57,8 @@ export default function Onboarding() {
     if (!form.email || !form.password) { setError('Email y contraseña son obligatorios'); return; }
     if (!form.email.includes('@')) { setError('El email ingresado no es válido'); return; }
     if (fortaleza.nivel < 3) { setError('La contraseña es muy débil. Usá mayúsculas, números y caracteres especiales.'); return; }
+    if (confirmPassword && form.password !== confirmPassword) { setError('Las contraseñas no coinciden'); return; }
+    if (!confirmPassword) { setError('Confirmá tu contraseña'); return; }
     if (!tcAceptado) { setError('Debes aceptar los Términos y Condiciones para continuar'); return; }
     setPaso(1);
   };
@@ -262,8 +266,21 @@ export default function Onboarding() {
 
               <input name="email" type="email" placeholder="Email" value={form.email}
                 onChange={handleChange} className="input-dark" autoComplete="email" />
-              <input name="password" type="password" placeholder="Contraseña (mín. 8 caracteres)"
-                value={form.password} onChange={handleChange} className="input-dark" autoComplete="new-password" />
+              <PasswordInput name="password" placeholder="Contraseña (mín. 8 caracteres)"
+                value={form.password} onChange={handleChange} autoComplete="new-password" />
+              <div style={{ position: 'relative' }}>
+                <PasswordInput placeholder="Confirmá tu contraseña"
+                  value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} autoComplete="new-password" />
+                {confirmPassword && (
+                  <span style={{
+                    position: 'absolute', right: 42, top: '50%', transform: 'translateY(-50%)',
+                    fontSize: 11, fontWeight: 700,
+                    color: form.password === confirmPassword ? '#4ade80' : '#E63946',
+                  }}>
+                    {form.password === confirmPassword ? '✓ Coinciden' : '✗ No coinciden'}
+                  </span>
+                )}
+              </div>
               {form.password && (
                 <div style={{ marginTop: 8 }}>
                   <div style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', marginBottom: 6 }}>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { activarBarbero } from '../services/api';
+import PasswordInput from '../components/PasswordInput';
 
 function calcularFortaleza(pwd) {
   const checks = [
@@ -76,14 +77,11 @@ function ActivarBarbero() {
             <p style={{ fontWeight: 700, fontSize: 15, margin: '0 0 18px 0', color: '#F5F5F5' }}>Crea tu contraseña</p>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <input
-                  type="password"
+                <PasswordInput
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="Nueva contraseña"
-                  required
-                  className="input-dark"
-                  style={{ width: '100%', boxSizing: 'border-box' }}
+                  autoComplete="new-password"
                 />
                 {password && (
                   <div style={{ marginTop: 8 }}>
@@ -108,13 +106,11 @@ function ActivarBarbero() {
                   </div>
                 )}
               </div>
-              <input
-                type="password"
+              <PasswordInput
                 value={confirmar}
                 onChange={e => setConfirmar(e.target.value)}
                 placeholder="Confirmar contraseña"
-                required
-                className="input-dark"
+                autoComplete="new-password"
               />
               {error && <p style={{ color: '#E63946', fontSize: 13, margin: 0 }}>{error}</p>}
               <button type="submit" disabled={cargando} className="btn-gold" style={{ opacity: cargando ? 0.7 : 1 }}>
