@@ -189,7 +189,19 @@ def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(
     validar_password(datos.password)
     existente = db.query(Usuario).filter(Usuario.email == email).first()
     if existente:
-        raise HTTPException(status_code=400, detail="Datos de registro invalidos")
+        if existente.email_verificado:
+            raise HTTPException(status_code=400, detail="Datos de registro invalidos")
+        # Email no verificado — limpiar cuenta incompleta y permitir re-registro
+        if existente.barberia_id:
+            bid = existente.barberia_id
+            db.query(Suscripcion).filter(Suscripcion.barberia_id == bid).delete(synchronize_session=False)
+            db.query(EmailVerificationToken).filter(EmailVerificationToken.usuario_id == existente.id).delete(synchronize_session=False)
+            db.delete(existente)
+            db.query(Barberia).filter(Barberia.id == bid).delete(synchronize_session=False)
+        else:
+            db.query(EmailVerificationToken).filter(EmailVerificationToken.usuario_id == existente.id).delete(synchronize_session=False)
+            db.delete(existente)
+        db.flush()
 
     # Crear barbería — plan siempre basico al registrarse, se sube via Stripe
     barberia = Barberia(
