@@ -514,11 +514,14 @@ export default function Planes() {
           <div style={{
             marginTop: 28, textAlign: 'center', padding: '14px 20px',
             background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.15)',
-            borderRadius: 12,
+            borderRadius: 12, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center',
           }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: '#C9A84C', fontWeight: 700 }}>
+              <LightningBolt size={13} style={{ filter: 'hue-rotate(30deg)' }} />
+              Precio especial por tiempo limitado.
+            </div>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
-              <span style={{ color: '#C9A84C', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 5 }}><LightningBolt size={13} style={{ filter: 'hue-rotate(30deg)' }} /> Precio especial por tiempo limitado.</span>
-              {' '}El plan anual se puede cancelar en cualquier momento desde el portal de facturacion.
+              El plan anual se puede cancelar en cualquier momento desde el portal de facturación.
             </p>
           </div>
         )}
