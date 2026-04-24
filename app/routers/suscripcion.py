@@ -147,23 +147,29 @@ def forzar_sincronizacion(
         if plan not in ("pro", "premium"):
             plan = "pro"
 
-        status = sub.status
-        items = list(sub.items.data) if sub.items and sub.items.data else []
-        price = items[0].price if items else None
-        interval = price.recurring.interval if price and price.recurring else "month"
-
+        status = getattr(sub, "status", "trialing")
         sus.stripe_subscription_id = sub.id
-        if price:
-            sus.stripe_price_id = price.id
-        sus.plan = plan
-        sus.periodo = "anual" if interval == "year" else "mensual"
 
+        try:
+            items = list(sub.items.data)
+            price = items[0].price if items else None
+            interval = price.recurring.interval if price and price.recurring else "month"
+            if price:
+                sus.stripe_price_id = price.id
+            sus.periodo = "anual" if interval == "year" else "mensual"
+        except Exception:
+            pass
+
+        sus.plan = plan
         barberia = db.query(Barberia).filter(Barberia.id == usuario.barberia_id).first()
 
         if status == "trialing":
             sus.estado = "trial"
-            if sub.trial_end:
-                sus.fecha_trial_fin = datetime.utcfromtimestamp(sub.trial_end)
+            try:
+                if sub.trial_end:
+                    sus.fecha_trial_fin = datetime.utcfromtimestamp(sub.trial_end)
+            except Exception:
+                pass
             if barberia:
                 barberia.plan = plan
                 barberia.activa = True
@@ -173,8 +179,11 @@ def forzar_sincronizacion(
                 barberia.plan = plan
                 barberia.activa = True
 
-        if sub.current_period_end:
-            sus.fecha_renovacion = datetime.utcfromtimestamp(sub.current_period_end)
+        try:
+            if sub.current_period_end:
+                sus.fecha_renovacion = datetime.utcfromtimestamp(sub.current_period_end)
+        except Exception:
+            pass
 
         db.commit()
         return {"ok": True, "plan": plan, "estado": sus.estado, "periodo": sus.periodo}
