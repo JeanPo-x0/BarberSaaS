@@ -6,7 +6,7 @@ import {
   getMisBarberos, crearBarbero, toggleBarbero, eliminarBarbero, invitarBarbero, editarBarbero,
   getMisServicios, crearServicio, toggleServicio, editarServicio, eliminarServicio,
   getMiBarberia, toggleBarberia, crearBarberiaAdicional,
-  getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio, actualizarMapsLink, actualizarTelefonoBarberia, forzarSyncSuscripcion,
+  getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio, actualizarMapsLink, actualizarTelefonoBarberia,
   getConfigPagos, updateConfigPagos,
 } from '../services/api';
 
@@ -136,12 +136,6 @@ function PanelDueno() {
   // Link copiado
   const [linkCopiado, setLinkCopiado] = useState(null);
 
-  const handleForzarSync = async () => {
-    try {
-      await forzarSyncSuscripcion();
-      getEstadoSuscripcion().then(r => setSuscripcion(r.data)).catch(() => {});
-    } catch (e) {}
-  };
 
   const cargarDatos = () => {
     getMisBarberos().then(r => setBarberos(r.data)).catch(() => {});

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { getEstadoSuscripcion, getPortalBilling, cambiarPassword, cancelarSuscripcion, reactivarSuscripcion, forzarSyncSuscripcion } from '../services/api';
+import { getEstadoSuscripcion, getPortalBilling, cambiarPassword, cancelarSuscripcion, reactivarSuscripcion } from '../services/api';
 
 const PLAN_LABEL = { basico: 'Trial', pro: 'Pro', premium: 'Premium' };
 const ESTADO_META = {
@@ -161,15 +161,6 @@ export default function Cuenta() {
     }
   };
 
-  const handleForzarSync = async () => {
-    try {
-      await forzarSyncSuscripcion();
-      const r = await getEstadoSuscripcion();
-      setSus(r.data);
-    } catch (err) {
-      alert(err.response?.data?.detail || err.message || 'Error desconocido');
-    }
-  };
 
   const handleCambiarPass = async (e) => {
     e.preventDefault();
