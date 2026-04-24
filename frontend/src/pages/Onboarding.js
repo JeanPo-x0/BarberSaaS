@@ -212,25 +212,27 @@ export default function Onboarding() {
                   <button
                     onClick={() => setAnual(a => !a)}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      background: anual ? 'rgba(74,222,128,0.08)' : 'var(--bg-secondary)',
-                      border: anual ? '1px solid rgba(74,222,128,0.25)' : '1px solid var(--border)',
-                      borderRadius: 100, padding: '3px 10px 3px 4px',
-                      cursor: 'pointer', fontFamily: "'DM Sans'", transition: 'all 0.2s',
+                      display: 'flex', alignItems: 'center', gap: 0,
+                      background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                      borderRadius: 100, padding: 3,
+                      cursor: 'pointer', fontFamily: "'DM Sans'",
                     }}
                   >
-                    <div style={{
-                      width: 18, height: 18, borderRadius: '50%',
-                      background: anual ? '#4ade80' : 'var(--border)',
-                      transition: 'background 0.2s',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    <span style={{
+                      padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700,
+                      background: !anual ? '#C9A84C' : 'transparent',
+                      color: !anual ? '#0A0A0A' : 'var(--text-muted)',
+                      transition: 'all 0.2s',
                     }}>
-                      {anual && <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
-                        <path d="M2 7l3.5 3.5L12 4" stroke="#0A0A0A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>}
-                    </div>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: anual ? '#4ade80' : 'var(--text-muted)' }}>
-                      {anual ? 'Anual' : 'Mensual'}
+                      Mensual
+                    </span>
+                    <span style={{
+                      padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700,
+                      background: anual ? '#4ade80' : 'transparent',
+                      color: anual ? '#0A0A0A' : 'var(--text-muted)',
+                      transition: 'all 0.2s',
+                    }}>
+                      Anual
                     </span>
                   </button>
                 </div>
