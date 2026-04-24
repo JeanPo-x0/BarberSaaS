@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { getEstadoSuscripcion, getPortalBilling, cambiarPassword, cancelarSuscripcion, reactivarSuscripcion } from '../services/api';
@@ -101,6 +102,7 @@ function InputPassword({ label, value, onChange, placeholder }) {
 
 export default function Cuenta() {
   const { usuario } = useAuth();
+  const navigate = useNavigate();
 
   const [sus, setSus] = useState(null);
   const [portalCargando, setPortalCargando] = useState(false);
@@ -128,7 +130,12 @@ export default function Cuenta() {
       const r = await getPortalBilling();
       window.location.href = r.data.portal_url;
     } catch (err) {
-      alert(err.response?.data?.detail || 'No se pudo abrir el portal de facturación');
+      const detail = err.response?.data?.detail || '';
+      if (detail === 'No tienes metodo de pago configurado' || err.response?.status === 400) {
+        navigate('/planes');
+      } else {
+        alert(detail || 'No se pudo abrir el portal de facturación');
+      }
     } finally {
       setPortalCargando(false);
     }
