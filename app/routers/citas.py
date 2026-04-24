@@ -40,21 +40,16 @@ def crear_cita(request: Request, cita: CitaCreate, db: Session = Depends(get_db)
     # Verificar conflicto usando solo citas pendientes (mismo criterio que ver_disponibilidad)
     servicio_nuevo = db.query(Servicio).filter(Servicio.id == cita.servicio_id).first()
     dur_nuevo = timedelta(minutes=servicio_nuevo.duracion_minutos if servicio_nuevo else 30)
-    citas_existentes = (
-        db.query(Cita, Servicio)
-        .outerjoin(Servicio, Servicio.id == Cita.servicio_id)
-        .filter(
-            and_(
-                Cita.barbero_id == cita.barbero_id,
-                Cita.estado == "pendiente",
-                Cita.fecha_hora >= cita.fecha_hora - timedelta(hours=4),
-                Cita.fecha_hora <= cita.fecha_hora + dur_nuevo,
-            )
+    citas_existentes = db.query(Cita).filter(
+        and_(
+            Cita.barbero_id == cita.barbero_id,
+            Cita.estado == "pendiente",
+            Cita.fecha_hora >= cita.fecha_hora - timedelta(hours=4),
+            Cita.fecha_hora <= cita.fecha_hora + dur_nuevo,
         )
-        .all()
-    )
-    for c_ex, s_ex in citas_existentes:
-        dur_ex = timedelta(minutes=s_ex.duracion_minutos if s_ex else 30)
+    ).all()
+    for c_ex in citas_existentes:
+        dur_ex = timedelta(minutes=c_ex.servicio.duracion_minutos if c_ex.servicio else 30)
         if c_ex.fecha_hora < cita.fecha_hora + dur_nuevo and c_ex.fecha_hora + dur_ex > cita.fecha_hora:
             raise HTTPException(status_code=400, detail="El barbero ya tiene una cita en ese horario")
 
@@ -196,7 +191,6 @@ def listar_mis_citas(usuario: Usuario = Depends(get_usuario_actual), db: Session
         db.query(Cita)
         .join(Barbero, Cita.barbero_id == Barbero.id)
         .filter(Barbero.barberia_id == usuario.barberia_id)
-        .distinct()
         .order_by(Cita.fecha_hora.asc())
         .all()
     )
