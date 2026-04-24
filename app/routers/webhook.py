@@ -41,9 +41,16 @@ async def webhook_whatsapp(request: Request, background_tasks: BackgroundTasks, 
     if body.upper().startswith("CANCELAR"):
         from_number = form_dict.get("From", "").replace("whatsapp:", "")
         to_number = form_dict.get("To", "").replace("whatsapp:", "")
-        respuesta, tarea_background = procesar_mensaje(db, from_number, to_number, body)
-        if tarea_background:
-            background_tasks.add_task(tarea_background)
+        try:
+            respuesta, tarea_background = procesar_mensaje(db, from_number, to_number, body)
+            if tarea_background:
+                background_tasks.add_task(tarea_background)
+        except Exception as e:
+            print(f"[Webhook] ERROR en procesar_mensaje: {e}")
+            respuesta = (
+                "Hubo un problema al procesar tu solicitud. "
+                "Intentá de nuevo o contactá directamente a tu barbería."
+            )
         twiml = (
             '<?xml version="1.0" encoding="UTF-8"?>'
             f"<Response><Message>{respuesta}</Message></Response>"

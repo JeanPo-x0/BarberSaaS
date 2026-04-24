@@ -356,96 +356,96 @@ def _paso_confirmacion(db: Session, conv: ConversacionBot, telefono: str, mensaj
 
 # ---------- entrada principal ----------
 
-def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str) -> str:
+def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str):
     mensaje = mensaje.strip()
 
-    # Keyword global: CANCELAR en cualquier momento
-    if mensaje.upper().startswith("CANCELAR"):
+    if not mensaje.upper().startswith("CANCELAR"):
+        return "No entendimos tu mensaje. Para cancelar una cita respondé *CANCELAR*.", None
+
+    try:
         conv = db.query(ConversacionBot).filter(ConversacionBot.telefono == telefono).first()
         if conv:
             _resetear(db, conv)
 
-        print(f"[CANCELAR] Buscando cliente con telefono: {telefono!r}")
+        print(f"[CANCELAR] Buscando cliente: {telefono!r}")
         cliente = _buscar_cliente(db, telefono)
-        if cliente:
-            # Busca la próxima cita pendiente. Las citas se guardan en hora CR (UTC-6),
-            # así que comparamos con hora CR, no UTC.
-            ahora_cr = datetime.utcnow() - timedelta(hours=6)
-            margen = ahora_cr - timedelta(minutes=30)
-            cita = db.query(Cita).filter(
+
+        if not cliente:
+            print(f"[CANCELAR] Cliente no encontrado: {telefono!r}")
+            return (
+                "No encontramos tu número en el sistema. "
+                "Asegurate de usar el mismo WhatsApp con el que agendaste tu cita.",
+                None,
+            )
+
+        # Citas en hora CR (UTC-6) — margen de 30 min para cancelar citas recién pasadas
+        ahora_cr = datetime.utcnow() - timedelta(hours=6)
+        margen = ahora_cr - timedelta(minutes=30)
+        cita = (
+            db.query(Cita)
+            .filter(
                 and_(
                     Cita.cliente_id == cliente.id,
                     Cita.estado == "pendiente",
                     Cita.fecha_hora >= margen,
                 )
-            ).order_by(Cita.fecha_hora).first()
+            )
+            .order_by(Cita.fecha_hora)
+            .first()
+        )
 
-            if cita:
-                cita.estado = "cancelada"
-                db.commit()
-                db.refresh(cita)
+        if not cita:
+            return (
+                "No encontramos ninguna cita pendiente asociada a tu número. "
+                "Si creés que es un error, contactá directamente a tu barbería.",
+                None,
+            )
 
-                barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
-                fecha_str = cita.fecha_hora.strftime("%d/%m/%y a las %H:%M")
+        cita.estado = "cancelada"
+        db.commit()
+        db.refresh(cita)
 
-                # Construir link de agendamiento
-                from app.core.config import settings
-                link_ag = ""
-                if barbero:
-                    barberia_obj = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first()
-                    if barberia_obj:
-                        link_ag = (
-                            f"{settings.FRONTEND_URL}/b/{barberia_obj.subdominio}"
-                            if getattr(barberia_obj, "subdominio", None)
-                            else f"{settings.FRONTEND_URL}/agendar/{barberia_obj.id}"
-                        )
+        barbero = db.query(Barbero).filter(Barbero.id == cita.barbero_id).first()
+        fecha_str = cita.fecha_hora.strftime("%d/%m/%y a las %H:%M")
 
-                msg_cancelacion = (
-                    f"✅ Tu cita del *{fecha_str}* ha sido cancelada exitosamente.\n\n"
-                    f"Cuando quieras volver a agendar, podés hacerlo directamente desde el link de tu barbería"
-                    + (f":\n{link_ag}" if link_ag else ".")
+        from app.core.config import settings
+        link_ag = ""
+        if barbero:
+            barberia_obj = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first()
+            if barberia_obj:
+                subdominio = getattr(barberia_obj, "subdominio", None)
+                link_ag = (
+                    f"{settings.FRONTEND_URL}/b/{subdominio}"
+                    if subdominio
+                    else f"{settings.FRONTEND_URL}/agendar/{barberia_obj.id}"
                 )
 
-                def notificar_barbero():
-                    try:
-                        from app.services.whatsapp import notificar_barbero_cancelacion
-                        if barbero and barbero.telefono:
-                            notificar_barbero_cancelacion(barbero.telefono, barbero.nombre, cliente.nombre, fecha_str)
-                    except Exception:
-                        pass
+        msg = (
+            f"✅ Tu cita del *{fecha_str}* fue cancelada exitosamente.\n\n"
+            f"Cuando quieras volver a agendar, podés hacerlo desde el link de tu barbería"
+            + (f":\n{link_ag}" if link_ag else ".")
+        )
 
-                return msg_cancelacion, notificar_barbero
+        _barbero = barbero
+        _cliente = cliente
 
-            return "No encontramos ninguna cita pendiente asociada a tu número. Si creés que es un error, contactá directamente a tu barbería.", None
+        def notificar_barbero():
+            try:
+                from app.services.whatsapp import notificar_barbero_cancelacion
+                if _barbero and _barbero.telefono:
+                    notificar_barbero_cancelacion(
+                        _barbero.telefono, _barbero.nombre, _cliente.nombre, fecha_str
+                    )
+            except Exception as e:
+                print(f"[CANCELAR] Error notificando barbero: {e}")
 
-    print(f"[CANCELAR] No se encontro cliente con telefono: {telefono!r}")
-    return "No encontramos tu número en el sistema. Asegurate de usar el mismo WhatsApp con el que agendaste tu cita.", None
+        print(f"[CANCELAR] Cita {cita.id} cancelada para cliente {cliente.id}")
+        return msg, notificar_barbero
 
-    # Identificar la barberia por el numero Twilio al que escribio el cliente
-    barberia = db.query(Barberia).filter(
-        and_(Barberia.twilio_numero == twilio_to, Barberia.activa == True)
-    ).first()
-
-    if not barberia:
-        return "Este número no está configurado con ninguna barbería activa. Contactá directamente al establecimiento.", None
-
-    conv = _obtener_o_crear_conv(db, telefono)
-
-    # Enrutar segun el paso actual
-    if conv.paso == "inicio":
-        return _paso_inicio(db, conv, barberia), None
-    elif conv.paso == "esperando_servicio":
-        return _paso_servicio(db, conv, mensaje), None
-    elif conv.paso == "esperando_barbero":
-        return _paso_barbero(db, conv, mensaje), None
-    elif conv.paso == "esperando_fecha":
-        return _paso_fecha(db, conv, mensaje), None
-    elif conv.paso == "esperando_hora":
-        return _paso_hora(db, conv, mensaje), None
-    elif conv.paso == "esperando_nombre":
-        return _paso_nombre(db, conv, mensaje), None
-    elif conv.paso == "confirmando":
-        return _paso_confirmacion(db, conv, telefono, mensaje), None
-    else:
-        _resetear(db, conv)
-        return _paso_inicio(db, conv, barberia), None
+    except Exception as e:
+        print(f"[CANCELAR] ERROR inesperado: {e}")
+        return (
+            "Hubo un problema al procesar tu cancelación. "
+            "Intentá de nuevo o contactá directamente a tu barbería.",
+            None,
+        )
