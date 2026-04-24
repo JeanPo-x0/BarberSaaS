@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { login, wakeUpServer, reenviarVerificacion, crearCheckout } from '../services/api';
+import { login, wakeUpServer, reenviarVerificacion } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import PasswordInput from '../components/PasswordInput';
 
