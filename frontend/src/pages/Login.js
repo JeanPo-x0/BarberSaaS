@@ -48,18 +48,7 @@ function Login() {
         localStorage.setItem('token', res.data.access_token);
       }
       iniciarSesion(res.data.usuario);
-      const pending = localStorage.getItem('pendingCheckout');
-      if (pending) {
-        localStorage.removeItem('pendingCheckout');
-        try {
-          const { plan, periodo } = JSON.parse(pending);
-          const checkoutRes = await crearCheckout({ plan, periodo });
-          window.location.href = checkoutRes.data.checkout_url;
-          return;
-        } catch {
-          // Si Stripe falla, continua al panel normalmente
-        }
-      }
+      localStorage.removeItem('pendingCheckout');
       navigate('/agenda');
     };
 

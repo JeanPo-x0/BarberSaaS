@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { getEstadoSuscripcion, getPortalBilling, cambiarPassword, cancelarSuscripcion, reactivarSuscripcion } from '../services/api';
+import { getEstadoSuscripcion, getPortalBilling, cambiarPassword, cancelarSuscripcion, reactivarSuscripcion, forzarSyncSuscripcion } from '../services/api';
 
 const PLAN_LABEL = { basico: 'Trial', pro: 'Pro', premium: 'Premium' };
 const ESTADO_META = {
@@ -249,6 +249,27 @@ export default function Cuenta() {
                     <Row label="Próxima renovación" value={new Date(sus.fecha_renovacion + 'Z').toLocaleDateString('es-CR')} />
                   )}
                   <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {/* Sync manual — para cuando el estado no coincide con Stripe */}
+                    {sus.estado === 'trial' && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            await forzarSyncSuscripcion();
+                            window.location.reload();
+                          } catch {
+                            alert('No se pudo sincronizar. Intentá de nuevo.');
+                          }
+                        }}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 8, width: 'fit-content',
+                          padding: '8px 16px', borderRadius: 10, cursor: 'pointer',
+                          background: 'none', border: '1px solid rgba(74,222,128,0.3)',
+                          color: '#4ade80', fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans'",
+                        }}
+                      >
+                        ↻ Ya pagué — actualizar estado
+                      </button>
+                    )}
                     {/* Portal facturación */}
                     <button
                       onClick={handlePortal}

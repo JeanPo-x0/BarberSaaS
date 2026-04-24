@@ -55,12 +55,16 @@ export default function SuscripcionExito() {
     sincronizado.current = true;
     const session_id = params.get('session_id');
     const sync = async () => {
-      try {
-        if (session_id) await sincronizarSuscripcion(session_id);
-      } catch {}
-      try {
-        await forzarSyncSuscripcion();
-      } catch {}
+      // Intentar sincronizar hasta 3 veces con delay (cubre cold start de Render ~30s)
+      for (let i = 0; i < 3; i++) {
+        try {
+          if (session_id) await sincronizarSuscripcion(session_id);
+          await forzarSyncSuscripcion();
+          break;
+        } catch {
+          if (i < 2) await new Promise(r => setTimeout(r, 5000));
+        }
+      }
       setSincronizando(false);
     };
     sync();

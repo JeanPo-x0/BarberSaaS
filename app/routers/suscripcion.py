@@ -215,7 +215,8 @@ def sincronizar_desde_checkout(
     except Exception:
         raise HTTPException(status_code=400, detail="Session invalida")
 
-    sub = session.get("subscription")
+    # Usar atributo directo — session.subscription es el objeto expandido
+    sub = getattr(session, "subscription", None)
     if not sub or isinstance(sub, str):
         raise HTTPException(status_code=400, detail="No hay suscripcion en este session")
 
@@ -223,17 +224,24 @@ def sincronizar_desde_checkout(
     if not sus:
         raise HTTPException(status_code=404, detail="Suscripcion no encontrada")
 
-    meta = sub.get("metadata", {})
-    plan = meta.get("plan") or session.get("metadata", {}).get("plan", "pro")
+    sub_meta = getattr(sub, "metadata", {}) or {}
+    ses_meta = getattr(session, "metadata", {}) or {}
+    plan = sub_meta.get("plan") or ses_meta.get("plan", "pro")
     if plan not in ("pro", "premium"):
         plan = "pro"
 
-    status = sub.get("status")
-    items = sub.get("items", {}).get("data", [])
-    interval = items[0]["price"]["recurring"]["interval"] if items else "month"
+    status = getattr(sub, "status", None)
+    try:
+        items = list(sub.items.data)
+        price = items[0].price if items else None
+        interval = price.recurring.interval if price and price.recurring else "month"
+        price_id = price.id if price else None
+    except Exception:
+        items, interval, price_id = [], "month", None
 
-    sus.stripe_subscription_id = sub["id"]
-    sus.stripe_price_id = items[0]["price"]["id"] if items else sus.stripe_price_id
+    sus.stripe_subscription_id = sub.id
+    if price_id:
+        sus.stripe_price_id = price_id
     sus.plan = plan
     sus.periodo = "anual" if interval == "year" else "mensual"
 
@@ -241,7 +249,7 @@ def sincronizar_desde_checkout(
 
     if status == "trialing":
         sus.estado = "trial"
-        trial_end = sub.get("trial_end")
+        trial_end = getattr(sub, "trial_end", None)
         if trial_end:
             sus.fecha_trial_fin = datetime.utcfromtimestamp(trial_end)
         if barberia:
@@ -253,12 +261,12 @@ def sincronizar_desde_checkout(
             barberia.plan = plan
             barberia.activa = True
 
-    ts = sub.get("current_period_end")
-    if ts:
-        sus.fecha_renovacion = datetime.utcfromtimestamp(ts)
+    period_end = getattr(sub, "current_period_end", None)
+    if period_end:
+        sus.fecha_renovacion = datetime.utcfromtimestamp(period_end)
 
     db.commit()
-    return {"ok": True, "plan": plan, "estado": sus.estado}
+    return {"ok": True, "plan": plan, "estado": sus.estado, "periodo": sus.periodo}
 
 
 @router.get("/portal")
