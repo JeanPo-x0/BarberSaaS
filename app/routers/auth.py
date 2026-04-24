@@ -225,12 +225,13 @@ def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(
     )
     db.add(suscripcion)
 
-    # Crear usuario dueño
+    # Crear usuario dueño — verificado de inmediato (Stripe es la verificación real)
     usuario = Usuario(
         email=email,
         password_hash=hash_password(datos.password),
         rol="dueno",
         barberia_id=barberia.id,
+        email_verificado=True,
     )
     db.add(usuario)
     db.flush()  # get usuario.id
@@ -240,10 +241,10 @@ def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(
     db.commit()
     db.refresh(usuario)
 
-    # Enviar verificación de email
+    # Enviar email de bienvenida
+    link_agendamiento = f"{settings.FRONTEND_URL}/agendar/{barberia.id}"
     try:
-        token_verificacion = _crear_token_verificacion(email, db)
-        enviar_verificacion_email(email, token_verificacion, settings.FRONTEND_URL)
+        enviar_bienvenida(email, barberia.nombre, link_agendamiento)
     except Exception:
         pass
 

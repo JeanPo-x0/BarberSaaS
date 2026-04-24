@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { onboarding, login, crearCheckout } from '../services/api';
+import { onboarding, login, crearCheckout, reenviarVerificacion } from '../services/api';
 import { NavLogo } from '../components/LogoLink';
 import { formatearInput, formatearTelefono } from '../utils/phone';
 import PasswordInput from '../components/PasswordInput';
@@ -430,8 +430,14 @@ export default function Onboarding() {
               <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '0 0 24px 0', lineHeight: 1.7 }}>
                 Hacé clic en el enlace del email para activar tu cuenta y luego iniciá sesión para completar el proceso.
               </p>
-              <button onClick={() => navigate('/login')} className="btn-gold" style={{ width: '100%' }}>
+              <button onClick={() => navigate('/login')} className="btn-gold" style={{ width: '100%', marginBottom: 10 }}>
                 Ir al login
+              </button>
+              <button
+                onClick={async () => { try { await reenviarVerificacion({ email: form.email }); alert('Email reenviado. Revisá tu bandeja.'); } catch { alert('No se pudo reenviar. Intentá de nuevo.'); } }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans'", textDecoration: 'underline' }}
+              >
+                No me llegó — reenviar email
               </button>
             </div>
           )}
