@@ -73,8 +73,11 @@ async def webhook_whatsapp(request: Request, background_tasks: BackgroundTasks, 
         cita_reciente = (
             db.query(Cita)
             .join(BarberoModel, Cita.barbero_id == BarberoModel.id)
-            .filter(Cita.cliente_id == cliente.id)
-            .order_by(Cita.fecha_hora.desc())
+            .filter(
+                Cita.cliente_id == cliente.id,
+                Cita.estado == "pendiente",
+            )
+            .order_by(Cita.fecha_hora.asc())
             .first()
         )
         if cita_reciente:
