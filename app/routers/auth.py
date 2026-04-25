@@ -206,25 +206,24 @@ def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(
             db.delete(existente)
         db.flush()
 
-    # Crear barbería — plan siempre basico al registrarse, se sube via Stripe
+    # Crear barbería — inactiva hasta que Stripe confirme el pago
     barberia = Barberia(
         nombre=sanitizar(datos.nombre_barberia),
         direccion=sanitizar(datos.direccion) if datos.direccion else None,
         telefono=datos.telefono,
         email=datos.email,
         plan="basico",
-        activa=True,
+        activa=False,
     )
     db.add(barberia)
     db.flush()  # obtener barberia.id sin commit
 
-    # Crear suscripción trial 14 días
+    # Suscripción pendiente — se activa cuando Stripe confirma el pago
     suscripcion = Suscripcion(
         barberia_id=barberia.id,
         plan="basico",
-        estado="trial",
+        estado="pendiente_pago",
         fecha_inicio=datetime.utcnow(),
-        fecha_trial_fin=datetime.utcnow() + timedelta(days=14),
     )
     db.add(suscripcion)
 

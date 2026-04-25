@@ -79,8 +79,8 @@ def crear_checkout(
         db.commit()
         db.refresh(sus)
     # Ya tiene suscripción: no es cliente nuevo, no aplica trial
-    elif sus.estado in ("trial",):
-        es_nuevo = True  # aún en trial: mantiene los días restantes
+    elif sus.estado in ("trial", "pendiente_pago"):
+        es_nuevo = True  # pendiente_pago = nunca pagó, trial = pagó pero en período de prueba
 
     url = stripe_service.crear_checkout_session(
         customer_id=sus.stripe_customer_id,
