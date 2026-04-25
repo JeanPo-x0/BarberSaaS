@@ -5,55 +5,59 @@ import { getEstadoSuscripcion, cancelarSuscripcion, reactivarSuscripcion, enviar
 const FAQS = [
   {
     q: '¿Cómo comparto el link de reservas con mis clientes?',
-    a: 'En la sección "Gestión" (tu panel), buscá la tarjeta de tu barbería. Ahí encontrás dos opciones:\n\n1. Link por defecto: algo como barbersas.com/agendar/1 — siempre está disponible.\n2. Link personalizado: podés configurar uno más fácil de recordar, por ejemplo barbersas.com/b/tu-barberia.\n\nPara compartirlo: copiá el link con el botón "Copiar" y pegalo donde quieras — WhatsApp, Instagram, Facebook, historia, bio, etc. Tus clientes solo tienen que abrirlo, elegir el barbero, el servicio y el horario. Sin app, sin cuenta, sin complicaciones.',
+    a: 'En la sección "Barberías" de tu panel, encontrás dos opciones:\n\n1. Link por defecto: algo como barbersas.com/agendar/1 — siempre está disponible.\n2. Link personalizado: podés configurar uno más fácil de recordar, por ejemplo barbersas.com/b/tu-barberia.\n\nCopiá el link con el botón "Copiar" y pegalo donde quieras — WhatsApp, Instagram, Facebook, historia, bio, etc. Tus clientes solo tienen que abrirlo, elegir el barbero, el servicio y el horario. Sin app, sin cuenta.',
   },
   {
-    q: '¿Por qué solo funciona el link corto de Google Maps y no el del navegador?',
-    a: 'Ambos formatos funcionan ahora. Podés pegar el link que aparece en la barra del navegador (el largo con todos los datos de ubicación) o el link corto que obtenés al dar "Compartir → Copiar link" en Google Maps. Ambos son válidos. También aceptamos links de Waze y Apple Maps.',
+    q: '¿Cómo configuro el horario de atención de mi barbería?',
+    a: 'En tu panel, andá a la sección "Barberías" y bajá hasta la tarjeta de tu barbería. Ahí encontrás la sección "Horario de atención" donde podés:\n\n- Elegir los días que abrís (botones por día: Dom, Lun, Mar, Mié, Jue, Vie, Sáb).\n- Configurar la hora de apertura y cierre.\n\nUna vez guardado, los clientes solo verán los días y horas disponibles en el calendario de reservas. Los días cerrados aparecen tachados y no se pueden seleccionar.',
+  },
+  {
+    q: '¿Cómo usa el barbero su cuenta propia?',
+    a: 'Los barberos pueden tener su propio login para ver su agenda sin acceso al panel del dueño. El proceso es:\n\n1. El dueño va a la sección "Barberos", abre la tarjeta del barbero y hace clic en "Invitar".\n2. Ingresa el correo del barbero y se envía un email de activación.\n3. El barbero abre el link del email, crea su contraseña y ya puede entrar en barbersas.com/login-barbero.\n\nDesde su dashboard, el barbero puede ver su agenda del día y la semana, y bloquear días en los que no va a trabajar.',
   },
   {
     q: '¿Cómo agendo una cita para mi cliente?',
-    a: 'Desde la pantalla de Agenda, usá el botón "Nueva cita" en la parte superior. Completá los datos del cliente, elegí el barbero, servicio y horario disponible.',
-  },
-  {
-    q: '¿Qué pasa si un cliente no llega a su cita?',
-    a: 'El sistema cancela automáticamente la cita 30 minutos después del horario pactado si no fue marcada como completada. Podés también cancelarla manualmente desde la Agenda.',
+    a: 'Desde la pantalla de Agenda, usá el botón "Nueva cita" en la parte superior. Completá los datos del cliente (nombre y teléfono), elegí el barbero, servicio y horario disponible.',
   },
   {
     q: '¿Cómo cancelo o reprogramo una cita?',
-    a: 'Desde la Agenda, hacé click en la cita y seleccioná "Cancelar". Para reprogramar, cancelá la existente y creá una nueva con el horario correcto.',
-  },
-  {
-    q: '¿Por qué no me llegan las notificaciones de WhatsApp al cliente?',
-    a: 'Las notificaciones de WhatsApp son manejadas automáticamente por BarberSaaS. Si un cliente no recibió su mensaje, verificá que el número esté bien escrito en la cita (solo los 8 dígitos, el prefijo +506 se agrega automáticamente). Si el problema persiste, reportanos el caso desde esta página.',
-  },
-  {
-    q: '¿Por qué sale "El barbero ya tiene una cita en ese horario"?',
-    a: 'El sistema bloquea un margen de 30 minutos antes y después de cada cita para el mismo barbero. Por ejemplo, si hay una cita a las 9:30, no se puede agendar otra para ese mismo barbero a las 10:00 porque cae dentro del margen. Si son barberos distintos, el horario sí está disponible — verificá que hayas seleccionado el barbero correcto.',
+    a: 'Desde la Agenda, encontrás el botón "Cancelar" en la cita. Para reprogramar, cancelá la existente y creá una nueva con el horario correcto.',
   },
   {
     q: '¿Cómo cancela su cita un cliente por WhatsApp?',
-    a: 'El cliente solo tiene que escribir la palabra CANCELAR (en mayúscula o minúscula) al número de WhatsApp de BarberSaaS. El sistema cancela automáticamente su próxima cita pendiente y le avisa al barbero. El cliente debe usar el mismo número de WhatsApp con el que agendó originalmente.',
+    a: 'El cliente escribe la palabra CANCELAR al número de WhatsApp de BarberSaaS. El sistema cancela automáticamente su cita pendiente más reciente y le avisa al barbero.\n\nFunciona aunque la hora de la cita ya haya pasado, siempre que la cita aún figure como "Pendiente" en el sistema. El cliente debe usar el mismo número de WhatsApp con el que agendó originalmente.',
+  },
+  {
+    q: '¿Por qué no me llegan las notificaciones de WhatsApp al cliente?',
+    a: 'Las notificaciones se envían automáticamente. Si un cliente no recibió su mensaje verificá:\n\n1. Que el número tenga exactamente 8 dígitos (el prefijo +506 se agrega solo).\n2. Que el cliente no haya bloqueado el número de BarberSaaS en WhatsApp.\n3. Puede haber demoras de algunos minutos en horas pico.\n\nSi el problema persiste, reportanos el caso con el número del cliente desde esta página.',
+  },
+  {
+    q: '¿Por qué sale "El barbero ya tiene una cita en ese horario"?',
+    a: 'El sistema bloquea un margen de 30 minutos alrededor de cada cita para el mismo barbero. Si hay una cita a las 9:30, no se puede agendar otra para ese barbero a las 10:00 porque cae dentro del margen. Con barberos distintos el horario sí está disponible — verificá que hayas seleccionado el barbero correcto.',
+  },
+  {
+    q: '¿Por qué solo funciona el link corto de Google Maps y no el del navegador?',
+    a: 'Ambos formatos funcionan. Podés pegar el link de la barra del navegador (el largo con todos los datos de ubicación) o el link corto de "Compartir → Copiar link" en Google Maps. También aceptamos links de Waze y Apple Maps.',
+  },
+  {
+    q: '¿Puedo usar el mismo correo de barbero en dos barberías distintas?',
+    a: 'Sí. El correo de un barbero es único dentro de cada barbería, no en todo el sistema. Un barbero que trabaja en dos barberías distintas puede ser invitado con el mismo correo en ambas y tendrá cuentas separadas para cada una.',
   },
   {
     q: '¿Puedo tener varias barberías con mi cuenta?',
-    a: 'Sí. El plan Pro permite hasta 3 barberos y el plan Premium permite barberos ilimitados.',
+    a: 'Sí. El plan Básico incluye 1 barbería. Los planes Pro y Premium permiten hasta 3 barberías registradas bajo una misma cuenta de dueño. Podés cambiar entre ellas desde el panel sin cerrar sesión.',
   },
   {
     q: '¿Cómo cambio de plan?',
-    a: 'Desde la sección "Tu Suscripción" en esta página podés ver tu plan actual. Para subir de plan escribinos a saascompany.cr@gmail.com y te orientamos. Los cambios aplican de inmediato.',
+    a: 'Desde la sección "Tu Suscripción" en esta página podés ver tu plan actual. Para subir de plan escribinos a saascompany.cr@gmail.com. Los cambios aplican de inmediato.',
   },
   {
     q: '¿Cómo cancelo mi suscripción?',
-    a: 'Desde la sección "Tu Suscripción" en esta misma página encontrás el botón "Cancelar suscripción". Al cancelar, seguís con acceso completo hasta el final del período ya pagado — sin cobros adicionales.',
+    a: 'Desde "Tu Suscripción" en esta página encontrás el botón "Cancelar suscripción". Al cancelar, seguís con acceso completo hasta el final del período ya pagado — sin cobros adicionales.',
   },
   {
     q: '¿Qué pasa cuando termina el período de prueba?',
-    a: 'Al finalizar los 14 días de prueba, se cobra automáticamente el plan seleccionado a la tarjeta registrada. Si no querés continuar, cancelá antes de que venza el trial desde la sección "Tu Suscripción".',
-  },
-  {
-    q: '¿Si cancelo durante el trial me cobran algo?',
-    a: 'No. Si cancelás antes de que terminen los 14 días, no se realiza ningún cobro. Seguís con acceso completo hasta que se cumpla el plazo. Al vencer, la cuenta se suspende automáticamente.',
+    a: 'Al finalizar los 14 días de prueba, se cobra automáticamente el plan seleccionado. Si no querés continuar, cancelá antes de que venza el trial desde "Tu Suscripción". No se realiza ningún cobro si cancelás dentro del trial.',
   },
   {
     q: '¿Si cancelo un plan ya pagado pierdo acceso de inmediato?',

@@ -20,7 +20,9 @@ Está prohibido usar BarberSaaS para actividades ilegales, fraudulentas o que vi
     title: '2. Agendamiento y Servicios',
     content: `Los clientes pueden agendar citas seleccionando uno o varios servicios simultáneamente (por ejemplo: corte + barba + cejas). La duración total y el precio se calculan automáticamente según los servicios seleccionados.
 
-El agendamiento queda sujeto a la disponibilidad del barbero seleccionado. BarberSaaS no garantiza la disponibilidad de un turno específico y no se hace responsable por errores en la disponibilidad mostrada si la barbería no mantiene su agenda actualizada.
+El agendamiento queda sujeto a la disponibilidad del barbero seleccionado y al horario configurado por el dueño de la barbería. Cada barbería define sus días de atención y horario de apertura/cierre; los días cerrados aparecen deshabilitados en el calendario de reservas y no pueden ser seleccionados por el cliente.
+
+BarberSaaS no garantiza la disponibilidad de un turno específico y no se hace responsable por errores en la disponibilidad mostrada si la barbería no mantiene su agenda y horario actualizados.
 
 Cada cita queda registrada con el cliente, el barbero asignado, los servicios seleccionados y el método de pago indicado. El cliente recibirá una confirmación vía WhatsApp al momento de agendar.`,
   },

@@ -193,6 +193,8 @@ body {
 .input-dark::placeholder { color: var(--text-muted); }
 .input-dark:focus         { border-color: var(--gold); }
 select.input-dark option  { background: var(--bg-secondary); }
+input[type="time"].input-dark { color-scheme: dark; }
+input[type="time"].input-dark::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
 
 /* ── Buttons ─────────────────────────────────────────── */
 .btn-gold {

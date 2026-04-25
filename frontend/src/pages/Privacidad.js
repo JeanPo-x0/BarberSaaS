@@ -14,7 +14,7 @@ De clientes:
 
 De dueños de barbería:
 - Nombre, correo electrónico y contraseña (almacenada con hash seguro).
-- Datos del establecimiento: nombre, dirección, teléfono, número SINPE, configuración de servicios y políticas de pago.
+- Datos del establecimiento: nombre, dirección, teléfono, número SINPE, configuración de servicios, horario de atención (días y horas) y políticas de pago.
 
 De barberos:
 - Nombre, teléfono, especialidad y correo electrónico (cuando el dueño envía una invitación de acceso).
