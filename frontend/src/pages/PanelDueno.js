@@ -1088,30 +1088,47 @@ function PanelDueno() {
                   )}
                 </div>
                 {editandoSinpe ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <input
-                      value={configPagosForm.sinpe_numero}
-                      onChange={e => {
-                        const val = e.target.value.replace(/\D/g, '').slice(0, 8);
-                        setConfigPagosForm(f => ({ ...f, sinpe_numero: val }));
-                      }}
-                      placeholder="Número de teléfono SINPE (ej: 88888888)"
-                      className="input-dark"
-                      inputMode="numeric"
-                      maxLength={8}
-                    />
-                    <input value={configPagosForm.sinpe_nombre} onChange={e => setConfigPagosForm(f => ({ ...f, sinpe_nombre: e.target.value }))}
-                      placeholder="Nombre que aparece en SINPE (ej: Juan Pérez)" className="input-dark" />
-                    <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: '#8A8A8A', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Número</span>
+                        <span style={{ fontSize: 11, color: (configPagosForm.sinpe_numero || '').length === 8 ? '#4ade80' : '#8A8A8A' }}>
+                          {(configPagosForm.sinpe_numero || '').length}/8
+                        </span>
+                      </div>
+                      <input
+                        value={configPagosForm.sinpe_numero || ''}
+                        onChange={e => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 8);
+                          setConfigPagosForm(f => ({ ...f, sinpe_numero: val }));
+                        }}
+                        placeholder="88888888"
+                        className="input-dark"
+                        inputMode="numeric"
+                        maxLength={8}
+                        style={{ letterSpacing: '0.1em', fontSize: 16 }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#8A8A8A', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Nombre en SINPE</span>
+                      <input
+                        value={configPagosForm.sinpe_nombre || ''}
+                        onChange={e => setConfigPagosForm(f => ({ ...f, sinpe_nombre: e.target.value }))}
+                        placeholder="Juan Pérez"
+                        className="input-dark"
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, paddingTop: 2 }}>
                       <button
                         type="button"
                         onClick={() => setEditandoSinpe(false)}
-                        disabled={configPagosForm.sinpe_numero.length !== 8}
+                        disabled={(configPagosForm.sinpe_numero || '').length !== 8}
                         style={{
-                          background: '#C9A84C', border: 'none',
-                          borderRadius: 8, padding: '7px 16px', color: '#0A0A0A',
-                          fontSize: 13, fontWeight: 700, cursor: configPagosForm.sinpe_numero.length !== 8 ? 'not-allowed' : 'pointer',
-                          fontFamily: "'DM Sans'", opacity: configPagosForm.sinpe_numero.length !== 8 ? 0.5 : 1,
+                          background: (configPagosForm.sinpe_numero || '').length === 8 ? '#C9A84C' : 'rgba(201,168,76,0.15)',
+                          border: 'none', borderRadius: 8, padding: '8px 20px',
+                          color: (configPagosForm.sinpe_numero || '').length === 8 ? '#0A0A0A' : '#5a4a20',
+                          fontSize: 13, fontWeight: 700, cursor: (configPagosForm.sinpe_numero || '').length !== 8 ? 'not-allowed' : 'pointer',
+                          fontFamily: "'DM Sans'", transition: 'all 0.15s',
                         }}
                       >
                         Guardar
@@ -1123,8 +1140,8 @@ function PanelDueno() {
                           setEditandoSinpe(false);
                         }}
                         style={{
-                          background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
-                          borderRadius: 8, padding: '7px 14px', color: '#8A8A8A',
+                          background: 'transparent', border: '1px solid rgba(255,255,255,0.08)',
+                          borderRadius: 8, padding: '8px 16px', color: '#666',
                           fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans'",
                         }}
                       >
@@ -1133,20 +1150,20 @@ function PanelDueno() {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{
-                      padding: '10px 14px', background: 'rgba(255,255,255,0.02)',
-                      border: '1px solid var(--border)', borderRadius: 8,
-                      fontSize: 14, color: configPagosForm.sinpe_numero ? '#F5F5F5' : '#8A8A8A',
-                    }}>
-                      {configPagosForm.sinpe_numero || 'Sin número configurado'}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#8A8A8A', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Número</span>
+                      <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.12em', color: configPagosForm.sinpe_numero ? '#F5F5F5' : '#444' }}>
+                        {configPagosForm.sinpe_numero
+                          ? `${(configPagosForm.sinpe_numero || '').slice(0,4)} ${(configPagosForm.sinpe_numero || '').slice(4)}`
+                          : '— — — —'}
+                      </span>
                     </div>
-                    <div style={{
-                      padding: '10px 14px', background: 'rgba(255,255,255,0.02)',
-                      border: '1px solid var(--border)', borderRadius: 8,
-                      fontSize: 14, color: configPagosForm.sinpe_nombre ? '#F5F5F5' : '#8A8A8A',
-                    }}>
-                      {configPagosForm.sinpe_nombre || 'Sin nombre configurado'}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#8A8A8A', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Nombre</span>
+                      <span style={{ fontSize: 14, color: configPagosForm.sinpe_nombre ? '#C9A84C' : '#444' }}>
+                        {configPagosForm.sinpe_nombre || 'Sin configurar'}
+                      </span>
                     </div>
                   </div>
                 )}
