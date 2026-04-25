@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { getEstadoSuscripcion, getPortalBilling, cambiarPassword, cancelarSuscripcion, reactivarSuscripcion, forzarSyncSuscripcion } from '../services/api';
 
-const PLAN_LABEL = { basico: 'Trial', pro: 'Pro', premium: 'Premium' };
+const PLAN_LABEL = { basico: 'Sin plan', pro: 'Pro', premium: 'Premium' };
 const ESTADO_META = {
   trial:               { label: 'Trial activo',         color: '#C9A84C', bg: 'rgba(201,168,76,0.12)'  },
   activa:              { label: 'Activa',               color: '#4ade80', bg: 'rgba(74,222,128,0.1)'   },
@@ -194,7 +194,12 @@ export default function Cuenta() {
     }
   };
 
-  const estadoMeta = sus ? (ESTADO_META[sus.estado] || ESTADO_META.cancelada) : null;
+  const pendientePago = sus?.estado === 'trial' && sus?.plan === 'basico';
+  const estadoMeta = sus
+    ? pendientePago
+      ? { label: 'Pendiente de pago', color: '#E63946', bg: 'rgba(230,57,70,0.12)' }
+      : (ESTADO_META[sus.estado] || ESTADO_META.cancelada)
+    : null;
   const trialFin = sus?.fecha_trial_fin ? new Date(sus.fecha_trial_fin + 'Z') : null;
   const diasTrial = trialFin ? Math.max(0, Math.ceil((trialFin - Date.now()) / 86400000)) : null;
 
@@ -249,8 +254,22 @@ export default function Cuenta() {
                     <Row label="Próxima renovación" value={new Date(sus.fecha_renovacion + 'Z').toLocaleDateString('es-CR')} />
                   )}
                   <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {/* Sync manual — para cuando el estado no coincide con Stripe */}
-                    {sus.estado === 'trial' && (
+                    {/* Pendiente de pago — nunca completó Stripe */}
+                    {pendientePago && (
+                      <button
+                        onClick={() => navigate('/planes')}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 8, width: 'fit-content',
+                          padding: '10px 20px', borderRadius: 10, cursor: 'pointer',
+                          background: 'rgba(230,57,70,0.1)', border: '1px solid rgba(230,57,70,0.4)',
+                          color: '#E63946', fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'",
+                        }}
+                      >
+                        Completar pago — elegir plan
+                      </button>
+                    )}
+                    {/* Sync manual — ya pagó en Stripe pero el estado no actualizó */}
+                    {sus.estado === 'trial' && !pendientePago && (
                       <button
                         onClick={async () => {
                           try {
