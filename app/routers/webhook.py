@@ -57,14 +57,30 @@ async def webhook_whatsapp(request: Request, background_tasks: BackgroundTasks, 
         )
         return Response(content=twiml, media_type="application/xml")
 
-    # Para cualquier otro mensaje, buscar la barbería y devolver el link
-    to_number = form_dict.get("To", "").replace("whatsapp:", "")
+    # Para cualquier otro mensaje: identificar la barbería del cliente por su cita más reciente
+    from_number = form_dict.get("From", "").replace("whatsapp:", "")
     from app.models.barberia import Barberia
+    from app.models.cliente import Cliente
+    from app.models.cita import Cita
+    from app.models.barbero import Barbero as BarberoModel
+    from app.services.bot import _buscar_cliente
     from sqlalchemy import and_
     from app.core.config import settings
-    barberia = db.query(Barberia).filter(
-        and_(Barberia.twilio_numero == to_number, Barberia.activa == True)
-    ).first()
+
+    barberia = None
+    cliente = _buscar_cliente(db, from_number)
+    if cliente:
+        cita_reciente = (
+            db.query(Cita)
+            .join(BarberoModel, Cita.barbero_id == BarberoModel.id)
+            .filter(Cita.cliente_id == cliente.id)
+            .order_by(Cita.fecha_hora.desc())
+            .first()
+        )
+        if cita_reciente:
+            barbero = db.query(BarberoModel).filter(BarberoModel.id == cita_reciente.barbero_id).first()
+            if barbero:
+                barberia = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first()
 
     if barberia:
         link = (
@@ -73,15 +89,15 @@ async def webhook_whatsapp(request: Request, background_tasks: BackgroundTasks, 
             else f"{settings.FRONTEND_URL}/agendar/{barberia.id}"
         )
         respuesta = (
-            f"Hola, gracias por escribirnos a *{barberia.nombre}*.\n\n"
-            f"Podés reservar tu cita fácilmente desde este link:\n{link}\n\n"
-            f"Si querés *cancelar* una cita existente, respondé *CANCELAR* y lo gestionamos en segundos."
+            f"¡Hola! Gracias por contactar a *{barberia.nombre}*. 💈\n\n"
+            f"Podés reservar tu próxima cita fácilmente desde aquí:\n{link}\n\n"
+            f"Si necesitás *cancelar* una cita existente, simplemente respondé *CANCELAR* y lo gestionamos de inmediato."
         )
     else:
         respuesta = (
-            "Hola, gracias por escribirnos. "
-            "Para agendar una cita usá el link que te compartió tu barbería. "
-            "Si necesitás cancelar una cita existente, respondé *CANCELAR*."
+            "¡Hola! Gracias por escribirnos. 💈\n\n"
+            "Para reservar tu cita, usá el link de agendamiento que te compartió tu barbería.\n\n"
+            "Si necesitás *cancelar* una cita existente, respondé *CANCELAR* y lo procesamos en segundos."
         )
 
     twiml = (
