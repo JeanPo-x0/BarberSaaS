@@ -151,7 +151,7 @@ export default function Onboarding() {
             <p style={{ fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: '0.1em', color: '#C9A84C', margin: 0, lineHeight: 1 }}>
               Registrá tu barbería
             </p>
-            <p style={{ fontSize: 11, color: '#555', margin: 0, letterSpacing: '0.04em' }}>BarberSaaS · {anual ? 'acceso inmediato' : '14 días gratis'}</p>
+            <p style={{ fontSize: 11, color: '#555', margin: 0, letterSpacing: '0.04em' }}>BarberSaaS · {(!anual && form.plan === 'pro') ? '14 días gratis' : 'acceso inmediato'}</p>
           </div>
         </div>
 
@@ -221,7 +221,7 @@ export default function Onboarding() {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                   <label style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                    Elegí tu plan — <span style={{ color: '#C9A84C' }}>{anual ? 'ahorrás 33%' : '14 días gratis'}</span>
+                    Elegí tu plan — <span style={{ color: '#C9A84C' }}>{anual ? 'ahorrás 33%' : form.plan === 'pro' ? '14 días gratis' : 'acceso inmediato'}</span>
                   </label>
                   {/* Toggle mensual / anual */}
                   <button
@@ -416,7 +416,7 @@ export default function Onboarding() {
                 <p style={{ fontSize: 12, color: anual ? '#C9A84C' : '#4ade80', margin: 0, lineHeight: 1.7, opacity: 0.9 }}>
                   {anual
                     ? <>Serás redirigido a Stripe para completar el pago de <strong>${form.plan === 'premium' ? '472' : '232'}/año</strong>. El acceso se activa de inmediato.</>
-                    : <>Te pediremos una tarjeta para activar los <strong>14 días gratis</strong>. No se realiza ningún cobro hasta que termine el trial. Cancelá antes sin costo.</>
+                    : form.plan === 'pro' ? <>Te pediremos una tarjeta para activar los <strong>14 días gratis</strong>. No se realiza ningún cobro hasta que termine el trial. Cancelá antes sin costo.</> : <>Serás redirigido a Stripe para completar el pago de <strong>${form.plan === 'premium' ? '59' : '29'}/mes</strong>. El acceso se activa de inmediato.</>
                   }
                 </p>
               </div>

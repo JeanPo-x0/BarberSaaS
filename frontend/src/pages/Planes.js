@@ -314,7 +314,7 @@ export default function Planes() {
             Planes y Precios
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 16, margin: '0 0 10px 0' }}>
-            {!anual ? '14 días gratis en planes mensuales. Sin cobros hasta que termine el trial.' : 'Plan anual: acceso inmediato, sin período de prueba.'}
+            {!anual ? 'Plan Pro incluye 14 días gratis. Sin cobros hasta que termine el trial.' : 'Plan anual: acceso inmediato, sin período de prueba.'}
           </p>
           {anual && (
             <p style={{ fontSize: 13, color: '#FB923C', fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
