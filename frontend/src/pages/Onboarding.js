@@ -74,6 +74,9 @@ export default function Onboarding() {
         telefono: form.telefono ? formatearTelefono(form.telefono) : '',
       });
       const loginRes = await login({ email: form.email, password: form.password });
+      if (loginRes.data.access_token) {
+        localStorage.setItem('token', loginRes.data.access_token);
+      }
       const bid = loginRes.data.usuario?.barberia_id;
       localStorage.setItem('usuario', JSON.stringify(loginRes.data.usuario));
       setLinkGenerado(`${window.location.origin}/agendar/${bid}`);

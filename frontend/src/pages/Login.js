@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { login, wakeUpServer, reenviarVerificacion } from '../services/api';
+import { login, wakeUpServer, reenviarVerificacion, crearCheckout } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import PasswordInput from '../components/PasswordInput';
 
@@ -48,7 +48,18 @@ function Login() {
         localStorage.setItem('token', res.data.access_token);
       }
       iniciarSesion(res.data.usuario);
-      localStorage.removeItem('pendingCheckout');
+      const pending = localStorage.getItem('pendingCheckout');
+      if (pending) {
+        localStorage.removeItem('pendingCheckout');
+        try {
+          const { plan, periodo } = JSON.parse(pending);
+          const checkoutRes = await crearCheckout({ plan, periodo });
+          window.location.href = checkoutRes.data.url;
+          return;
+        } catch {
+          // si falla el checkout igual entrar a la app
+        }
+      }
       navigate('/agenda');
     };
 
