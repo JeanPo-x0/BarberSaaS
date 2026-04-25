@@ -341,20 +341,20 @@ def exportar_pdf(
     pdf.set_y(10)
     pdf.set_font("Helvetica", "B", 18)
     pdf.set_text_color(*GOLD)
-    pdf.cell(0, 8, "BarberSaaS", ln=False, align='L')
+    pdf.cell(0, 8, "BarberSaaS", align='L')
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(*MUTED)
     pdf.set_y(10)
-    pdf.cell(0, 8, f"Generado: {ahora.strftime('%d/%m/%Y %H:%M')} UTC", align='R', ln=True)
+    pdf.cell(0, 8, f"Generado: {ahora.strftime('%d/%m/%Y %H:%M')} UTC", align='R', new_x="LMARGIN", new_y="NEXT")
     pdf.set_y(40)
 
     # Barbería y periodo
     pdf.set_font("Helvetica", "B", 20)
     pdf.set_text_color(*DARK)
-    pdf.cell(0, 10, safe(barberia.nombre), ln=True)
+    pdf.cell(0, 10, safe(barberia.nombre), new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "", 11)
     pdf.set_text_color(*MUTED)
-    pdf.cell(0, 6, safe(f"Reporte de citas — {hace_30.strftime('%d/%m/%Y')} al {ahora.strftime('%d/%m/%Y')}"), ln=True)
+    pdf.cell(0, 6, safe(f"Reporte de citas — {hace_30.strftime('%d/%m/%Y')} al {ahora.strftime('%d/%m/%Y')}"), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(6)
 
     # Línea separadora
@@ -379,17 +379,17 @@ def exportar_pdf(
         pdf.set_xy(x, y0 + 3)
         pdf.set_font("Helvetica", "", 7)
         pdf.set_text_color(*MUTED)
-        pdf.cell(col_w, 4, label, align='C', ln=False)
+        pdf.cell(col_w, 4, label, align='C')
         pdf.set_xy(x, y0 + 9)
         pdf.set_font("Helvetica", "B", 13)
         pdf.set_text_color(*color)
-        pdf.cell(col_w, 8, safe(value), align='C', ln=False)
+        pdf.cell(col_w, 8, safe(value), align='C')
     pdf.set_y(y0 + 28)
 
     if not citas:
         pdf.set_font("Helvetica", "", 12)
         pdf.set_text_color(*MUTED)
-        pdf.cell(0, 10, "No hay citas en este periodo.", ln=True, align='C')
+        pdf.cell(0, 10, "No hay citas en este periodo.", align='C', new_x="LMARGIN", new_y="NEXT")
     else:
         # Encabezado tabla
         headers = ["Fecha", "Hora", "Barbero", "Cliente", "Servicio", "Precio", "Estado"]
@@ -449,7 +449,7 @@ def exportar_pdf(
         total_w = sum(col_ws[:6])
         pdf.cell(total_w, 7, f"Total ingresos ({completadas} citas completadas):", align='R')
         pdf.set_text_color(*GOLD)
-        pdf.cell(col_ws[6], 7, safe(f"CRC {ingresos:,.0f}"), align='C', ln=True)
+        pdf.cell(col_ws[6], 7, safe(f"CRC {ingresos:,.0f}"), align='C', new_x="LMARGIN", new_y="NEXT")
 
     # Footer
     pdf.set_y(-18)
