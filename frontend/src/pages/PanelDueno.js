@@ -114,9 +114,6 @@ function PanelDueno() {
     dias: (b.dias_abiertos || '1,2,3,4,5,6').split(',').map(Number),
   };
 
-  const setHorario = (barbId, patch) =>
-    setHorarioForms(f => ({ ...f, [barbId]: { ...getHorarioForm({ id: barbId, ...patch }), ...patch } }));
-
   const handleGuardarHorario = async (b) => {
     const form = getHorarioForm(b);
     setGuardandoHorario(true);

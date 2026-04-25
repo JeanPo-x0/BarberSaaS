@@ -283,13 +283,17 @@ def exportar_pdf(
     db: Session = Depends(get_db),
 ):
     """Genera y descarga un reporte PDF de los últimos 30 días — solo Premium."""
+    try:
+        from fpdf import FPDF, __version__ as fpdf_version
+        print(f"[PDF] fpdf2 version: {fpdf_version}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"fpdf2 no disponible: {e}")
+
     barberia = _verificar_plan(usuario, db)
     sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia.id).first()
     plan = sus.plan if sus else barberia.plan
     if plan != "premium":
         raise HTTPException(status_code=403, detail="Esta funcion requiere plan Premium")
-
-    from fpdf import FPDF
 
     ahora = datetime.utcnow()
     hace_30 = ahora - timedelta(days=30)
@@ -457,7 +461,14 @@ def exportar_pdf(
     pdf.set_text_color(*MUTED)
     pdf.cell(0, 6, "BarberSaaS — Sistema de gestion de barberias | barbersas.com", align='C')
 
-    buf = io.BytesIO(pdf.output())
+    try:
+        output = pdf.output()
+        buf = io.BytesIO(bytes(output) if not isinstance(output, bytes) else output)
+    except Exception as e:
+        import traceback
+        print(f"[PDF] Error generando PDF: {e}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Error generando PDF: {e}")
+
     filename = f"reporte_{barberia.nombre.lower().replace(' ', '_')}_{ahora.strftime('%Y%m%d')}.pdf"
     return StreamingResponse(
         buf,

@@ -309,6 +309,16 @@ app.add_middleware(
     allow_credentials=True,
 )
 
+_cors_set = set(_cors_origins)
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    import traceback
+    print(f"[500] {request.method} {request.url.path} — {exc}\n{traceback.format_exc()}")
+    origin = request.headers.get("origin", "")
+    headers = {"Access-Control-Allow-Origin": origin, "Access-Control-Allow-Credentials": "true"} if origin in _cors_set else {}
+    return JSONResponse(status_code=500, content={"detail": "Error interno del servidor"}, headers=headers)
+
 app.include_router(auth.router)
 app.include_router(webhook.router)
 app.include_router(barberias.router)
