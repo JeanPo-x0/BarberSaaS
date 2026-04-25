@@ -318,25 +318,34 @@ def exportar_pdf(
     ingresos    = _sumar_ingresos(db, barberia.id, hace_30, ahora)
 
     # ── Construir PDF ────────────────────────────────────────────
-    LM = 14        # left/right margin
+    LM = 20        # left/right margin mm (≈ 30px equivalent)
     PW = 210       # A4 width mm
-    UW = PW - LM * 2   # usable width = 182mm
+    UW = PW - LM * 2   # 170mm usable
 
     pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.set_auto_page_break(auto=True, margin=22)
     pdf.add_page()
-    pdf.set_margins(LM, LM, LM)
+    pdf.set_margins(LM, 10, LM)
 
-    GOLD    = (201, 168, 76)
-    DARK    = (18,  18,  18)
-    DARK2   = (40,  40,  40)
-    MUTED   = (140, 140, 140)
-    WHITE   = (255, 255, 255)
-    GREEN   = (22,  163, 74)
-    RED     = (220, 38,  38)
-    ORANGE  = (234, 88,  12)
-    LIGHT   = (248, 248, 248)
-    BORDER  = (220, 220, 220)
+    # Palette — matches spec exactly
+    DARK         = (26,  26,  26)    # #1a1a1a
+    DARK_TXT     = (17,  17,  17)    # #111
+    MUTED        = (170, 170, 170)   # #aaa
+    WHITE        = (255, 255, 255)
+    GOLD_DK      = (180, 83,  9)     # #b45309
+    BORDER       = (229, 229, 229)   # #e5e5e5
+    ROW_LINE     = (240, 240, 240)   # #f0f0f0
+    FAFAFA       = (250, 250, 250)
+    KPI_TOT      = (17,  17,  17)
+    KPI_COMP     = (22,  163, 74)    # #16a34a
+    KPI_CANC     = (220, 38,  38)    # #dc2626
+    KPI_ING      = (180, 83,  9)     # #b45309
+    BADGE_GRN_BG = (220, 252, 231)   # #dcfce7
+    BADGE_GRN_TX = (21,  128, 61)    # #15803d
+    BADGE_RED_BG = (254, 226, 226)   # #fee2e2
+    BADGE_RED_TX = (185, 28,  28)    # #b91c1c
+    BADGE_ORG_BG = (254, 243, 199)
+    BADGE_ORG_TX = (146, 64,  14)
 
     def safe(text: str) -> str:
         reps = {'á':'a','é':'e','í':'i','ó':'o','ú':'u','ü':'u',
@@ -346,127 +355,112 @@ def exportar_pdf(
             text = text.replace(k, v)
         return text
 
-    def trunc(text: str, max_chars: int) -> str:
-        return text if len(text) <= max_chars else text[:max_chars - 1] + "."
+    def trunc(text: str, n: int) -> str:
+        return text if len(text) <= n else text[:n - 1] + '.'
 
-    # ── HEADER (full-width dark band) ────────────────────────────
+    # ── HEADER — full-width dark band, 20mm vertical padding ─────
+    HDR_H = 40
     pdf.set_fill_color(*DARK)
-    pdf.rect(0, 0, PW, 44, 'F')
-    pdf.set_fill_color(*GOLD)
-    pdf.rect(0, 0, 5, 44, 'F')          # gold left accent
+    pdf.rect(0, 0, PW, HDR_H, 'F')
 
-    pdf.set_xy(LM + 2, 11)
+    pdf.set_xy(LM, 12)
     pdf.set_font("Helvetica", "B", 20)
-    pdf.set_text_color(*GOLD)
-    pdf.cell(80, 10, "BarberSaaS", align='L')
+    pdf.set_text_color(212, 175, 55)   # #D4AF37
+    pdf.cell(90, 9, "BarberSaaS", align='L')
 
-    pdf.set_xy(LM + 2, 25)
-    pdf.set_font("Helvetica", "", 8)
-    pdf.set_text_color(160, 160, 160)
-    pdf.cell(80, 5, "Sistema de Gestion de Barberias", align='L')
+    pdf.set_xy(LM, 23)
+    pdf.set_font("Helvetica", "", 7.5)
+    pdf.set_text_color(*MUTED)
+    pdf.cell(90, 5, "Sistema de Gestion de Barberias", align='L')
 
-    pdf.set_xy(LM + 82, 13)
+    pdf.set_xy(LM + 90, 16)
     pdf.set_font("Helvetica", "", 8.5)
-    pdf.set_text_color(180, 180, 180)
-    pdf.cell(UW - 82, 6, f"Generado: {ahora.strftime('%d/%m/%Y  %H:%M')} UTC", align='R')
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(UW - 90, 7, f"Generado: {ahora.strftime('%d/%m/%Y  %H:%M')} UTC", align='R')
 
-    pdf.set_xy(LM + 82, 22)
-    pdf.set_font("Helvetica", "", 8)
-    pdf.set_text_color(120, 120, 120)
-    pdf.cell(UW - 82, 6, "barbersas.com", align='R')
+    # Gold separator line full-width, 0.7mm ≈ 2px
+    pdf.set_draw_color(212, 175, 55)
+    pdf.set_line_width(0.7)
+    pdf.line(0, HDR_H, PW, HDR_H)
 
-    pdf.set_y(54)
+    pdf.set_y(HDR_H + 11)
 
     # ── BARBERÍA NAME + PERIODO ──────────────────────────────────
-    pdf.set_font("Helvetica", "B", 18)
-    pdf.set_text_color(*DARK)
-    pdf.cell(0, 9, safe(barberia.nombre), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.set_text_color(*DARK_TXT)
+    pdf.cell(0, 8, safe(barberia.nombre), new_x="LMARGIN", new_y="NEXT")
 
-    pdf.set_font("Helvetica", "", 9.5)
+    pdf.set_font("Helvetica", "", 9)
     pdf.set_text_color(*MUTED)
-    periodo = f"Reporte de citas: {hace_30.strftime('%d/%m/%Y')} al {ahora.strftime('%d/%m/%Y')}"
-    pdf.cell(0, 5, safe(periodo), new_x="LMARGIN", new_y="NEXT")
-    pdf.ln(5)
+    pdf.cell(0, 5,
+             safe(f"Periodo: {hace_30.strftime('%d/%m/%Y')} - {ahora.strftime('%d/%m/%Y')}"),
+             new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(8)
 
-    # Gold separator
-    pdf.set_draw_color(*GOLD)
-    pdf.set_line_width(0.7)
-    pdf.line(LM, pdf.get_y(), PW - LM, pdf.get_y())
-    pdf.ln(9)
-
-    # ── KPI CARDS (4 cards, gap 3mm) ────────────────────────────
-    CARD_W = (UW - 9) / 4    # ~42.75mm each
-    CARD_H = 26
+    # ── KPI CARDS — 4 cols, border 0.5px #e5e5e5 ────────────────
+    GAP    = 3
+    CARD_W = (UW - GAP * 3) / 4   # ~40.75mm
+    CARD_H = 28
     y_kpi  = pdf.get_y()
 
     kpis = [
-        ("TOTAL CITAS",  str(total),                 DARK,  str(pendientes) + " pendientes"),
-        ("COMPLETADAS",  str(completadas),            GREEN, ""),
-        ("CANCELADAS",   str(canceladas),             RED,   ""),
-        ("INGRESOS",     f"CRC {ingresos:,.0f}",      GOLD,  "ultimos 30 dias"),
+        ("TOTAL CITAS", str(total),             KPI_TOT),
+        ("COMPLETADAS", str(completadas),        KPI_COMP),
+        ("CANCELADAS",  str(canceladas),         KPI_CANC),
+        ("INGRESOS",    f"CRC {ingresos:,.0f}", KPI_ING),
     ]
-    for i, (label, value, color, sub) in enumerate(kpis):
-        x = LM + i * (CARD_W + 3)
-        # card bg + border
-        pdf.set_fill_color(*LIGHT)
+    for i, (label, value, vcolor) in enumerate(kpis):
+        cx = LM + i * (CARD_W + GAP)
+        pdf.set_fill_color(*WHITE)
         pdf.set_draw_color(*BORDER)
-        pdf.set_line_width(0.2)
-        pdf.rect(x, y_kpi, CARD_W, CARD_H, 'FD')
-        # gold top accent bar
-        pdf.set_fill_color(*GOLD)
-        pdf.rect(x, y_kpi, CARD_W, 1.8, 'F')
-        # label
-        pdf.set_xy(x, y_kpi + 4)
-        pdf.set_font("Helvetica", "B", 6)
+        pdf.set_line_width(0.4)
+        pdf.rect(cx, y_kpi, CARD_W, CARD_H, 'FD')
+
+        # label 10px caps ≈ 7pt
+        pdf.set_xy(cx, y_kpi + 5)
+        pdf.set_font("Helvetica", "B", 6.5)
         pdf.set_text_color(*MUTED)
         pdf.cell(CARD_W, 4, label, align='C')
-        # value
-        font_sz = 15 if len(value) <= 6 else 11 if len(value) <= 12 else 9
-        pdf.set_xy(x, y_kpi + 9)
-        pdf.set_font("Helvetica", "B", font_sz)
-        pdf.set_text_color(*color)
-        pdf.cell(CARD_W, 9, safe(value), align='C')
-        # sub-label
-        if sub:
-            pdf.set_xy(x, y_kpi + 19)
-            pdf.set_font("Helvetica", "", 6)
-            pdf.set_text_color(*MUTED)
-            pdf.cell(CARD_W, 4, safe(sub), align='C')
+
+        # value 22px ≈ 15.5pt
+        fsz = 15 if len(value) <= 7 else 11 if len(value) <= 13 else 9
+        pdf.set_xy(cx, y_kpi + 11)
+        pdf.set_font("Helvetica", "B", fsz)
+        pdf.set_text_color(*vcolor)
+        pdf.cell(CARD_W, 11, safe(value), align='C')
 
     pdf.set_y(y_kpi + CARD_H + 10)
 
-    # ── TABLE ────────────────────────────────────────────────────
-    # Columns sum exactly = UW (182mm)
+    # ── TABLE — columns sum = 170mm = UW ─────────────────────────
     COLS = [
-        ("Fecha",    22),
-        ("Hora",     13),
-        ("Barbero",  28),
-        ("Cliente",  31),
-        ("Servicio", 38),
-        ("Precio",   26),
-        ("Estado",   24),
-    ]   # 22+13+28+31+38+26+24 = 182 ✓
+        ("Fecha",    20),
+        ("Hora",     12),
+        ("Barbero",  26),
+        ("Cliente",  28),
+        ("Servicio", 34),
+        ("Precio",   24),
+        ("Estado",   26),
+    ]   # 20+12+26+28+34+24+26 = 170 ✓
 
-    HDR_H = 8
-    ROW_H = 7
+    TH = 8   # table header height mm
+    RH = 8   # row height mm
 
     if not citas:
         pdf.set_font("Helvetica", "", 11)
         pdf.set_text_color(*MUTED)
-        pdf.cell(0, 12, "No hay citas en este periodo.", align='C', new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, 14, "No hay citas en este periodo.", align='C', new_x="LMARGIN", new_y="NEXT")
     else:
-        # Table section label
         pdf.set_font("Helvetica", "B", 9)
-        pdf.set_text_color(*DARK2)
+        pdf.set_text_color(*DARK_TXT)
         pdf.cell(0, 6, "Detalle de citas", new_x="LMARGIN", new_y="NEXT")
         pdf.ln(3)
 
-        # Header row
+        # Header — dark bg, grayish text
         pdf.set_fill_color(*DARK)
-        pdf.set_text_color(*WHITE)
+        pdf.set_text_color(200, 200, 200)
         pdf.set_font("Helvetica", "B", 7.5)
-        for col_label, w in COLS:
-            pdf.cell(w, HDR_H, col_label, border=0, fill=True, align='C')
+        for col_lbl, cw in COLS:
+            pdf.cell(cw, TH, col_lbl, border=0, fill=True, align='C')
         pdf.ln()
 
         # Data rows
@@ -475,63 +469,83 @@ def exportar_pdf(
             cliente_obj  = db.query(Cliente).filter(Cliente.id == c.cliente_id).first()
             servicio_obj = db.query(Servicio).filter(Servicio.id == c.servicio_id).first()
 
-            bg = LIGHT if idx % 2 == 0 else WHITE
-            pdf.set_fill_color(*bg)
+            row_y = pdf.get_y()
 
+            # Row bg: #fafafa even, white odd
+            pdf.set_fill_color(*(FAFAFA if idx % 2 == 0 else WHITE))
+            pdf.rect(LM, row_y, UW, RH, 'F')
+
+            # Estado badge colors
             if c.estado == "completada":
-                ec, etxt = GREEN,  "Completada"
+                bbg, btx, etxt = BADGE_GRN_BG, BADGE_GRN_TX, "Completada"
             elif c.estado == "cancelada":
-                ec, etxt = RED,    "Cancelada"
+                bbg, btx, etxt = BADGE_RED_BG, BADGE_RED_TX, "Cancelada"
             else:
-                ec, etxt = ORANGE, "Pendiente"
+                bbg, btx, etxt = BADGE_ORG_BG, BADGE_ORG_TX, "Pendiente"
 
             vals = [
                 c.fecha_hora.strftime("%d/%m/%y"),
                 c.fecha_hora.strftime("%H:%M"),
-                trunc(safe(barbero_obj.nombre  if barbero_obj  else "-"), 15),
-                trunc(safe(cliente_obj.nombre  if cliente_obj  else "-"), 17),
+                trunc(safe(barbero_obj.nombre  if barbero_obj  else "-"), 14),
+                trunc(safe(cliente_obj.nombre  if cliente_obj  else "-"), 16),
                 trunc(safe(servicio_obj.nombre if servicio_obj else "-"), 20),
                 f"CRC {float(servicio_obj.precio):,.0f}" if servicio_obj else "-",
-                etxt,
+                None,
             ]
 
-            pdf.set_font("Helvetica", "", 7.5)
-            for i, ((_, w), val) in enumerate(zip(COLS, vals)):
+            cur_x = LM
+            for i, ((_, cw), val) in enumerate(zip(COLS, vals)):
                 if i == 6:
-                    pdf.set_text_color(*ec)
-                    pdf.set_font("Helvetica", "B", 7.5)
+                    PAD_X, PAD_Y = 3, 1.5
+                    bw = cw - PAD_X * 2
+                    bh = RH  - PAD_Y * 2
+                    pdf.set_fill_color(*bbg)
+                    pdf.rect(cur_x + PAD_X, row_y + PAD_Y, bw, bh, 'F')
+                    pdf.set_xy(cur_x + PAD_X, row_y + PAD_Y)
+                    pdf.set_font("Helvetica", "B", 7)
+                    pdf.set_text_color(*btx)
+                    pdf.cell(bw, bh, etxt, align='C')
                 else:
-                    pdf.set_text_color(*DARK)
+                    pdf.set_xy(cur_x, row_y)
                     pdf.set_font("Helvetica", "", 7.5)
-                pdf.cell(w, ROW_H, val, border=0, fill=True, align='C')
-            pdf.ln()
+                    pdf.set_text_color(*DARK_TXT)
+                    pdf.cell(cw, RH, val, border=0, fill=False, align='C')
+                cur_x += cw
 
-        # Bottom table line
+            # Row bottom border 0.5px #f0f0f0
+            pdf.set_draw_color(*ROW_LINE)
+            pdf.set_line_width(0.2)
+            pdf.line(LM, row_y + RH, LM + UW, row_y + RH)
+            pdf.set_y(row_y + RH)
+
+        pdf.ln(6)
+
+        # Totals footer — separated by 0.5px #e5e5e5
         pdf.set_draw_color(*BORDER)
-        pdf.set_line_width(0.3)
-        pdf.line(LM, pdf.get_y(), PW - LM, pdf.get_y())
+        pdf.set_line_width(0.4)
+        pdf.line(LM, pdf.get_y(), LM + UW, pdf.get_y())
         pdf.ln(5)
 
-        # Totals row
-        label_w = sum(w for _, w in COLS[:6])
+        label_w = sum(cw for _, cw in COLS[:6])
         val_w   = COLS[6][1]
-        pdf.set_font("Helvetica", "B", 9)
-        pdf.set_text_color(*DARK2)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.set_text_color(*MUTED)
         pdf.cell(label_w, 8, f"Total ingresos  ({completadas} citas completadas):", align='R')
-        pdf.set_text_color(*GOLD)
         pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(*GOLD_DK)
         pdf.cell(val_w, 8, safe(f"CRC {ingresos:,.0f}"), align='C', new_x="LMARGIN", new_y="NEXT")
 
-    # ── FOOTER ───────────────────────────────────────────────────
-    pdf.set_y(-16)
-    pdf.set_draw_color(*GOLD)
+    # ── PAGE FOOTER ──────────────────────────────────────────────
+    pdf.set_y(-15)
+    pdf.set_draw_color(*BORDER)
     pdf.set_line_width(0.4)
-    pdf.line(LM, pdf.get_y(), PW - LM, pdf.get_y())
+    pdf.line(LM, pdf.get_y(), LM + UW, pdf.get_y())
     pdf.ln(2)
     pdf.set_font("Helvetica", "", 7.5)
     pdf.set_text_color(*MUTED)
-    pdf.cell(UW // 2, 6, "BarberSaaS - barbersas.com", align='L')
-    pdf.cell(UW - UW // 2, 6, f"Pagina {pdf.page_no()}", align='R')
+    half = int(UW // 2)
+    pdf.cell(half, 6, "BarberSaaS - barbersas.com", align='L')
+    pdf.cell(UW - half, 6, f"Pagina {pdf.page_no()}", align='R')
 
     try:
         output = pdf.output()
