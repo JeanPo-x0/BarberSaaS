@@ -90,6 +90,7 @@ function PanelDueno() {
   const [guardandoPagos, setGuardandoPagos] = useState(false);
   const [pagoGuardado, setPagoGuardado] = useState(false);
   const [editandoSinpe, setEditandoSinpe] = useState(false);
+  const [sinpeOriginal, setSinpeOriginal] = useState({ sinpe_numero: '', sinpe_nombre: '' });
   const [configPagosForm, setConfigPagosForm] = useState({
     sinpe_habilitado: true,
     sinpe_numero: '',
@@ -1066,7 +1067,10 @@ function PanelDueno() {
                   {!editandoSinpe && (
                     <button
                       type="button"
-                      onClick={() => setEditandoSinpe(true)}
+                      onClick={() => {
+                        setSinpeOriginal({ sinpe_numero: configPagosForm.sinpe_numero, sinpe_nombre: configPagosForm.sinpe_nombre });
+                        setEditandoSinpe(true);
+                      }}
                       title="Editar datos SINPE"
                       style={{
                         background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)',
@@ -1085,21 +1089,48 @@ function PanelDueno() {
                 </div>
                 {editandoSinpe ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <input value={configPagosForm.sinpe_numero} onChange={e => setConfigPagosForm(f => ({ ...f, sinpe_numero: e.target.value }))}
-                      placeholder="Número de teléfono SINPE (ej: 8888-8888)" className="input-dark" inputMode="numeric" />
+                    <input
+                      value={configPagosForm.sinpe_numero}
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 8);
+                        setConfigPagosForm(f => ({ ...f, sinpe_numero: val }));
+                      }}
+                      placeholder="Número de teléfono SINPE (ej: 88888888)"
+                      className="input-dark"
+                      inputMode="numeric"
+                      maxLength={8}
+                    />
                     <input value={configPagosForm.sinpe_nombre} onChange={e => setConfigPagosForm(f => ({ ...f, sinpe_nombre: e.target.value }))}
                       placeholder="Nombre que aparece en SINPE (ej: Juan Pérez)" className="input-dark" />
-                    <button
-                      type="button"
-                      onClick={() => setEditandoSinpe(false)}
-                      style={{
-                        background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: 8, padding: '7px 14px', color: '#8A8A8A',
-                        fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans'", alignSelf: 'flex-start',
-                      }}
-                    >
-                      Cancelar
-                    </button>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => setEditandoSinpe(false)}
+                        disabled={configPagosForm.sinpe_numero.length !== 8}
+                        style={{
+                          background: '#C9A84C', border: 'none',
+                          borderRadius: 8, padding: '7px 16px', color: '#0A0A0A',
+                          fontSize: 13, fontWeight: 700, cursor: configPagosForm.sinpe_numero.length !== 8 ? 'not-allowed' : 'pointer',
+                          fontFamily: "'DM Sans'", opacity: configPagosForm.sinpe_numero.length !== 8 ? 0.5 : 1,
+                        }}
+                      >
+                        Guardar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConfigPagosForm(f => ({ ...f, sinpe_numero: sinpeOriginal.sinpe_numero, sinpe_nombre: sinpeOriginal.sinpe_nombre }));
+                          setEditandoSinpe(false);
+                        }}
+                        style={{
+                          background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
+                          borderRadius: 8, padding: '7px 14px', color: '#8A8A8A',
+                          fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans'",
+                        }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
