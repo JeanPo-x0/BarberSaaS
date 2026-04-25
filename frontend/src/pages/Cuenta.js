@@ -194,7 +194,7 @@ export default function Cuenta() {
     }
   };
 
-  const pendientePago = sus?.estado === 'trial' && sus?.plan === 'basico';
+  const pendientePago = sus?.estado === 'pendiente_pago';
   const estadoMeta = sus
     ? pendientePago
       ? { label: 'Pendiente de pago', color: '#E63946', bg: 'rgba(230,57,70,0.12)' }
