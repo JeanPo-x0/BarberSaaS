@@ -30,8 +30,8 @@ def crear_checkout_session(
 ) -> str:
     price_id = PRECIOS[plan][periodo]
     sub_data = {"metadata": {"barberia_id": str(barberia_id), "plan": plan}}
-    # Trial solo en plan mensual nuevo — anual cobra de inmediato
-    if es_nuevo and periodo == "mensual":
+    # Trial solo en pro mensual nuevo — incentiva conversión sin regalar premium
+    if es_nuevo and plan == "pro" and periodo == "mensual":
         sub_data["trial_period_days"] = 14
     params = {
         "customer": customer_id,
