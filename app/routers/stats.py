@@ -459,7 +459,7 @@ def exportar_pdf(
     pdf.set_y(-18)
     pdf.set_font("Helvetica", "", 8)
     pdf.set_text_color(*MUTED)
-    pdf.cell(0, 6, "BarberSaaS — Sistema de gestion de barberias | barbersas.com", align='C')
+    pdf.cell(0, 6, "BarberSaaS - Sistema de gestion de barberias | barbersas.com", align='C')
 
     try:
         output = pdf.output()

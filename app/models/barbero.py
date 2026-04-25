@@ -14,7 +14,7 @@ class Barbero(Base):
     barberia_id = Column(Integer, ForeignKey("barberias.id"))
 
     # Login propio del barbero
-    email = Column(String, nullable=True, unique=True, index=True)
+    email = Column(String, nullable=True, index=True)
     password_hash = Column(String, nullable=True)
     inv_token_hash = Column(String, nullable=True)
     inv_token_expires = Column(DateTime, nullable=True)
