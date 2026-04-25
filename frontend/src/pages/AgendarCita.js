@@ -410,7 +410,7 @@ function AgendarCita() {
               </p>
               <p style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 700, margin: '0 0 2px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <svg width="15" height="15" viewBox="0 0 18 18" fill="none"><rect x="5" y="1" width="8" height="14" rx="1.5" stroke="#C9A84C" strokeWidth="1.4"/><circle cx="9" cy="13" r="0.8" fill="#C9A84C"/></svg>
-                {configPagos.sinpe_numero}
+                {(() => { const n = (configPagos.sinpe_numero || '').replace(/\D/g, ''); return n.length === 8 ? `${n.slice(0,4)} ${n.slice(4)}` : n; })()}
               </p>
               <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
                 A nombre de: {configPagos.sinpe_nombre}
@@ -556,7 +556,7 @@ function AgendarCita() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="5" y="1" width="8" height="14" rx="1.5" stroke="#C9A84C" strokeWidth="1.4"/><circle cx="9" cy="13" r="0.8" fill="#C9A84C"/></svg>
                   <span style={{ fontSize: 14, color: 'var(--text-primary)' }}>
-                    SINPE Móvil{configPagos.sinpe_numero ? ` — ${configPagos.sinpe_numero}` : ''}{configPagos.sinpe_nombre ? ` (${configPagos.sinpe_nombre})` : ''}
+                    SINPE Móvil{configPagos.sinpe_numero ? ` — ${(() => { const n = (configPagos.sinpe_numero || '').replace(/\D/g, ''); return n.length === 8 ? `${n.slice(0,4)} ${n.slice(4)}` : n; })()}` : ''}{configPagos.sinpe_nombre ? ` (${configPagos.sinpe_nombre})` : ''}
                   </span>
                 </div>
               )}
