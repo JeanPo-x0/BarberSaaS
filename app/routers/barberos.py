@@ -133,9 +133,10 @@ def invitar_barbero(
     conflicto = db.query(Barbero).filter(
         Barbero.email == email,
         Barbero.id != barbero_id,
+        Barbero.barberia_id == usuario.barberia_id,
     ).first()
     if conflicto:
-        raise HTTPException(status_code=400, detail="Ese email ya está en uso por otro barbero")
+        raise HTTPException(status_code=400, detail="Ese email ya está en uso por otro barbero en tu barbería")
 
     token_raw = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(token_raw.encode()).hexdigest()
@@ -180,8 +181,10 @@ def activar_cuenta_barbero(request: Request, datos: ActivarBarberoRequest, db: S
 @limiter.limit("3/minute")
 def login_barbero(request: Request, datos: LoginBarberoRequest, db: Session = Depends(get_db)):
     email = datos.email.lower().strip()
-    barbero = db.query(Barbero).filter(Barbero.email == email).first()
-    if not barbero or not barbero.password_hash or not verify_password(datos.password, barbero.password_hash):
+    # Si el mismo email existe en varias barberías, buscar el que tiene cuenta activa y password válido
+    candidatos = db.query(Barbero).filter(Barbero.email == email, Barbero.password_hash.isnot(None)).all()
+    barbero = next((b for b in candidatos if verify_password(datos.password, b.password_hash)), None)
+    if not barbero:
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
     if not barbero.cuenta_activa:
         raise HTTPException(status_code=403, detail="Cuenta no activada. Revisá tu email.")
