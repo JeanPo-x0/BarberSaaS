@@ -378,19 +378,17 @@ def procesar_mensaje(db: Session, telefono: str, twilio_to: str, mensaje: str):
                 None,
             )
 
-        # Citas en hora CR (UTC-6) — margen de 30 min para cancelar citas recién pasadas
-        ahora_cr = datetime.utcnow() - timedelta(hours=6)
-        margen = ahora_cr - timedelta(minutes=30)
+        # Busca cualquier cita pendiente — sin filtro de tiempo porque las citas se
+        # guardan en hora local CR y la comparacion con UTC causaba falsos negativos.
         cita = (
             db.query(Cita)
             .filter(
                 and_(
                     Cita.cliente_id == cliente.id,
                     Cita.estado == "pendiente",
-                    Cita.fecha_hora >= margen,
                 )
             )
-            .order_by(Cita.fecha_hora)
+            .order_by(Cita.fecha_hora.desc())
             .first()
         )
 
