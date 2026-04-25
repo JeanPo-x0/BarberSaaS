@@ -1155,7 +1155,7 @@ function PanelDueno() {
                       <span style={{ fontSize: 11, fontWeight: 600, color: '#8A8A8A', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Número</span>
                       <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.12em', color: configPagosForm.sinpe_numero ? '#F5F5F5' : '#444' }}>
                         {configPagosForm.sinpe_numero
-                          ? `${(configPagosForm.sinpe_numero || '').slice(0,4)} ${(configPagosForm.sinpe_numero || '').slice(4)}`
+                          ? (() => { const n = (configPagosForm.sinpe_numero || '').replace(/\D/g, ''); return `${n.slice(0,4)} ${n.slice(4)}`; })()
                           : '— — — —'}
                       </span>
                     </div>
