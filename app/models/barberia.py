@@ -17,6 +17,9 @@ class Barberia(Base):
     subdominio = Column(String, nullable=True, unique=True)
     maps_link = Column(String, nullable=True)
     dueno_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    hora_apertura = Column(String, default="08:00")
+    hora_cierre = Column(String, default="20:00")
+    dias_abiertos = Column(String, default="1,2,3,4,5,6")
 
     barberos = relationship("Barbero", back_populates="barberia")
     servicios = relationship("Servicio", back_populates="barberia")

@@ -7,7 +7,7 @@ import {
   getMisServicios, crearServicio, toggleServicio, editarServicio, eliminarServicio,
   getMiBarberia, toggleBarberia, crearBarberiaAdicional,
   getEstadoSuscripcion, actualizarSubdominio, eliminarSubdominio, actualizarMapsLink, actualizarTelefonoBarberia,
-  getConfigPagos, updateConfigPagos,
+  getConfigPagos, updateConfigPagos, actualizarHorario,
 } from '../services/api';
 
 /* ── Initials avatar ─────────────────────────────────── */
@@ -102,6 +102,39 @@ function PanelDueno() {
     cancelacion_porcentaje: 0,
     cancelacion_horas_minimo: 24,
   });
+
+  // Horario
+  const [horarioForms, setHorarioForms] = useState({});
+  const [guardandoHorario, setGuardandoHorario] = useState(false);
+  const [horarioGuardadoId, setHorarioGuardadoId] = useState(null);
+
+  const getHorarioForm = (b) => horarioForms[b.id] || {
+    hora_apertura: b.hora_apertura || '08:00',
+    hora_cierre:   b.hora_cierre   || '20:00',
+    dias: (b.dias_abiertos || '1,2,3,4,5,6').split(',').map(Number),
+  };
+
+  const setHorario = (barbId, patch) =>
+    setHorarioForms(f => ({ ...f, [barbId]: { ...getHorarioForm({ id: barbId, ...patch }), ...patch } }));
+
+  const handleGuardarHorario = async (b) => {
+    const form = getHorarioForm(b);
+    setGuardandoHorario(true);
+    try {
+      await actualizarHorario(b.id, {
+        hora_apertura: form.hora_apertura,
+        hora_cierre:   form.hora_cierre,
+        dias_abiertos: form.dias.join(','),
+      });
+      getMiBarberia().then(r => setBarberias(r.data));
+      setHorarioGuardadoId(b.id);
+      setTimeout(() => setHorarioGuardadoId(null), 3000);
+    } catch (e) {
+      alert('Error al guardar horario');
+    } finally {
+      setGuardandoHorario(false);
+    }
+  };
 
   // Slug
   const [editandoSlug, setEditandoSlug] = useState(null);
@@ -946,6 +979,82 @@ function PanelDueno() {
                     </div>
                   </div>
                 )}
+
+                {/* ── Horario de atención ── */}
+                {(() => {
+                  const form = getHorarioForm(b);
+                  const DIAS_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                  const toggleDia = (v) => {
+                    const nuevos = form.dias.includes(v) ? form.dias.filter(d => d !== v) : [...form.dias, v];
+                    setHorarioForms(f => ({ ...f, [b.id]: { ...form, dias: nuevos } }));
+                  };
+                  return (
+                    <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: '#8A8A8A', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px 0' }}>
+                        Horario de atención
+                      </p>
+                      {/* Días */}
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+                        {DIAS_LABELS.map((label, i) => {
+                          const activo = form.dias.includes(i);
+                          return (
+                            <button key={i} type="button" onClick={() => toggleDia(i)} style={{
+                              padding: '5px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                              cursor: 'pointer', fontFamily: "'DM Sans'", border: 'none',
+                              background: activo ? '#C9A84C' : 'rgba(255,255,255,0.06)',
+                              color: activo ? '#0A0A0A' : '#8A8A8A',
+                              transition: 'all 0.15s',
+                            }}>
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {/* Horas */}
+                      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: '#8A8A8A', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Apertura</span>
+                          <input
+                            type="time"
+                            value={form.hora_apertura}
+                            onChange={e => setHorarioForms(f => ({ ...f, [b.id]: { ...form, hora_apertura: e.target.value } }))}
+                            className="input-dark"
+                            style={{ width: 110, fontSize: 15, fontWeight: 700, letterSpacing: '0.05em' }}
+                          />
+                        </div>
+                        <span style={{ fontSize: 18, color: '#444', marginTop: 16 }}>→</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: '#8A8A8A', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Cierre</span>
+                          <input
+                            type="time"
+                            value={form.hora_cierre}
+                            onChange={e => setHorarioForms(f => ({ ...f, [b.id]: { ...form, hora_cierre: e.target.value } }))}
+                            className="input-dark"
+                            style={{ width: 110, fontSize: 15, fontWeight: 700, letterSpacing: '0.05em' }}
+                          />
+                        </div>
+                      </div>
+                      {/* Guardar */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <button
+                          type="button"
+                          onClick={() => handleGuardarHorario(b)}
+                          disabled={guardandoHorario || form.dias.length === 0}
+                          className="btn-gold"
+                          style={{ fontSize: 13, padding: '7px 18px', opacity: (guardandoHorario || form.dias.length === 0) ? 0.6 : 1 }}
+                        >
+                          {guardandoHorario ? 'Guardando...' : 'Guardar horario'}
+                        </button>
+                        {horarioGuardadoId === b.id && (
+                          <span style={{ fontSize: 13, color: '#4ade80', fontWeight: 600 }}>✓ Guardado</span>
+                        )}
+                        {form.dias.length === 0 && (
+                          <span style={{ fontSize: 12, color: '#E63946' }}>Seleccioná al menos un día</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             ))}
 

@@ -4,7 +4,7 @@ from app.database import get_db
 from app.models.barberia import Barberia
 from app.models.suscripcion import Suscripcion
 from app.schemas import BarberiaCreate, BarberiaResponse
-from app.schemas.barberia import MapsLinkUpdate
+from app.schemas.barberia import MapsLinkUpdate, HorarioUpdate
 from app.core.deps import get_usuario_actual
 from app.models.usuario import Usuario
 from typing import List
@@ -201,6 +201,32 @@ def actualizar_telefono(
     if not barberia:
         raise HTTPException(status_code=404, detail="Barberia no encontrada")
     barberia.telefono = datos.telefono
+    db.commit()
+    db.refresh(barberia)
+    return barberia
+
+
+@router.patch("/{barberia_id}/horario", response_model=BarberiaResponse)
+def actualizar_horario(
+    barberia_id: int,
+    datos: HorarioUpdate,
+    usuario: Usuario = Depends(get_usuario_actual),
+    db: Session = Depends(get_db),
+):
+    barberia = db.query(Barberia).filter(
+        Barberia.id == barberia_id,
+        Barberia.dueno_id == usuario.id
+    ).first()
+    if not barberia:
+        barberia = db.query(Barberia).filter(
+            Barberia.id == barberia_id,
+            Barberia.id == usuario.barberia_id
+        ).first()
+    if not barberia:
+        raise HTTPException(status_code=404, detail="Barberia no encontrada")
+    barberia.hora_apertura = datos.hora_apertura
+    barberia.hora_cierre = datos.hora_cierre
+    barberia.dias_abiertos = datos.dias_abiertos
     db.commit()
     db.refresh(barberia)
     return barberia

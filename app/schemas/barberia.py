@@ -40,11 +40,19 @@ class MapsLinkUpdate(BaseModel):
             raise ValueError(str(e))
         return v
 
+class HorarioUpdate(BaseModel):
+    hora_apertura: str
+    hora_cierre: str
+    dias_abiertos: str
+
 class BarberiaResponse(BarberiaBase):
     id: int
     activa: bool
     subdominio: Optional[str] = None
     maps_link: Optional[str] = None
+    hora_apertura: Optional[str] = "08:00"
+    hora_cierre: Optional[str] = "20:00"
+    dias_abiertos: Optional[str] = "1,2,3,4,5,6"
 
     class Config:
         from_attributes = True

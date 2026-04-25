@@ -54,6 +54,7 @@ export const actualizarSubdominio = (id, subdominio) => API.patch(`/barberias/${
 export const eliminarSubdominio = (id) => API.delete(`/barberias/${id}/subdominio`);
 export const actualizarMapsLink = (id, maps_link) => API.patch(`/barberias/${id}/maps-link`, { maps_link });
 export const actualizarTelefonoBarberia = (id, telefono) => API.patch(`/barberias/${id}/telefono`, { telefono });
+export const actualizarHorario = (id, data) => API.patch(`/barberias/${id}/horario`, data);
 export const getBarberiaBySlug = (slug) => API.get(`/barberias/slug/${slug}`);
 
 // Auth

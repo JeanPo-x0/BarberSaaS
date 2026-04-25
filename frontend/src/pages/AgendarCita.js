@@ -36,7 +36,7 @@ function Initials({ name }) {
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DIAS  = ['Do','Lu','Ma','Mi','Ju','Vi','Sa'];
 
-function CalendarPicker({ value, onChange, min }) {
+function CalendarPicker({ value, onChange, min, diasCerrados = [] }) {
   const [open, setOpen]       = useState(false);
   const [view, setView]       = useState(() => {
     const d = value ? new Date(value + 'T12:00:00') : new Date();
@@ -67,6 +67,11 @@ function CalendarPicker({ value, onChange, min }) {
     const d = new Date(view.year, view.month, day);
     return d < new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate());
   };
+  const isClosed = day => {
+    if (!diasCerrados.length) return false;
+    const d = new Date(view.year, view.month, day);
+    return diasCerrados.includes(d.getDay()); // getDay() returns 0=Sun..6=Sat
+  };
   const isSel   = day => {
     if (!value) return false;
     const s = new Date(value + 'T12:00:00');
@@ -81,7 +86,7 @@ function CalendarPicker({ value, onChange, min }) {
   const nextMonth = () => setView(v => v.month === 11 ? { year: v.year+1, month: 0  } : { ...v, month: v.month+1 });
 
   const handleDay = day => {
-    if (isPast(day)) return;
+    if (isPast(day) || isClosed(day)) return;
     const m = String(view.month + 1).padStart(2,'0');
     const d = String(day).padStart(2,'0');
     onChange(`${view.year}-${m}-${d}`);
@@ -154,24 +159,28 @@ function CalendarPicker({ value, onChange, min }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
             {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
             {Array.from({ length: daysCount }).map((_, i) => {
-              const day  = i + 1;
-              const past = isPast(day);
-              const sel  = isSel(day);
-              const today = isToday(day);
+              const day    = i + 1;
+              const past   = isPast(day);
+              const closed = isClosed(day);
+              const disabled = past || closed;
+              const sel    = isSel(day);
+              const today  = isToday(day);
               return (
-                <button key={day} type="button" onClick={() => handleDay(day)} disabled={past}
+                <button key={day} type="button" onClick={() => handleDay(day)} disabled={disabled}
+                  title={closed ? 'Cerrado' : undefined}
                   style={{
                     padding: '9px 4px', borderRadius: 9, fontSize: 13, fontWeight: sel ? 700 : 400,
-                    cursor: past ? 'default' : 'pointer', fontFamily: "'DM Sans'",
+                    cursor: disabled ? 'default' : 'pointer', fontFamily: "'DM Sans'",
                     border: sel ? '1px solid transparent'
-                      : today ? '1px solid rgba(201,168,76,0.55)'
+                      : today && !disabled ? '1px solid rgba(201,168,76,0.55)'
                       : '1px solid transparent',
-                    background: sel ? '#C9A84C' : 'transparent',
-                    color: sel ? '#0A0A0A' : past ? 'rgba(255,255,255,0.18)' : 'var(--text-primary)',
+                    background: sel ? '#C9A84C' : closed ? 'rgba(230,57,70,0.06)' : 'transparent',
+                    color: sel ? '#0A0A0A' : disabled ? 'rgba(255,255,255,0.18)' : 'var(--text-primary)',
                     transition: 'background 0.12s',
+                    textDecoration: closed ? 'line-through' : 'none',
                   }}
-                  onMouseEnter={e => { if (!past && !sel) e.currentTarget.style.background = 'rgba(201,168,76,0.12)'; }}
-                  onMouseLeave={e => { if (!past && !sel) e.currentTarget.style.background = 'transparent'; }}
+                  onMouseEnter={e => { if (!disabled && !sel) e.currentTarget.style.background = 'rgba(201,168,76,0.12)'; }}
+                  onMouseLeave={e => { if (!disabled && !sel) e.currentTarget.style.background = closed ? 'rgba(230,57,70,0.06)' : 'transparent'; }}
                 >
                   {day}
                 </button>
@@ -986,7 +995,16 @@ function AgendarCita() {
                 <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-muted)', margin: '0 0 10px 0', textTransform: 'uppercase' }}>
                   Fecha
                 </p>
-                <CalendarPicker value={fecha} onChange={setFecha} min={hoy} />
+                <CalendarPicker
+                  value={fecha}
+                  onChange={setFecha}
+                  min={hoy}
+                  diasCerrados={(() => {
+                    if (!barberia?.dias_abiertos) return [];
+                    const abiertos = barberia.dias_abiertos.split(',').map(Number);
+                    return [0,1,2,3,4,5,6].filter(d => !abiertos.includes(d));
+                  })()}
+                />
               </div>
 
               {fecha && (

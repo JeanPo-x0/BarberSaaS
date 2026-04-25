@@ -163,23 +163,37 @@ def ver_disponibilidad(request: Request, barbero_id: int, fecha: str, db: Sessio
     except ValueError:
         raise HTTPException(status_code=400, detail="Formato de fecha invalido. Usa YYYY-MM-DD")
 
-    # Si el barbero tiene ese día bloqueado, todos los slots no disponibles
+    # Cargar horario de la barbería
+    from app.models.barberia import Barberia
+    barberia = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first()
+    hora_apertura_str = (barberia.hora_apertura if barberia and barberia.hora_apertura else "08:00")
+    hora_cierre_str   = (barberia.hora_cierre   if barberia and barberia.hora_cierre   else "20:00")
+    dias_lista        = [int(d) for d in (barberia.dias_abiertos or "1,2,3,4,5,6").split(",") if d.strip()]
+
+    # 0=Sun..6=Sat (JS convention). Python weekday: 0=Mon..6=Sun → convertir
+    dia_js = (dia.weekday() + 1) % 7
+    dia_cerrado = dia_js not in dias_lista
+
+    h_ap, m_ap = int(hora_apertura_str.split(":")[0]), int(hora_apertura_str.split(":")[1])
+    h_ci, m_ci = int(hora_cierre_str.split(":")[0]),   int(hora_cierre_str.split(":")[1])
+
+    # Si el barbero tiene ese día bloqueado O la barbería está cerrada ese día
     bloqueado = db.query(BloqueoDisponibilidad).filter(
         BloqueoDisponibilidad.barbero_id == barbero_id,
         BloqueoDisponibilidad.fecha == dia.date(),
     ).first()
-    if bloqueado:
+    if bloqueado or dia_cerrado:
         slots = []
-        hora_actual = dia.replace(hour=5, minute=0)
-        hora_fin = dia.replace(hour=23, minute=30)
+        hora_actual = dia.replace(hour=h_ap, minute=m_ap)
+        hora_fin    = dia.replace(hour=h_ci, minute=m_ci)
         while hora_actual < hora_fin:
             slots.append({"hora": hora_actual.strftime("%H:%M"), "disponible": False})
             hora_actual += timedelta(minutes=30)
-        return {"barbero_id": barbero_id, "fecha": fecha, "slots": slots, "bloqueado": True}
+        return {"barbero_id": barbero_id, "fecha": fecha, "slots": slots, "bloqueado": True, "cerrado": dia_cerrado}
 
     slots = []
-    hora_actual = dia.replace(hour=5, minute=0)
-    hora_fin = dia.replace(hour=23, minute=30)
+    hora_actual = dia.replace(hour=h_ap, minute=m_ap)
+    hora_fin    = dia.replace(hour=h_ci, minute=m_ci)
 
     citas_del_dia = db.query(Cita).filter(
         and_(
