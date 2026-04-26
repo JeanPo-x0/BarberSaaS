@@ -198,11 +198,11 @@ def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(
         if existente.barberia_id:
             bid = existente.barberia_id
             db.query(Suscripcion).filter(Suscripcion.barberia_id == bid).delete(synchronize_session=False)
-            db.query(EmailVerificationToken).filter(EmailVerificationToken.usuario_id == existente.id).delete(synchronize_session=False)
+            db.query(EmailVerificationToken).filter(EmailVerificationToken.email == existente.email).delete(synchronize_session=False)
             db.delete(existente)
             db.query(Barberia).filter(Barberia.id == bid).delete(synchronize_session=False)
         else:
-            db.query(EmailVerificationToken).filter(EmailVerificationToken.usuario_id == existente.id).delete(synchronize_session=False)
+            db.query(EmailVerificationToken).filter(EmailVerificationToken.email == existente.email).delete(synchronize_session=False)
             db.delete(existente)
         db.flush()
 
@@ -227,26 +227,25 @@ def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(
     )
     db.add(suscripcion)
 
-    # Crear usuario dueño — verificado de inmediato (Stripe es la verificación real)
+    # Crear usuario dueño — pendiente de verificación de email
     usuario = Usuario(
         email=email,
         password_hash=hash_password(datos.password),
         rol="dueno",
         barberia_id=barberia.id,
-        email_verificado=True,
+        email_verificado=False,
     )
     db.add(usuario)
-    db.flush()  # get usuario.id
+    db.flush()
 
-    # Link the barbershop to its owner
     barberia.dueno_id = usuario.id
     db.commit()
     db.refresh(usuario)
 
-    # Enviar email de bienvenida
-    link_agendamiento = f"{settings.FRONTEND_URL}/agendar/{barberia.id}"
+    # Enviar email de verificación
     try:
-        enviar_bienvenida(email, barberia.nombre, link_agendamiento)
+        token_plano = _crear_token_verificacion(email, db)
+        enviar_verificacion_email(email, token_plano, settings.FRONTEND_URL)
     except Exception:
         pass
 
