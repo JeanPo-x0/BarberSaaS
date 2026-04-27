@@ -39,7 +39,7 @@ export default function Onboarding() {
   const [anual, setAnual] = useState(anualInicial);
   const [stripeError, setStripeError] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [linkGenerado, setLinkGenerado] = useState('');
+  const [linkGenerado] = useState('');
   const [tcAceptado, setTcAceptado] = useState(false);
   const [verificacionPendiente, setVerificacionPendiente] = useState(false);
   const [form, setForm] = useState({

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { sincronizarSuscripcion, forzarSyncSuscripcion, getEstadoSuscripcion } from '../services/api';
 
 const CHECK_ANIM = `
@@ -45,7 +45,6 @@ function AnimatedCheck() {
 }
 
 export default function SuscripcionExito() {
-  const navigate = useNavigate();
   const [params] = useSearchParams();
   const sincronizado = useRef(false);
   const [sincronizando, setSincronizando] = useState(true);
