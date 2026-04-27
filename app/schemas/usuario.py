@@ -25,6 +25,17 @@ class UsuarioResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+class OnboardingResponse(BaseModel):
+    id: int
+    email: str
+    rol: str
+    barberia_id: Optional[int] = None
+    access_token: str
+
+    class Config:
+        from_attributes = True
+
 class LoginRequest(BaseModel):
     email: str
     password: str

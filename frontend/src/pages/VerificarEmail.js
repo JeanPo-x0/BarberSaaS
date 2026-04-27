@@ -7,6 +7,9 @@ export default function VerificarEmail() {
   const [estado, setEstado] = useState('verificando'); // verificando | ok | error
 
   useEffect(() => {
+    // Limpiar cualquier token temporal que haya quedado del onboarding
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
     const token = params.get('token');
     if (!token) { setEstado('error'); return; }
     verificarEmail(token)
@@ -63,7 +66,7 @@ export default function VerificarEmail() {
                 Email verificado
               </h2>
               <p style={{ color: '#aaa', fontSize: 14, margin: '0 0 24px' }}>
-                Tu cuenta está activa. Ya podés ingresar a BarberSaaS.
+                Email verificado. Ya podés iniciar sesión y acceder a tu panel.
               </p>
               <Link
                 to="/login"

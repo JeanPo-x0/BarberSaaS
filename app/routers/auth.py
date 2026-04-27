@@ -12,7 +12,7 @@ from app.models.barberia import Barberia
 from app.models.suscripcion import Suscripcion
 from app.models.password_reset import PasswordResetToken
 from app.models.email_verification import EmailVerificationToken
-from app.schemas import UsuarioCreate, UsuarioResponse, LoginRequest, TokenResponse, OnboardingCreate
+from app.schemas import UsuarioCreate, UsuarioResponse, LoginRequest, TokenResponse, OnboardingCreate, OnboardingResponse
 from app.core.security import hash_password, verify_password, crear_token, crear_refresh_token, verificar_token
 import re as _re
 from app.core.config import settings
@@ -181,7 +181,7 @@ def refresh(datos: RefreshRequest, db: Session = Depends(get_db)):
 def me(usuario: Usuario = Depends(get_usuario_actual)):
     return usuario
 
-@router.post("/onboarding", response_model=UsuarioResponse)
+@router.post("/onboarding", response_model=OnboardingResponse)
 @limiter.limit("5/minute")
 def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(get_db)):
     """Registro completo: crea usuario dueño + barbería + suscripción trial."""
@@ -249,7 +249,17 @@ def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(
     except Exception:
         pass
 
-    return usuario
+    # Devolver token temporal para que el frontend pueda ir directo a Stripe
+    # sin pasar por /auth/login (que bloquea emails no verificados)
+    token_payload = {"sub": usuario.email, "rol": usuario.rol, "barberia_id": usuario.barberia_id}
+    access_token = crear_token(token_payload)
+    return {
+        "id": usuario.id,
+        "email": usuario.email,
+        "rol": usuario.rol,
+        "barberia_id": usuario.barberia_id,
+        "access_token": access_token,
+    }
 
 
 @router.get("/verificar-email")

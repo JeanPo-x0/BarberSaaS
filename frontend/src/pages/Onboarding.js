@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { onboarding, login, crearCheckout, reenviarVerificacion } from '../services/api';
+import { onboarding, crearCheckout, reenviarVerificacion } from '../services/api';
 import { NavLogo } from '../components/LogoLink';
 import { formatearInput, formatearTelefono } from '../utils/phone';
 import PasswordInput from '../components/PasswordInput';
@@ -69,17 +69,19 @@ export default function Onboarding() {
     if (!form.nombre_barberia.trim()) { setError('El nombre de la barberia es obligatorio'); return; }
     setCargando(true); setError('');
     try {
-      await onboarding({
+      const res = await onboarding({
         ...form,
         telefono: form.telefono ? formatearTelefono(form.telefono) : '',
       });
-      const loginRes = await login({ email: form.email, password: form.password });
-      if (loginRes.data.access_token) {
-        localStorage.setItem('token', loginRes.data.access_token);
-      }
-      const bid = loginRes.data.usuario?.barberia_id;
-      localStorage.setItem('usuario', JSON.stringify(loginRes.data.usuario));
-      setLinkGenerado(`${window.location.origin}/agendar/${bid}`);
+      // Usar el token devuelto por onboarding directamente para ir a Stripe
+      // (no se pasa por login, que bloquea emails no verificados)
+      localStorage.setItem('token', res.data.access_token);
+      localStorage.setItem('usuario', JSON.stringify({
+        id: res.data.id,
+        email: res.data.email,
+        rol: res.data.rol,
+        barberia_id: res.data.barberia_id,
+      }));
       // Redirigir a Stripe para activar el plan
       try {
         const checkoutRes = await crearCheckout({ plan: form.plan, periodo: anual ? 'anual' : 'mensual' });
@@ -102,9 +104,6 @@ export default function Onboarding() {
         if (detail === 'Datos de registro invalidos' || detail.toLowerCase().includes('ya esta registrado') || detail.toLowerCase().includes('already')) {
           setPaso(0);
           setError('Este email ya está registrado. Iniciá sesión o usá otro email.');
-        } else if (detail === 'EMAIL_NO_VERIFICADO') {
-          localStorage.setItem('pendingCheckout', JSON.stringify({ plan: form.plan, periodo: anual ? 'anual' : 'mensual' }));
-          setVerificacionPendiente(true);
         } else {
           setError(detail);
         }

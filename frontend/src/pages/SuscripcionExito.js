@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { sincronizarSuscripcion, forzarSyncSuscripcion, getEstadoSuscripcion } from '../services/api';
 
 const CHECK_ANIM = `
@@ -79,6 +79,10 @@ export default function SuscripcionExito() {
       }
       setSincronizadoOk(activado);
       setSincronizando(false);
+      // Limpiar token temporal de onboarding — el usuario debe hacer login
+      // fresco con email verificado para acceder al panel
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
     };
     sync();
   }, [params]);
@@ -111,22 +115,27 @@ export default function SuscripcionExito() {
               }}>
                 Pago exitoso
               </h1>
-              {sincronizadoOk ? (
-                <p style={{ color: '#aaa', fontSize: 15, margin: '0 0 28px', lineHeight: 1.6 }}>
-                  Tu suscripción quedó activada. Ya podés usar todas las funciones de tu plan.
+              <p style={{ color: '#aaa', fontSize: 15, margin: '0 0 8px', lineHeight: 1.6 }}>
+                Tu suscripción quedó activada.{!sincronizadoOk && ' Si el estado no se actualiza, usá el botón ↻ Ya pagué en la sección Cuenta.'}
+              </p>
+              <div style={{
+                background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)',
+                borderRadius: 12, padding: '14px 16px', margin: '0 0 24px', textAlign: 'left',
+              }}>
+                <p style={{ color: '#C9A84C', fontSize: 13, fontWeight: 700, margin: '0 0 6px' }}>
+                  Último paso: verificá tu email
                 </p>
-              ) : (
-                <p style={{ color: '#aaa', fontSize: 14, margin: '0 0 20px', lineHeight: 1.6 }}>
-                  Tu pago fue procesado exitosamente. Si tu estado de cuenta no se actualiza de inmediato, usá el botón <strong style={{ color: '#C9A84C' }}>↻ Ya pagué</strong> en la sección Cuenta.
+                <p style={{ color: '#aaa', fontSize: 13, margin: 0, lineHeight: 1.6 }}>
+                  Te enviamos un email de activación. Hacé clic en el enlace y después iniciá sesión para acceder a tu panel.
                 </p>
-              )}
-              <button
-                onClick={() => navigate('/panel')}
+              </div>
+              <Link
+                to="/login"
                 className="btn-gold"
-                style={{ padding: '13px 32px', fontSize: 15 }}
+                style={{ display: 'inline-block', padding: '13px 32px', fontSize: 15, textDecoration: 'none' }}
               >
-                Ir al Panel →
-              </button>
+                Ir al login →
+              </Link>
             </>
           )}
         </div>
