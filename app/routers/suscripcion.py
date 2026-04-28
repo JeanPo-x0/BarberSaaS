@@ -9,7 +9,10 @@ from app.models.barberia import Barberia
 from app.models.suscripcion import Suscripcion
 from app.schemas import SuscripcionResponse, CheckoutRequest
 from app.services import stripe_service
-from app.services.email import enviar_recibo_pago, enviar_aviso_suspension
+from app.services.email import enviar_recibo_pago, enviar_aviso_suspension, enviar_verificacion_email
+from app.models.email_verification import EmailVerificationToken
+from app.core.config import settings
+import secrets, hashlib
 import stripe as stripe_lib
 
 router = APIRouter(prefix="/suscripcion", tags=["Suscripcion"])
@@ -287,6 +290,28 @@ def sincronizar_desde_checkout(
         sus.fecha_renovacion = datetime.utcfromtimestamp(period_end)
 
     db.commit()
+
+    # Enviar email de verificación ahora que el pago está confirmado
+    if sus.estado in ("activa", "trial"):
+        try:
+            usuario_db = db.query(Usuario).filter(Usuario.barberia_id == barberia_id).first()
+            if usuario_db and not usuario_db.email_verificado:
+                db.query(EmailVerificationToken).filter(
+                    EmailVerificationToken.email == usuario_db.email,
+                    EmailVerificationToken.usado == False
+                ).update({"usado": True})
+                token_plano = secrets.token_urlsafe(32)
+                token_hash = hashlib.sha256(token_plano.encode()).hexdigest()
+                db.add(EmailVerificationToken(
+                    email=usuario_db.email,
+                    token_hash=token_hash,
+                    expires_at=datetime.utcnow() + timedelta(hours=24),
+                ))
+                db.commit()
+                enviar_verificacion_email(usuario_db.email, token_plano, settings.FRONTEND_URL)
+        except Exception:
+            pass
+
     return {"ok": True, "plan": plan, "estado": sus.estado, "periodo": sus.periodo}
 
 

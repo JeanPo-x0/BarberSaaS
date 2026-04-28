@@ -250,12 +250,7 @@ def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(
     db.commit()
     db.refresh(usuario)
 
-    # Enviar email de verificación
-    try:
-        token_plano = _crear_token_verificacion(email, db)
-        enviar_verificacion_email(email, token_plano, settings.FRONTEND_URL)
-    except Exception:
-        pass
+    # El email de verificación se envía DESPUÉS de confirmar el pago en /suscripcion/sincronizar
 
     # Devolver token temporal para que el frontend pueda ir directo a Stripe
     # sin pasar por /auth/login (que bloquea emails no verificados)
