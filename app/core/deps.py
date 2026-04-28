@@ -6,15 +6,12 @@ from app.models.usuario import Usuario
 
 
 def _extraer_token(request: Request) -> str | None:
-    # 1. Cookie HTTP-only (dueños autenticados via browser)
-    token = request.cookies.get("auth_token")
-    if token:
-        return token
-    # 2. Authorization header (barberos con token en localStorage, clientes API)
+    # 1. Authorization header tiene prioridad (onboarding tempToken, API, barberos)
     auth = request.headers.get("Authorization", "")
     if auth.startswith("Bearer "):
         return auth[7:]
-    return None
+    # 2. Cookie HTTP-only como fallback (sesiones de browser sin header explícito)
+    return request.cookies.get("auth_token")
 
 
 def get_usuario_actual(request: Request, db: Session = Depends(get_db)):
