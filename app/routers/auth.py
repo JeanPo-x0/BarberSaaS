@@ -198,12 +198,19 @@ def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(
         # Sin pago completado — limpiar cuenta incompleta y permitir re-registro
         if existente.barberia_id:
             bid = existente.barberia_id
+            # Romper FKs circulares antes de borrar (usuario.barberia_id <-> barberia.dueno_id)
+            barberia_existente = db.query(Barberia).filter(Barberia.id == bid).first()
+            if barberia_existente:
+                barberia_existente.dueno_id = None
+            existente.barberia_id = None
+            db.flush()
             db.query(Suscripcion).filter(Suscripcion.barberia_id == bid).delete(synchronize_session=False)
-            db.query(EmailVerificationToken).filter(EmailVerificationToken.email == existente.email).delete(synchronize_session=False)
+            db.query(EmailVerificationToken).filter(EmailVerificationToken.email == email).delete(synchronize_session=False)
             db.delete(existente)
-            db.query(Barberia).filter(Barberia.id == bid).delete(synchronize_session=False)
+            if barberia_existente:
+                db.delete(barberia_existente)
         else:
-            db.query(EmailVerificationToken).filter(EmailVerificationToken.email == existente.email).delete(synchronize_session=False)
+            db.query(EmailVerificationToken).filter(EmailVerificationToken.email == email).delete(synchronize_session=False)
             db.delete(existente)
         db.flush()
 
