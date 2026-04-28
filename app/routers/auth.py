@@ -290,6 +290,11 @@ def reenviar_verificacion(request: Request, datos: EmailRequest, db: Session = D
     usuario = db.query(Usuario).filter(Usuario.email == datos.email.lower().strip()).first()
     if not usuario or usuario.email_verificado:
         return {"mensaje": "Si el email existe y no está verificado, recibirás un correo"}
+    # Solo reenviar si el pago ya fue confirmado (suscripción activa o en trial)
+    sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == usuario.barberia_id).first() if usuario.barberia_id else None
+    ha_pagado = sus and sus.estado in ("activa", "trial")
+    if not ha_pagado:
+        return {"mensaje": "Si el email existe y no está verificado, recibirás un correo"}
     try:
         token_plano = _crear_token_verificacion(datos.email.lower().strip(), db)
         enviar_verificacion_email(datos.email.lower().strip(), token_plano, settings.FRONTEND_URL)
