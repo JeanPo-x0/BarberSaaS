@@ -65,7 +65,10 @@ def crear_checkout(
     # Crear cliente Stripe si no existe
     es_nuevo = False
     if not sus or not sus.stripe_customer_id:
-        customer_id = stripe_service.crear_cliente(barberia.email or usuario.email, barberia.nombre)
+        email_stripe = barberia.email or usuario.email
+        print(f"[checkout] creando customer stripe email={email_stripe} barberia_id={barberia.id}", flush=True)
+        customer_id = stripe_service.crear_cliente(email_stripe, barberia.nombre)
+        print(f"[checkout] customer_id={customer_id}", flush=True)
         if not sus:
             es_nuevo = True
             sus = Suscripcion(
