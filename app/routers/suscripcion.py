@@ -235,8 +235,9 @@ def sincronizar_desde_checkout(
         raise HTTPException(status_code=400, detail="No hay suscripcion en este session")
 
     # Obtener barberia_id desde el metadata de la sesión de Stripe
-    ses_meta = getattr(session, "metadata", {}) or {}
-    barberia_id_str = ses_meta.get("barberia_id", "")
+    # El SDK nuevo retorna StripeObject (no dict) — usar getattr en lugar de .get()
+    ses_meta = getattr(session, "metadata", None)
+    barberia_id_str = str(getattr(ses_meta, "barberia_id", "") or "")
     if not barberia_id_str:
         raise HTTPException(status_code=400, detail="Session sin barberia_id en metadata")
     barberia_id = int(barberia_id_str)
@@ -245,9 +246,9 @@ def sincronizar_desde_checkout(
     if not sus:
         raise HTTPException(status_code=404, detail="Suscripcion no encontrada")
 
-    sub_meta = getattr(sub, "metadata", {}) or {}
-    ses_meta = getattr(session, "metadata", {}) or {}
-    plan = sub_meta.get("plan") or ses_meta.get("plan", "pro")
+    sub_meta = getattr(sub, "metadata", None)
+    ses_meta = getattr(session, "metadata", None)
+    plan = getattr(sub_meta, "plan", None) or getattr(ses_meta, "plan", None) or "pro"
     if plan not in ("pro", "premium"):
         plan = "pro"
 
@@ -291,10 +292,14 @@ def sincronizar_desde_checkout(
 
     db.commit()
 
+    estado_final = sus.estado
+    print(f"[sincronizar] barberia_id={barberia_id} stripe_status={status} estado_db={estado_final}", flush=True)
+
     # Enviar email de verificación ahora que el pago está confirmado
-    if sus.estado in ("activa", "trial"):
+    if estado_final in ("activa", "trial"):
         try:
             usuario_db = db.query(Usuario).filter(Usuario.barberia_id == barberia_id).first()
+            print(f"[sincronizar] usuario_db={usuario_db and usuario_db.email} email_verificado={usuario_db and usuario_db.email_verificado}", flush=True)
             if usuario_db and not usuario_db.email_verificado:
                 db.query(EmailVerificationToken).filter(
                     EmailVerificationToken.email == usuario_db.email,
@@ -308,11 +313,13 @@ def sincronizar_desde_checkout(
                     expires_at=datetime.utcnow() + timedelta(hours=24),
                 ))
                 db.commit()
+                print(f"[sincronizar] enviando email a {usuario_db.email}", flush=True)
                 enviar_verificacion_email(usuario_db.email, token_plano, settings.FRONTEND_URL)
-        except Exception:
-            pass
+                print(f"[sincronizar] email enviado OK", flush=True)
+        except Exception as e:
+            print(f"[sincronizar] ERROR email: {e}", flush=True)
 
-    return {"ok": True, "plan": plan, "estado": sus.estado, "periodo": sus.periodo}
+    return {"ok": True, "plan": plan, "estado": estado_final, "periodo": sus.periodo}
 
 
 @router.get("/portal")
