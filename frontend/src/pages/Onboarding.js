@@ -23,7 +23,7 @@ function calcularFortaleza(pwd) {
 
 const CHECK_LABELS = ['8+ caracteres', 'Mayúscula', 'Caracter especial', 'Número'];
 
-const PASOS = ['Tu cuenta', 'Tu barberia', 'Listo'];
+const PASOS = ['Tu cuenta', 'Tu barberia', 'Pago'];
 
 const PLANES_INFO = {
   pro:     { label: 'Pro',     color: '#C9A84C', mensual: 29,  anual: 232,  desc_mensual: 'Hasta 3 barberos', desc_anual: 'Hasta 3 barberos · $19/mes' },
@@ -87,6 +87,8 @@ export default function Onboarding() {
           { plan: form.plan, periodo: anual ? 'anual' : 'mensual' },
           { headers: { Authorization: `Bearer ${tk}` }, withCredentials: true, timeout: 70000 }
         );
+        setPaso(2);
+        await new Promise(r => setTimeout(r, 800));
         window.location.href = checkoutRes.data.checkout_url;
       } catch {
         setStripeError(true);
@@ -486,53 +488,22 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Paso 2: Listo */}
+          {/* Paso 2: Redirigiendo a Stripe */}
           {paso === 2 && (
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', padding: '12px 0' }}>
               <div style={{
                 width: 56, height: 56, borderRadius: '50%',
-                background: 'rgba(201,168,76,0.15)', border: '1px solid #C9A84C',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '3px solid rgba(201,168,76,0.2)', borderTop: '3px solid #C9A84C',
+                animation: 'spin 0.8s linear infinite',
                 margin: '0 auto 20px',
-              }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 12l5 5L20 7" stroke="#C9A84C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 28, letterSpacing: '0.08em', color: '#C9A84C', margin: '0 0 8px 0' }}>
-                Tu barberia esta lista
+              }} />
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+              <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 26, letterSpacing: '0.08em', color: '#C9A84C', margin: '0 0 8px 0' }}>
+                Redirigiendo a Stripe
               </h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: '0 0 20px 0' }}>
-                Comparte este link con tus clientes:
+              <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0, lineHeight: 1.6 }}>
+                Te llevamos a completar el pago de forma segura.
               </p>
-              <div style={{
-                background: 'var(--bg-secondary)', border: '1px solid var(--border)',
-                borderRadius: 10, padding: '10px 14px', marginBottom: 20,
-                display: 'flex', alignItems: 'center', gap: 8,
-              }}>
-                <span style={{ color: '#C9A84C', fontSize: 13, flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {linkGenerado}
-                </span>
-                <button onClick={() => navigator.clipboard.writeText(linkGenerado)} className="btn-gold" style={{ padding: '6px 12px', fontSize: 12 }}>
-                  Copiar
-                </button>
-              </div>
-              <div style={{ textAlign: 'left', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {['Agrega tus barberos en el Panel', 'Configura tus servicios y precios', 'Comparte tu link con clientes'].map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14, color: 'var(--text-muted)' }}>
-                    <span style={{
-                      width: 20, height: 20, borderRadius: '50%', background: 'rgba(201,168,76,0.12)',
-                      border: '1px solid rgba(201,168,76,0.3)', color: '#C9A84C',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 11, fontWeight: 700, flexShrink: 0,
-                    }}>{i + 1}</span>
-                    {item}
-                  </div>
-                ))}
-              </div>
-              <button onClick={() => navigate('/panel')} className="btn-gold" style={{ width: '100%' }}>
-                Ir al Panel
-              </button>
             </div>
           )}
           </div>{/* /padding */}
