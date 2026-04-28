@@ -304,10 +304,6 @@ def sincronizar_desde_checkout(
             usuario_db = db.query(Usuario).filter(Usuario.barberia_id == barberia_id).first()
             print(f"[sincronizar] usuario_db={usuario_db and usuario_db.email} email_verificado={usuario_db and usuario_db.email_verificado}", flush=True)
             if usuario_db and not usuario_db.email_verificado:
-                db.query(EmailVerificationToken).filter(
-                    EmailVerificationToken.email == usuario_db.email,
-                    EmailVerificationToken.usado == False
-                ).update({"usado": True})
                 token_plano = secrets.token_urlsafe(32)
                 token_hash = hashlib.sha256(token_plano.encode()).hexdigest()
                 db.add(EmailVerificationToken(

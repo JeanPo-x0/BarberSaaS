@@ -68,10 +68,7 @@ router = APIRouter(prefix="/auth", tags=["Autenticacion"])
 
 
 def _crear_token_verificacion(email: str, db: Session) -> str:
-    db.query(EmailVerificationToken).filter(
-        EmailVerificationToken.email == email,
-        EmailVerificationToken.usado == False
-    ).update({"usado": True})
+    # No invalidamos tokens anteriores — el usuario puede usar cualquier email recibido
     token_plano = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(token_plano.encode()).hexdigest()
     db.add(EmailVerificationToken(
