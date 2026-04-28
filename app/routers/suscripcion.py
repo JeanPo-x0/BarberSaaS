@@ -269,7 +269,7 @@ def sincronizar_desde_checkout(
     sus.plan = plan
     sus.periodo = "anual" if interval == "year" else "mensual"
 
-    barberia = db.query(Barberia).filter(Barberia.id == usuario.barberia_id).first()
+    barberia = db.query(Barberia).filter(Barberia.id == barberia_id).first()
 
     if status == "trialing":
         sus.estado = "trial"
