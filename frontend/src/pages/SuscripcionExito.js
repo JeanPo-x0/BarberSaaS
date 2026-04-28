@@ -56,8 +56,8 @@ export default function SuscripcionExito() {
     const session_id = params.get('session_id');
     const sync = async () => {
       let activado = false;
-      // Reintentar hasta 3 veces con 4s de espera (cubre cold start de Render)
-      for (let i = 0; i < 3; i++) {
+      // Reintentar hasta 6 veces con 10s de espera — cubre cold start de Render (~30s)
+      for (let i = 0; i < 6; i++) {
         try {
           if (session_id) {
             const res = await sincronizarSuscripcion(session_id);
@@ -66,9 +66,8 @@ export default function SuscripcionExito() {
               break;
             }
           }
-        } catch {
-          if (i < 2) await new Promise(r => setTimeout(r, 4000));
-        }
+        } catch { /* continuar reintentando */ }
+        if (i < 5) await new Promise(r => setTimeout(r, 10000));
       }
       setSincronizadoOk(activado);
       setSincronizando(false);

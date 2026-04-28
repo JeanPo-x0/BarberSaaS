@@ -131,11 +131,24 @@ def forzar_sincronizacion(
         import stripe as stripe_lib
 
         sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == usuario.barberia_id).first()
-        if not sus or not sus.stripe_customer_id:
+        barberia = db.query(Barberia).filter(Barberia.id == usuario.barberia_id).first()
+
+        customer_id = sus.stripe_customer_id if sus else None
+
+        # Si no hay customer_id guardado (sync inicial falló), buscar en Stripe por email
+        if not customer_id and barberia and barberia.email:
+            customers = stripe_lib.Customer.search(query=f"email:'{barberia.email}'", limit=1)
+            if customers.data:
+                customer_id = customers.data[0].id
+                if sus:
+                    sus.stripe_customer_id = customer_id
+                    db.flush()
+
+        if not customer_id:
             raise HTTPException(status_code=400, detail="No hay customer de Stripe registrado")
 
         # Listar suscripciones del customer y tomar la más reciente activa/trialing
-        result = stripe_lib.Subscription.list(customer=sus.stripe_customer_id, limit=10)
+        result = stripe_lib.Subscription.list(customer=customer_id, limit=10)
         data = result.data  # atributo directo, funciona en todas las versiones del SDK
         if not data:
             raise HTTPException(status_code=400, detail="No hay suscripciones en Stripe para este cliente")
