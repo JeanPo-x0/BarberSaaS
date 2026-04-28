@@ -60,7 +60,7 @@ export default function Onboarding() {
 
   const handleRegistro = () => {
     if (!form.email || !form.password) { setError('Email y contraseña son obligatorios'); return; }
-    if (!form.email.includes('@')) { setError('El email ingresado no es válido'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { setError('El email ingresado no es válido'); return; }
     if (fortaleza.nivel < 3) { setError('La contraseña es muy débil. Usá mayúsculas, números y caracteres especiales.'); return; }
     if (confirmPassword && form.password !== confirmPassword) { setError('Las contraseñas no coinciden'); return; }
     if (!confirmPassword) { setError('Confirmá tu contraseña'); return; }

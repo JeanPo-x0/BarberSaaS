@@ -2,7 +2,7 @@ import os, uuid, shutil
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
 from app.core.limiter import limiter
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
+from sqlalchemy import and_, text
 from datetime import datetime, timedelta
 from typing import List
 from app.database import get_db
@@ -36,6 +36,24 @@ def crear_cita(request: Request, cita: CitaCreate, db: Session = Depends(get_db)
         raise HTTPException(status_code=404, detail="Barbero no encontrado")
     if not barbero.activo:
         raise HTTPException(status_code=400, detail="El barbero no esta disponible")
+
+    # Validar horario de la barbería
+    barberia_v = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first()
+    if barberia_v:
+        hora_ap_str = barberia_v.hora_apertura or "08:00"
+        hora_ci_str = barberia_v.hora_cierre or "20:00"
+        dias_lista = [int(d) for d in (barberia_v.dias_abiertos or "1,2,3,4,5,6").split(",") if d.strip()]
+        dia_js = (cita.fecha_hora.weekday() + 1) % 7
+        if dia_js not in dias_lista:
+            raise HTTPException(status_code=400, detail="La barbería está cerrada ese día")
+        h_ap = int(hora_ap_str.split(":")[0]) * 60 + int(hora_ap_str.split(":")[1])
+        h_ci = int(hora_ci_str.split(":")[0]) * 60 + int(hora_ci_str.split(":")[1])
+        cita_min = cita.fecha_hora.hour * 60 + cita.fecha_hora.minute
+        if cita_min < h_ap or cita_min >= h_ci:
+            raise HTTPException(status_code=400, detail="El horario está fuera del horario de atención")
+
+    # Lock exclusivo por barbero para evitar double-booking concurrente
+    db.execute(text("SELECT pg_advisory_xact_lock(:lock_id)"), {"lock_id": cita.barbero_id})
 
     # Verificar conflicto usando solo citas pendientes (mismo criterio que ver_disponibilidad)
     servicio_nuevo = db.query(Servicio).filter(Servicio.id == cita.servicio_id).first()
@@ -198,7 +216,7 @@ def ver_disponibilidad(request: Request, barbero_id: int, fecha: str, db: Sessio
     citas_del_dia = db.query(Cita).filter(
         and_(
             Cita.barbero_id == barbero_id,
-            Cita.estado != "cancelada",
+            Cita.estado == "pendiente",
             Cita.fecha_hora >= dia.replace(hour=0, minute=0),
             Cita.fecha_hora < dia.replace(hour=23, minute=59)
         )
@@ -518,8 +536,8 @@ def cancelar_cita(cita_id: int, usuario: Usuario = Depends(get_usuario_actual), 
         if cliente and cliente.telefono:
             barberia_obj = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first() if barbero else None
             link_ag = f"{settings.FRONTEND_URL}/agendar/{barbero.barberia_id}" if barbero else ""
-            if barberia_obj and barberia_obj.slug:
-                link_ag = f"{settings.FRONTEND_URL}/b/{barberia_obj.slug}"
+            if barberia_obj and getattr(barberia_obj, "subdominio", None):
+                link_ag = f"{settings.FRONTEND_URL}/b/{barberia_obj.subdominio}"
             notificar_cancelacion(cliente.telefono, cliente.nombre, link_agendamiento=link_ag)
         if barbero and barbero.telefono:
             notificar_barbero_cancelacion(

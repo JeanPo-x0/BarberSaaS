@@ -156,8 +156,8 @@ def eliminar_barberia(
 
     dueno = db.query(Usuario).filter(Usuario.barberia_id == barberia_id).first()
     if dueno:
-        db.query(EmailVerificationToken).filter(EmailVerificationToken.usuario_id == dueno.id).delete(synchronize_session=False)
-        db.query(PasswordResetToken).filter(PasswordResetToken.usuario_id == dueno.id).delete(synchronize_session=False)
+        db.query(EmailVerificationToken).filter(EmailVerificationToken.email == dueno.email).delete(synchronize_session=False)
+        db.query(PasswordResetToken).filter(PasswordResetToken.email == dueno.email).delete(synchronize_session=False)
         db.delete(dueno)
 
     db.delete(barberia)

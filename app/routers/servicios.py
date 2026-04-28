@@ -4,6 +4,7 @@ from app.database import get_db
 from app.models.servicio import Servicio
 from app.models.usuario import Usuario
 from app.schemas import ServicioCreate, ServicioResponse
+from app.schemas.servicio import ServicioUpdate
 from app.core.deps import get_usuario_actual
 from typing import List
 
@@ -60,7 +61,7 @@ def toggle_servicio(servicio_id: int, usuario: Usuario = Depends(get_usuario_act
 @router.patch("/{servicio_id}", response_model=ServicioResponse)
 def editar_servicio(
     servicio_id: int,
-    datos: dict,
+    datos: ServicioUpdate,
     usuario: Usuario = Depends(get_usuario_actual),
     db: Session = Depends(get_db),
 ):
@@ -70,12 +71,12 @@ def editar_servicio(
     ).first()
     if not servicio:
         raise HTTPException(status_code=404, detail="Servicio no encontrado")
-    if "nombre" in datos and datos["nombre"]:
-        servicio.nombre = datos["nombre"]
-    if "duracion_minutos" in datos and datos["duracion_minutos"]:
-        servicio.duracion_minutos = int(datos["duracion_minutos"])
-    if "precio" in datos and datos["precio"] is not None:
-        servicio.precio = float(datos["precio"])
+    if datos.nombre is not None:
+        servicio.nombre = datos.nombre
+    if datos.duracion_minutos is not None:
+        servicio.duracion_minutos = datos.duracion_minutos
+    if datos.precio is not None:
+        servicio.precio = datos.precio
     db.commit()
     db.refresh(servicio)
     return servicio

@@ -113,7 +113,7 @@ function ModalEnterprise({ onClose }) {
     if (!form.nombre.trim() || !form.email.trim() || !form.mensaje.trim()) {
       setError('Completá todos los campos'); return;
     }
-    if (!form.email.includes('@')) { setError('Email inválido'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { setError('Email inválido'); return; }
     setEnviando(true); setError('');
     try {
       await enviarContactoSoporte({

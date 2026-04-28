@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, text
 from typing import List
 from datetime import datetime
 
@@ -24,6 +24,8 @@ def anotarse_en_lista(
     if not barberia:
         raise HTTPException(status_code=404, detail="Barberia no encontrada")
 
+    # Lock exclusivo por barbería para asignar posición sin race condition
+    db.execute(text("SELECT pg_advisory_xact_lock(:lock_id)"), {"lock_id": barberia_id + 100000})
     ultima_posicion = (
         db.query(func.max(ListaEspera.posicion))
         .filter(

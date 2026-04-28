@@ -14,6 +14,8 @@ def _extraer_token(request: Request) -> str | None:
     return request.cookies.get("auth_token")
 
 
+_ONBOARDING_ALLOWED_PATHS = {"/suscripcion/checkout", "/suscripcion/estado"}
+
 def get_usuario_actual(request: Request, db: Session = Depends(get_db)):
     token = _extraer_token(request)
     if not token:
@@ -21,6 +23,8 @@ def get_usuario_actual(request: Request, db: Session = Depends(get_db)):
     payload = verificar_token(token)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
+    if payload.get("scope") == "onboarding" and request.url.path not in _ONBOARDING_ALLOWED_PATHS:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Token de onboarding no autorizado para este endpoint")
     usuario = db.query(Usuario).filter(Usuario.email == payload.get("sub")).first()
     if not usuario:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")

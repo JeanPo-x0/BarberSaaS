@@ -4,7 +4,7 @@ from app.database import get_db
 from app.models.barberia import Barberia
 from app.models.suscripcion import Suscripcion
 from app.schemas import BarberiaCreate, BarberiaResponse
-from app.schemas.barberia import MapsLinkUpdate, HorarioUpdate
+from app.schemas.barberia import MapsLinkUpdate, HorarioUpdate, BarberiaPublicaResponse
 from app.core.deps import get_usuario_actual
 from app.models.usuario import Usuario
 from typing import List
@@ -88,7 +88,7 @@ def toggle_barberia(barberia_id: int, usuario: Usuario = Depends(get_usuario_act
 
 
 
-@router.get("/slug/{subdominio}", response_model=BarberiaResponse)
+@router.get("/slug/{subdominio}", response_model=BarberiaPublicaResponse)
 def obtener_barberia_por_slug(subdominio: str, db: Session = Depends(get_db)):
     barberia = db.query(Barberia).filter(Barberia.subdominio == subdominio.lower()).first()
     if not barberia:
@@ -232,7 +232,7 @@ def actualizar_horario(
     return barberia
 
 
-@router.get("/{barberia_id}", response_model=BarberiaResponse)
+@router.get("/{barberia_id}", response_model=BarberiaPublicaResponse)
 def obtener_barberia(barberia_id: int, db: Session = Depends(get_db)):
     barberia = db.query(Barberia).filter(Barberia.id == barberia_id).first()
     if not barberia:

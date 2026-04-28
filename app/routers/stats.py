@@ -284,8 +284,7 @@ def exportar_pdf(
 ):
     """Genera y descarga un reporte PDF de los últimos 30 días — solo Premium."""
     try:
-        from fpdf import FPDF, __version__ as fpdf_version
-        print(f"[PDF] fpdf2 version: {fpdf_version}")
+        from fpdf import FPDF
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"fpdf2 no disponible: {e}")
 

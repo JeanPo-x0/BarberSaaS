@@ -56,3 +56,20 @@ class BarberiaResponse(BarberiaBase):
 
     class Config:
         from_attributes = True
+
+
+class BarberiaPublicaResponse(BaseModel):
+    id: int
+    nombre: str
+    direccion: Optional[str] = None
+    telefono: Optional[str] = None
+    logo: Optional[str] = None
+    activa: bool
+    subdominio: Optional[str] = None
+    maps_link: Optional[str] = None
+    hora_apertura: Optional[str] = "08:00"
+    hora_cierre: Optional[str] = "20:00"
+    dias_abiertos: Optional[str] = "1,2,3,4,5,6"
+
+    class Config:
+        from_attributes = True

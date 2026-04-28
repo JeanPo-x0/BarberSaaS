@@ -9,7 +9,7 @@ from app.models.barberia import Barberia
 from app.models.suscripcion import Suscripcion
 from app.schemas import SuscripcionResponse, CheckoutRequest
 from app.services import stripe_service
-from app.services.email import enviar_recibo_pago, enviar_aviso_suspension, enviar_verificacion_email
+from app.services.email import enviar_recibo_pago, enviar_aviso_suspension, enviar_verificacion_email, enviar_confirmacion_trial
 from app.models.email_verification import EmailVerificationToken
 from app.core.config import settings
 import secrets, hashlib
@@ -66,9 +66,7 @@ def crear_checkout(
     es_nuevo = False
     if not sus or not sus.stripe_customer_id:
         email_stripe = barberia.email or usuario.email
-        print(f"[checkout] creando customer stripe email={email_stripe} barberia_id={barberia.id}", flush=True)
         customer_id = stripe_service.crear_cliente(email_stripe, barberia.nombre)
-        print(f"[checkout] customer_id={customer_id}", flush=True)
         if not sus:
             es_nuevo = True
             sus = Suscripcion(
@@ -298,13 +296,11 @@ def sincronizar_desde_checkout(
     db.commit()
 
     estado_final = sus.estado
-    print(f"[sincronizar] barberia_id={barberia_id} stripe_status={status} estado_db={estado_final}", flush=True)
 
-    # Enviar email de verificación ahora que el pago está confirmado
+    # Enviar emails ahora que el pago está confirmado
     if estado_final in ("activa", "trial"):
         try:
             usuario_db = db.query(Usuario).filter(Usuario.barberia_id == barberia_id).first()
-            print(f"[sincronizar] usuario_db={usuario_db and usuario_db.email} email_verificado={usuario_db and usuario_db.email_verificado}", flush=True)
             if usuario_db and not usuario_db.email_verificado:
                 token_plano = secrets.token_urlsafe(32)
                 token_hash = hashlib.sha256(token_plano.encode()).hexdigest()
@@ -314,11 +310,15 @@ def sincronizar_desde_checkout(
                     expires_at=datetime.utcnow() + timedelta(hours=24),
                 ))
                 db.commit()
-                print(f"[sincronizar] enviando email a {usuario_db.email}", flush=True)
                 enviar_verificacion_email(usuario_db.email, token_plano, settings.FRONTEND_URL)
-                print(f"[sincronizar] email enviado OK", flush=True)
-        except Exception as e:
-            print(f"[sincronizar] ERROR email: {e}", flush=True)
+            if usuario_db and status == "trialing" and barberia:
+                try:
+                    fecha_fin_str = sus.fecha_trial_fin.strftime("%d/%m/%Y") if sus.fecha_trial_fin else "14 días desde hoy"
+                    enviar_confirmacion_trial(usuario_db.email, barberia.nombre, fecha_fin_str)
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
     return {"ok": True, "plan": plan, "estado": estado_final, "periodo": sus.periodo}
 

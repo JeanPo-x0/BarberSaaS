@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.configuracion_pagos import ConfiguracionPagos
+from app.models.barberia import Barberia
 from app.schemas.configuracion_pagos import (
     ConfiguracionPagosUpdate,
     ConfiguracionPagosResponse,
@@ -27,7 +28,15 @@ def _get_or_create(db: Session, barberia_id: int) -> ConfiguracionPagos:
 
 @router.get("/publica/{barberia_id}", response_model=ConfiguracionPagosPublica)
 def get_config_publica(barberia_id: int, db: Session = Depends(get_db)):
-    return _get_or_create(db, barberia_id)
+    barberia = db.query(Barberia).filter(Barberia.id == barberia_id, Barberia.activa == True).first()
+    if not barberia:
+        raise HTTPException(status_code=404, detail="Barberia no encontrada")
+    config = db.query(ConfiguracionPagos).filter(
+        ConfiguracionPagos.barberia_id == barberia_id
+    ).first()
+    if not config:
+        config = ConfiguracionPagos(barberia_id=barberia_id)
+    return config
 
 
 @router.get("/mia", response_model=ConfiguracionPagosResponse)

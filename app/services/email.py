@@ -143,6 +143,29 @@ def enviar_bienvenida(email: str, nombre_barberia: str, link_agendamiento: str):
     enviar_email(email, f"Bienvenido a BarberSaaS — {nombre_barberia} ya esta activa", _base(contenido))
 
 
+def enviar_confirmacion_trial(email: str, nombre_barberia: str, fecha_fin: str):
+    contenido = f"""
+{_titulo("Tu prueba gratuita esta activa")}
+{_parrafo(f"Hola, <strong style='color:#F5F5F5;'>{nombre_barberia}</strong>. Tu periodo de prueba de <strong style='color:#F5F5F5;'>14 dias</strong> en el Plan Pro esta activo.")}
+{_separador()}
+<table cellpadding="0" cellspacing="0" role="presentation" width="100%"
+       style="border:1px solid #1E1E1E;border-radius:8px;overflow:hidden;">
+  {_dato("Plan", "Pro &mdash; Mensual")}
+  {_dato("Periodo de prueba", "14 dias gratis")}
+  {_dato("Vence", fecha_fin, "#C9A84C")}
+  {_dato("Cobro al vencer", "USD 29.00 / mes")}
+</table>
+{_boton("Ir a mi panel", f"{settings.FRONTEND_URL}/agenda")}
+{_separador()}
+<div style="background:#161616;border:1px solid #1E1E1E;border-radius:8px;padding:16px 18px;">
+  <p style="margin:0;font-size:13px;color:#888888;line-height:1.7;">
+    No se realizara ningun cobro hasta que finalice el periodo de prueba.<br>
+    Podes cancelar en cualquier momento desde <a href="{settings.FRONTEND_URL}/cuenta" style="color:#C9A84C;text-decoration:none;">tu cuenta</a> sin costo.
+  </p>
+</div>"""
+    enviar_email(email, "Tu prueba de 14 dias comenzo — BarberSaaS Plan Pro", _base(contenido))
+
+
 def enviar_recibo_pago(email: str, nombre_barberia: str, plan: str, monto: float, periodo: str, fecha: str):
     contenido = f"""
 {_titulo("Pago confirmado")}

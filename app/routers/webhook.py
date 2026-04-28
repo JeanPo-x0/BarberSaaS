@@ -31,7 +31,6 @@ async def webhook_whatsapp(request: Request, background_tasks: BackgroundTasks, 
         url = f"https://{host}{path}"
     if query:
         url += f"?{query}"
-    print(f"[Webhook] URL validando: {url!r} | sig: {signature[:20]!r}...")
     if not validator.validate(url, form_dict, signature):
         return Response(content="Forbidden", status_code=403)
 
