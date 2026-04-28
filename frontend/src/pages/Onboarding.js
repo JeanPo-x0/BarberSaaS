@@ -1,11 +1,12 @@
+import axios from 'axios';
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import axios from 'axios';
 import { onboarding, reenviarVerificacion } from '../services/api';
-const BACKEND = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 import { NavLogo } from '../components/LogoLink';
 import { formatearInput, formatearTelefono } from '../utils/phone';
 import PasswordInput from '../components/PasswordInput';
+
+const BACKEND = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 function calcularFortaleza(pwd) {
   const checks = [
@@ -40,6 +41,7 @@ export default function Onboarding() {
   const [error, setError] = useState('');
   const [anual, setAnual] = useState(anualInicial);
   const [stripeError, setStripeError] = useState(false);
+  const [tempToken, setTempToken] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [linkGenerado] = useState('');
   const [tcAceptado, setTcAceptado] = useState(false);
@@ -77,12 +79,13 @@ export default function Onboarding() {
       });
       // Token temporal — NUNCA se guarda en localStorage para evitar acceso
       // al panel sin pagar. Se usa solo para el call a /checkout y se descarta.
-      const tempToken = res.data.access_token;
+      const tk = res.data.access_token;
+      setTempToken(tk);
       try {
         const checkoutRes = await axios.post(
           `${BACKEND}/suscripcion/checkout`,
           { plan: form.plan, periodo: anual ? 'anual' : 'mensual' },
-          { headers: { Authorization: `Bearer ${tempToken}` }, withCredentials: true, timeout: 70000 }
+          { headers: { Authorization: `Bearer ${tk}` }, withCredentials: true, timeout: 70000 }
         );
         window.location.href = checkoutRes.data.checkout_url;
       } catch {
@@ -321,7 +324,11 @@ export default function Onboarding() {
                     onClick={async () => {
                       setStripeError(false); setCargando(true);
                       try {
-                        const r = await crearCheckout({ plan: form.plan, periodo: anual ? 'anual' : 'mensual' });
+                        const r = await axios.post(
+                          `${BACKEND}/suscripcion/checkout`,
+                          { plan: form.plan, periodo: anual ? 'anual' : 'mensual' },
+                          { headers: { Authorization: `Bearer ${tempToken}` }, withCredentials: true, timeout: 70000 }
+                        );
                         window.location.href = r.data.checkout_url;
                       } catch {
                         setStripeError(true);
