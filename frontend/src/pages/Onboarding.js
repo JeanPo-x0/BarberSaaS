@@ -531,6 +531,11 @@ export default function Onboarding() {
                   Pago procesado de forma segura por Stripe. No almacenamos datos de tarjeta.
                 </p>
               </div>
+
+              <button onClick={() => { setPaso(1); setStripeError(false); setTempToken(''); }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans'" }}>
+                Atras
+              </button>
             </div>
           )}
           </div>{/* /padding */}
