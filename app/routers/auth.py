@@ -287,17 +287,44 @@ def verificar_email(token: str, db: Session = Depends(get_db)):
 @router.post("/reenviar-verificacion")
 @limiter.limit("3/minute")
 def reenviar_verificacion(request: Request, datos: EmailRequest, db: Session = Depends(get_db)):
-    usuario = db.query(Usuario).filter(Usuario.email == datos.email.lower().strip()).first()
+    import stripe as stripe_lib
+    email = datos.email.lower().strip()
+    usuario = db.query(Usuario).filter(Usuario.email == email).first()
     if not usuario or usuario.email_verificado:
         return {"mensaje": "Si el email existe y no está verificado, recibirás un correo"}
-    # Solo reenviar si el pago ya fue confirmado (suscripción activa o en trial)
+
     sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == usuario.barberia_id).first() if usuario.barberia_id else None
-    ha_pagado = sus and sus.estado in ("activa", "trial")
+    ha_pagado = bool(sus and sus.estado in ("activa", "trial"))
+
+    # Si la DB dice pendiente_pago, consultar Stripe directamente por si el sync falló
+    if not ha_pagado and sus:
+        try:
+            customers = stripe_lib.Customer.search(query=f"email:'{email}'", limit=1)
+            if customers.data:
+                customer_id = customers.data[0].id
+                subs = stripe_lib.Subscription.list(customer=customer_id, limit=5)
+                active_sub = next((s for s in subs.data if s.status in ("active", "trialing")), None)
+                if active_sub:
+                    # Pago confirmado en Stripe — sincronizar DB
+                    sus.stripe_customer_id = customer_id
+                    sus.stripe_subscription_id = active_sub.id
+                    sus.estado = "trial" if active_sub.status == "trialing" else "activa"
+                    sus.plan = (getattr(active_sub, "metadata", {}) or {}).get("plan", "pro")
+                    barberia = db.query(Barberia).filter(Barberia.id == usuario.barberia_id).first()
+                    if barberia:
+                        barberia.activa = True
+                        barberia.plan = sus.plan
+                    db.commit()
+                    ha_pagado = True
+        except Exception:
+            pass
+
     if not ha_pagado:
         return {"mensaje": "Si el email existe y no está verificado, recibirás un correo"}
+
     try:
-        token_plano = _crear_token_verificacion(datos.email.lower().strip(), db)
-        enviar_verificacion_email(datos.email.lower().strip(), token_plano, settings.FRONTEND_URL)
+        token_plano = _crear_token_verificacion(email, db)
+        enviar_verificacion_email(email, token_plano, settings.FRONTEND_URL)
     except Exception:
         pass
     return {"mensaje": "Si el email existe y no está verificado, recibirás un correo"}
