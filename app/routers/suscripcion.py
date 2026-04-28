@@ -199,11 +199,10 @@ def forzar_sincronizacion(
 @router.post("/sincronizar")
 def sincronizar_desde_checkout(
     datos: dict,
-    usuario: Usuario = Depends(get_usuario_actual),
     db: Session = Depends(get_db),
+    # Sin auth — el session_id de Stripe es suficiente validación
 ):
     """Sincroniza la suscripción local con Stripe usando el session_id del checkout."""
-    import stripe as stripe_lib
     session_id = datos.get("session_id", "")
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id requerido")
@@ -215,12 +214,18 @@ def sincronizar_desde_checkout(
     except Exception:
         raise HTTPException(status_code=400, detail="Session invalida")
 
-    # Usar atributo directo — session.subscription es el objeto expandido
     sub = getattr(session, "subscription", None)
     if not sub or isinstance(sub, str):
         raise HTTPException(status_code=400, detail="No hay suscripcion en este session")
 
-    sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == usuario.barberia_id).first()
+    # Obtener barberia_id desde el metadata de la sesión de Stripe
+    ses_meta = getattr(session, "metadata", {}) or {}
+    barberia_id_str = ses_meta.get("barberia_id", "")
+    if not barberia_id_str:
+        raise HTTPException(status_code=400, detail="Session sin barberia_id en metadata")
+    barberia_id = int(barberia_id_str)
+
+    sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia_id).first()
     if not sus:
         raise HTTPException(status_code=404, detail="Suscripcion no encontrada")
 

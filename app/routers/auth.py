@@ -182,7 +182,8 @@ def me(usuario: Usuario = Depends(get_usuario_actual)):
     return usuario
 
 @router.post("/onboarding", response_model=OnboardingResponse)
-@limiter.limit("5/minute")
+@limiter.limit("3/hour")
+@limiter.limit("2/minute")
 def onboarding(request: Request, datos: OnboardingCreate, db: Session = Depends(get_db)):
     """Registro completo: crea usuario dueño + barbería + suscripción trial."""
     email = sanitizar(datos.email).lower()

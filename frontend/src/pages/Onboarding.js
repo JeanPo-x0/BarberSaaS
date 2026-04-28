@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { onboarding, crearCheckout, reenviarVerificacion } from '../services/api';
+import axios from 'axios';
+import { onboarding, reenviarVerificacion } from '../services/api';
+const BACKEND = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 import { NavLogo } from '../components/LogoLink';
 import { formatearInput, formatearTelefono } from '../utils/phone';
 import PasswordInput from '../components/PasswordInput';
@@ -73,21 +75,17 @@ export default function Onboarding() {
         ...form,
         telefono: form.telefono ? formatearTelefono(form.telefono) : '',
       });
-      // Usar el token devuelto por onboarding directamente para ir a Stripe
-      // (no se pasa por login, que bloquea emails no verificados)
-      localStorage.setItem('token', res.data.access_token);
-      localStorage.setItem('usuario', JSON.stringify({
-        id: res.data.id,
-        email: res.data.email,
-        rol: res.data.rol,
-        barberia_id: res.data.barberia_id,
-      }));
-      // Redirigir a Stripe para activar el plan
+      // Token temporal — NUNCA se guarda en localStorage para evitar acceso
+      // al panel sin pagar. Se usa solo para el call a /checkout y se descarta.
+      const tempToken = res.data.access_token;
       try {
-        const checkoutRes = await crearCheckout({ plan: form.plan, periodo: anual ? 'anual' : 'mensual' });
+        const checkoutRes = await axios.post(
+          `${BACKEND}/suscripcion/checkout`,
+          { plan: form.plan, periodo: anual ? 'anual' : 'mensual' },
+          { headers: { Authorization: `Bearer ${tempToken}` }, withCredentials: true, timeout: 70000 }
+        );
         window.location.href = checkoutRes.data.checkout_url;
       } catch {
-        // Stripe no respondió — mostrar error con opción de reintentar
         setStripeError(true);
         setCargando(false);
         return;

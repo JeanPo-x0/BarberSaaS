@@ -88,7 +88,7 @@ function AppRoutes() {
         <Route path="/ingresos" element={<ProtectedRoute><DashboardIngresos /></ProtectedRoute>} />
         <Route path="/soporte" element={<ProtectedRoute><Soporte /></ProtectedRoute>} />
         <Route path="/cuenta" element={<ProtectedRoute><Cuenta /></ProtectedRoute>} />
-        <Route path="/suscripcion/exito" element={<ProtectedRoute><SuscripcionExito /></ProtectedRoute>} />
+        <Route path="/suscripcion/exito" element={<SuscripcionExito />} />
         <Route path="/admin" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>

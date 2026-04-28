@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { login, wakeUpServer, reenviarVerificacion, crearCheckout, getEstadoSuscripcion } from '../services/api';
+import { login, wakeUpServer, reenviarVerificacion, crearCheckout, getEstadoSuscripcion, forzarSyncSuscripcion } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import PasswordInput from '../components/PasswordInput';
 
@@ -53,16 +53,15 @@ function Login() {
       try {
         const susRes = await getEstadoSuscripcion();
         if (susRes.data?.estado === 'pendiente_pago') {
-          const pending = localStorage.getItem('pendingCheckout');
-          if (pending) {
-            localStorage.removeItem('pendingCheckout');
-            try {
-              const { plan, periodo } = JSON.parse(pending);
-              const checkoutRes = await crearCheckout({ plan, periodo });
-              window.location.href = checkoutRes.data.url;
+          // Intentar sync con Stripe primero — puede que el webhook llegó tarde
+          try {
+            await forzarSyncSuscripcion();
+            const recheck = await getEstadoSuscripcion();
+            if (recheck.data?.estado !== 'pendiente_pago') {
+              navigate('/agenda');
               return;
-            } catch { /* si falla checkout, ir a planes */ }
-          }
+            }
+          } catch { /* si falla, continuar a planes */ }
           navigate('/planes');
           return;
         }

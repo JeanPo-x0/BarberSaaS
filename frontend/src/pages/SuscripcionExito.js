@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { sincronizarSuscripcion, forzarSyncSuscripcion, getEstadoSuscripcion } from '../services/api';
+import { sincronizarSuscripcion } from '../services/api';
 
 const CHECK_ANIM = `
 @keyframes draw-circle {
@@ -55,31 +55,24 @@ export default function SuscripcionExito() {
     sincronizado.current = true;
     const session_id = params.get('session_id');
     const sync = async () => {
-      // 1. Forzar sync con Stripe
+      let activado = false;
+      // Reintentar hasta 3 veces con 4s de espera (cubre cold start de Render)
       for (let i = 0; i < 3; i++) {
         try {
-          if (session_id) await sincronizarSuscripcion(session_id);
-          await forzarSyncSuscripcion();
-          break;
+          if (session_id) {
+            const res = await sincronizarSuscripcion(session_id);
+            if (res.data?.ok && ['activa', 'trial'].includes(res.data?.estado)) {
+              activado = true;
+              break;
+            }
+          }
         } catch {
           if (i < 2) await new Promise(r => setTimeout(r, 4000));
         }
       }
-      // 2. Polling: esperar hasta que el estado local confirme "activa" (máx 120s)
-      const deadline = Date.now() + 120000;
-      let activado = false;
-      while (Date.now() < deadline) {
-        try {
-          const res = await getEstadoSuscripcion();
-          if (res.data.estado === 'activa') { activado = true; break; }
-          await forzarSyncSuscripcion().catch(() => {});
-        } catch {}
-        await new Promise(r => setTimeout(r, 5000));
-      }
       setSincronizadoOk(activado);
       setSincronizando(false);
-      // Limpiar token temporal de onboarding — el usuario debe hacer login
-      // fresco con email verificado para acceder al panel
+      // Por si quedó algún token de sesión anterior
       localStorage.removeItem('token');
       localStorage.removeItem('usuario');
     };
