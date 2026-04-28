@@ -43,7 +43,6 @@ export default function Onboarding() {
   const [stripeError, setStripeError] = useState(false);
   const [tempToken, setTempToken] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [linkGenerado] = useState('');
   const [tcAceptado, setTcAceptado] = useState(false);
   const [verificacionPendiente, setVerificacionPendiente] = useState(false);
   const [form, setForm] = useState({
@@ -77,24 +76,8 @@ export default function Onboarding() {
         ...form,
         telefono: form.telefono ? formatearTelefono(form.telefono) : '',
       });
-      // Token temporal — NUNCA se guarda en localStorage para evitar acceso
-      // al panel sin pagar. Se usa solo para el call a /checkout y se descarta.
-      const tk = res.data.access_token;
-      setTempToken(tk);
-      try {
-        const checkoutRes = await axios.post(
-          `${BACKEND}/suscripcion/checkout`,
-          { plan: form.plan, periodo: anual ? 'anual' : 'mensual' },
-          { headers: { Authorization: `Bearer ${tk}` }, withCredentials: true, timeout: 70000 }
-        );
-        setPaso(2);
-        await new Promise(r => setTimeout(r, 800));
-        window.location.href = checkoutRes.data.checkout_url;
-      } catch {
-        setStripeError(true);
-        setCargando(false);
-        return;
-      }
+      setTempToken(res.data.access_token);
+      setPaso(2);
     } catch (err) {
       const status = err.response?.status;
       const detail = err.response?.data?.detail;
@@ -114,6 +97,21 @@ export default function Onboarding() {
         setError(`Error del servidor (${status || 'desconocido'}). Intenta de nuevo.`);
       }
     } finally {
+      setCargando(false);
+    }
+  };
+
+  const handleIrAStripe = async () => {
+    setCargando(true); setStripeError(false);
+    try {
+      const checkoutRes = await axios.post(
+        `${BACKEND}/suscripcion/checkout`,
+        { plan: form.plan, periodo: anual ? 'anual' : 'mensual' },
+        { headers: { Authorization: `Bearer ${tempToken}` }, withCredentials: true, timeout: 70000 }
+      );
+      window.location.href = checkoutRes.data.checkout_url;
+    } catch {
+      setStripeError(true);
       setCargando(false);
     }
   };
@@ -315,39 +313,6 @@ export default function Onboarding() {
                 </div>
               )}
 
-              {stripeError && (
-                <div style={{
-                  background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.25)',
-                  borderRadius: 10, padding: '12px 14px', fontSize: 13, color: '#E63946',
-                }}>
-                  No se pudo conectar con el sistema de pago. Tu cuenta fue creada — intentá de nuevo para activar tu plan.
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      setStripeError(false); setCargando(true);
-                      try {
-                        const r = await axios.post(
-                          `${BACKEND}/suscripcion/checkout`,
-                          { plan: form.plan, periodo: anual ? 'anual' : 'mensual' },
-                          { headers: { Authorization: `Bearer ${tempToken}` }, withCredentials: true, timeout: 70000 }
-                        );
-                        window.location.href = r.data.checkout_url;
-                      } catch {
-                        setStripeError(true);
-                      } finally { setCargando(false); }
-                    }}
-                    style={{
-                      display: 'block', marginTop: 10, background: 'rgba(230,57,70,0.15)',
-                      border: '1px solid rgba(230,57,70,0.4)', borderRadius: 8,
-                      color: '#E63946', fontSize: 12, fontWeight: 700, padding: '7px 14px',
-                      cursor: 'pointer', fontFamily: "'DM Sans'",
-                    }}
-                  >
-                    Reintentar ir a Stripe
-                  </button>
-                </div>
-              )}
-
               {/* Checkbox T&C */}
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
                 <input
@@ -488,22 +453,84 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Paso 2: Redirigiendo a Stripe */}
+          {/* Paso 2: Resumen + confirmación */}
           {paso === 2 && (
-            <div style={{ textAlign: 'center', padding: '12px 0' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <div>
+                <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 24, letterSpacing: '0.06em', margin: '0 0 4px' }}>
+                  Confirmá tu plan
+                </h2>
+                <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+                  Revisá los detalles antes de continuar al pago
+                </p>
+              </div>
+
+              {/* Card del plan */}
               <div style={{
-                width: 56, height: 56, borderRadius: '50%',
-                border: '3px solid rgba(201,168,76,0.2)', borderTop: '3px solid #C9A84C',
-                animation: 'spin 0.8s linear infinite',
-                margin: '0 auto 20px',
-              }} />
-              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-              <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 26, letterSpacing: '0.08em', color: '#C9A84C', margin: '0 0 8px 0' }}>
-                Redirigiendo a Stripe
-              </h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0, lineHeight: 1.6 }}>
-                Te llevamos a completar el pago de forma segura.
-              </p>
+                border: `1px solid ${PLANES_INFO[form.plan].color}40`,
+                background: `${PLANES_INFO[form.plan].color}08`,
+                borderRadius: 12, padding: '16px 18px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Plan</p>
+                    <p style={{ fontSize: 18, fontWeight: 700, color: PLANES_INFO[form.plan].color, margin: '0 0 4px', fontFamily: "'Bebas Neue'", letterSpacing: '0.06em' }}>
+                      {PLANES_INFO[form.plan].label}
+                    </p>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                      {anual ? PLANES_INFO[form.plan].desc_anual : PLANES_INFO[form.plan].desc_mensual}
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontSize: 28, fontWeight: 800, color: '#F5F5F5', margin: '0 0 2px', lineHeight: 1 }}>
+                      ${anual ? PLANES_INFO[form.plan].anual : PLANES_INFO[form.plan].mensual}
+                    </p>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>/{anual ? 'año' : 'mes'}</p>
+                  </div>
+                </div>
+                {!anual && form.plan === 'pro' && (
+                  <div style={{
+                    marginTop: 12, paddingTop: 12, borderTop: `1px solid ${PLANES_INFO[form.plan].color}25`,
+                    fontSize: 12, color: '#4ade80', fontWeight: 600,
+                  }}>
+                    14 dias gratis incluidos · sin cobro hasta que termine el trial
+                  </div>
+                )}
+              </div>
+
+              {/* Datos de la barberia */}
+              <div style={{
+                background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)',
+                borderRadius: 10, padding: '12px 16px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              }}>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Barberia</span>
+                <span style={{ fontSize: 14, color: '#F5F5F5', fontWeight: 600 }}>{form.nombre_barberia}</span>
+              </div>
+
+              {stripeError && (
+                <div style={{
+                  background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.25)',
+                  borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#E63946',
+                }}>
+                  No se pudo conectar con el sistema de pago. Intentá de nuevo.
+                </div>
+              )}
+
+              <button onClick={handleIrAStripe} disabled={cargando} className="btn-gold"
+                style={{ width: '100%', opacity: cargando ? 0.7 : 1, fontSize: 15 }}>
+                {cargando ? 'Conectando con Stripe...' : 'Confirmar y pagar →'}
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+                <p style={{ fontSize: 11, color: '#555', margin: 0 }}>
+                  Pago procesado de forma segura por Stripe. No almacenamos datos de tarjeta.
+                </p>
+              </div>
             </div>
           )}
           </div>{/* /padding */}
