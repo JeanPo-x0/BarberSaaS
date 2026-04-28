@@ -347,14 +347,32 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     tipo = evento["type"]
     data = evento["data"]["object"]
 
+    # Helper: accede a campos de StripeObject (no tiene .get() en SDK nuevo)
+    def _g(key, default=None):
+        try:
+            v = data[key]
+            return v if v is not None else default
+        except (KeyError, TypeError, AttributeError):
+            return default
+
+    def _meta(key, default=None):
+        meta = _g("metadata")
+        if not meta:
+            return default
+        try:
+            v = meta[key]
+            return v if v is not None else default
+        except (KeyError, TypeError, AttributeError):
+            return getattr(meta, key, default) or default
+
     # Suscripción activada (trial o pago exitoso)
     if tipo in ("customer.subscription.created", "customer.subscription.updated"):
         sub_id = data["id"]
         status = data["status"]
-        barberia_id = int(data.get("metadata", {}).get("barberia_id", 0))
+        barberia_id = int(_meta("barberia_id", 0) or 0)
         if barberia_id <= 0:
             return {"ok": False, "razon": "barberia_id invalido"}
-        plan = data.get("metadata", {}).get("plan", "pro")
+        plan = _meta("plan") or "pro"
         PLANES_VALIDOS = {"basico", "pro", "premium"}
         if plan not in PLANES_VALIDOS:
             plan = "pro"
@@ -366,14 +384,13 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             sus.plan = plan
             periodo_interval = data["items"]["data"][0]["price"]["recurring"]["interval"]
             sus.periodo = "anual" if periodo_interval == "year" else "mensual"
-            cancel_at_end = data.get("cancel_at_period_end", False)
+            cancel_at_end = _g("cancel_at_period_end", False)
 
             barberia = db.query(Barberia).filter(Barberia.id == barberia_id).first()
 
             if status == "trialing":
-                # Suscripción nueva en período de prueba — actualizar plan pero mantener estado trial
                 sus.estado = "trial"
-                trial_end_ts = data.get("trial_end")
+                trial_end_ts = _g("trial_end")
                 if trial_end_ts:
                     sus.fecha_trial_fin = datetime.utcfromtimestamp(trial_end_ts)
                 if barberia:
@@ -398,15 +415,15 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
                     except Exception:
                         pass
 
-            ts = data.get("current_period_end")
+            ts = _g("current_period_end")
             if ts:
                 sus.fecha_renovacion = datetime.utcfromtimestamp(ts)
             db.commit()
 
     # Pago exitoso → recibo por email
     elif tipo == "invoice.payment_succeeded":
-        customer_id = data.get("customer")
-        monto = (data.get("amount_paid", 0) or 0) / 100
+        customer_id = _g("customer")
+        monto = (_g("amount_paid", 0) or 0) / 100
         sus = db.query(Suscripcion).filter(Suscripcion.stripe_customer_id == customer_id).first()
         if sus:
             barberia = db.query(Barberia).filter(Barberia.id == sus.barberia_id).first()
@@ -419,7 +436,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
 
     # Pago fallido → suspender
     elif tipo == "invoice.payment_failed":
-        customer_id = data.get("customer")
+        customer_id = _g("customer")
         sus = db.query(Suscripcion).filter(Suscripcion.stripe_customer_id == customer_id).first()
         if sus:
             sus.estado = "suspendida"

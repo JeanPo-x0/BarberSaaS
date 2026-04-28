@@ -295,38 +295,44 @@ def reenviar_verificacion(request: Request, datos: EmailRequest, db: Session = D
 
     sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == usuario.barberia_id).first() if usuario.barberia_id else None
     ha_pagado = bool(sus and sus.estado in ("activa", "trial"))
+    print(f"[reenviar] email={email} ha_pagado={ha_pagado} estado_db={sus and sus.estado}", flush=True)
 
     # Fallback: si DB dice pendiente_pago, verificar en Stripe por si el sync no llegó
     if not ha_pagado and sus and usuario.barberia_id:
         try:
             import stripe as stripe_lib
             customers = stripe_lib.Customer.list(email=email, limit=1)
+            print(f"[reenviar] stripe customers encontrados: {len(customers.data)}", flush=True)
             if customers.data:
                 customer_id = customers.data[0].id
                 subs = stripe_lib.Subscription.list(customer=customer_id, limit=5)
+                print(f"[reenviar] suscripciones stripe: {[s.status for s in subs.data]}", flush=True)
                 active_sub = next((s for s in subs.data if s.status in ("active", "trialing")), None)
                 if active_sub:
                     sus.stripe_customer_id = customer_id
                     sus.stripe_subscription_id = active_sub.id
                     sus.estado = "trial" if active_sub.status == "trialing" else "activa"
-                    sus.plan = (getattr(active_sub, "metadata", {}) or {}).get("plan", "pro")
+                    sub_meta = getattr(active_sub, "metadata", None)
+                    sus.plan = getattr(sub_meta, "plan", None) or "pro"
                     barberia_obj = db.query(Barberia).filter(Barberia.id == usuario.barberia_id).first()
                     if barberia_obj:
                         barberia_obj.activa = True
                         barberia_obj.plan = sus.plan
                     db.commit()
                     ha_pagado = True
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[reenviar] ERROR stripe fallback: {e}", flush=True)
 
     if not ha_pagado:
+        print(f"[reenviar] no ha pagado — no se envia email", flush=True)
         return {"mensaje": "Si el email existe y no está verificado, recibirás un correo"}
 
     try:
         token_plano = _crear_token_verificacion(email, db)
         enviar_verificacion_email(email, token_plano, settings.FRONTEND_URL)
-    except Exception:
-        pass
+        print(f"[reenviar] email enviado OK a {email}", flush=True)
+    except Exception as e:
+        print(f"[reenviar] ERROR enviando email: {e}", flush=True)
     return {"mensaje": "Si el email existe y no está verificado, recibirás un correo"}
 
 
