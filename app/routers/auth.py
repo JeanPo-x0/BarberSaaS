@@ -296,24 +296,24 @@ def reenviar_verificacion(request: Request, datos: EmailRequest, db: Session = D
     sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == usuario.barberia_id).first() if usuario.barberia_id else None
     ha_pagado = bool(sus and sus.estado in ("activa", "trial"))
 
-    # Si la DB dice pendiente_pago, consultar Stripe directamente por si el sync falló
-    if not ha_pagado and sus:
+    # Fallback: si DB dice pendiente_pago, verificar en Stripe por si el sync no llegó
+    if not ha_pagado and sus and usuario.barberia_id:
         try:
-            customers = stripe_lib.Customer.search(query=f"email:'{email}'", limit=1)
+            import stripe as stripe_lib
+            customers = stripe_lib.Customer.list(email=email, limit=1)
             if customers.data:
                 customer_id = customers.data[0].id
                 subs = stripe_lib.Subscription.list(customer=customer_id, limit=5)
                 active_sub = next((s for s in subs.data if s.status in ("active", "trialing")), None)
                 if active_sub:
-                    # Pago confirmado en Stripe — sincronizar DB
                     sus.stripe_customer_id = customer_id
                     sus.stripe_subscription_id = active_sub.id
                     sus.estado = "trial" if active_sub.status == "trialing" else "activa"
                     sus.plan = (getattr(active_sub, "metadata", {}) or {}).get("plan", "pro")
-                    barberia = db.query(Barberia).filter(Barberia.id == usuario.barberia_id).first()
-                    if barberia:
-                        barberia.activa = True
-                        barberia.plan = sus.plan
+                    barberia_obj = db.query(Barberia).filter(Barberia.id == usuario.barberia_id).first()
+                    if barberia_obj:
+                        barberia_obj.activa = True
+                        barberia_obj.plan = sus.plan
                     db.commit()
                     ha_pagado = True
         except Exception:

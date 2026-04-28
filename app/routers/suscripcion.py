@@ -140,7 +140,7 @@ def forzar_sincronizacion(
 
         # Si no hay customer_id guardado (sync inicial falló), buscar en Stripe por email
         if not customer_id and barberia and barberia.email:
-            customers = stripe_lib.Customer.search(query=f"email:'{barberia.email}'", limit=1)
+            customers = stripe_lib.Customer.list(email=barberia.email, limit=1)
             if customers.data:
                 customer_id = customers.data[0].id
                 if sus:
