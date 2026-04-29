@@ -65,7 +65,12 @@ function ActivarBarbero() {
 
         {exito ? (
           <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: 14, padding: 28, textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" fill="rgba(74,222,128,0.15)"/>
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
             <p style={{ color: '#4ade80', fontWeight: 700, fontSize: 16, margin: '0 0 8px 0' }}>¡Cuenta activada!</p>
             <p style={{ color: '#8A8A8A', fontSize: 13, margin: '0 0 20px 0' }}>Ya podés iniciar sesión con tu email y contraseña.</p>
             <button onClick={() => navigate('/barbero/login')} className="btn-gold" style={{ width: '100%' }}>

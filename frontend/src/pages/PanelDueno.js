@@ -504,7 +504,7 @@ function PanelDueno() {
                     </p>
                     <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {b.email
-                        ? (b.cuenta_activa ? `✓ ${b.email}` : `⏳ Invitación pendiente`)
+                        ? (b.cuenta_activa ? b.email : 'Invitación pendiente')
                         : [b.especialidad, b.telefono].filter(Boolean).join(' · ')}
                     </p>
                   </div>
@@ -1043,7 +1043,10 @@ function PanelDueno() {
                           {guardandoHorario ? 'Guardando...' : 'Guardar horario'}
                         </button>
                         {horarioGuardadoId === b.id && (
-                          <span style={{ fontSize: 13, color: '#4ade80', fontWeight: 600 }}>✓ Guardado</span>
+                          <span style={{ fontSize: 13, color: '#4ade80', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            Guardado
+                          </span>
                         )}
                         {form.dias.length === 0 && (
                           <span style={{ fontSize: 12, color: '#E63946' }}>Seleccioná al menos un día</span>
@@ -1387,7 +1390,7 @@ function PanelDueno() {
           padding: '10px 20px', fontSize: 13, fontWeight: 700, zIndex: 9999,
           whiteSpace: 'nowrap',
         }}>
-          ✓ {inviteExito}
+          {inviteExito}
         </div>
       )}
     </div>

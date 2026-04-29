@@ -281,6 +281,17 @@ def actualizar_perfil_barbero(datos: BarberoUpdate, barbero: Barbero = Depends(g
     return {"ok": True, "nombre": barbero.nombre, "telefono": barbero.telefono, "especialidad": barbero.especialidad}
 
 
+@router.get("/me/plan")
+def plan_de_barbero(barbero: Barbero = Depends(get_barbero_actual), db: Session = Depends(get_db)):
+    from app.models.suscripcion import Suscripcion
+    from app.models.barberia import Barberia
+    sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == barbero.barberia_id).first()
+    barberia = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first()
+    plan = sus.plan if sus else (barberia.plan if barberia else "basico")
+    estado = sus.estado if sus else "activa"
+    return {"plan": plan, "estado": estado}
+
+
 @router.get("/me/agenda")
 def agenda_barbero(barbero: Barbero = Depends(get_barbero_actual), db: Session = Depends(get_db)):
     from app.models.cita import Cita

@@ -34,10 +34,17 @@ API.interceptors.response.use(
     // Skip redirect for login/auth endpoints — 401 there means wrong credentials, not expired session
     const esEndpointPublico = url.includes('/auth/login') || url.includes('/auth/registro') || url.includes('/auth/onboarding') || url.includes('/barberos/login') || url.includes('/barberos/activar');
     if (error.response?.status === 401 && !esEndpointPublico) {
-      const usuarioActual = JSON.parse(localStorage.getItem('usuario') || 'null');
-      localStorage.removeItem('usuario');
-      localStorage.removeItem('token');
-      window.location.href = usuarioActual?.rol === 'barbero' ? '/barbero/login' : '/login';
+      // Barbero endpoints use their own session key — only clear if it's a barbero route
+      const esBarberoEndpoint = url.includes('/barberos/me/') || url.includes('/bloqueos/');
+      if (esBarberoEndpoint) {
+        localStorage.removeItem('barbero_token');
+        localStorage.removeItem('barbero_usuario');
+        window.location.href = '/barbero/login';
+      } else {
+        localStorage.removeItem('usuario');
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -84,6 +91,7 @@ export const getAgendaBarbero = () => API.get('/barberos/me/agenda');
 export const getHistorialBarbero = () => API.get('/barberos/me/historial');
 export const actualizarPerfilBarbero = (data) => API.patch('/barberos/me/perfil', data);
 export const editarBarbero = (id, data) => API.patch(`/barberos/${id}/editar`, data);
+export const getBarberoEstado = () => API.get('/barberos/me/plan');
 export const getMisBloqueos = () => API.get('/bloqueos/mis');
 export const crearBloqueo = (data) => API.post('/bloqueos/', data);
 export const eliminarBloqueo = (id) => API.delete(`/bloqueos/${id}`);

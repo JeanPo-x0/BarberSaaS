@@ -26,10 +26,10 @@ function LoginBarbero() {
     setCargando(true);
     try {
       const res = await loginBarbero({ email: email.trim().toLowerCase(), password });
-      // Guardamos el token en localStorage para que DashboardBarbero pueda leer el payload
-      // El token también llega en cookie HttpOnly para las llamadas API (withCredentials)
-      localStorage.setItem('token', res.data.access_token);
-      localStorage.setItem('usuario', JSON.stringify({ email: res.data.barbero.email, rol: 'barbero', nombre: res.data.barbero.nombre }));
+      // Token del barbero se guarda en clave separada para no interferir con la sesión del dueño
+      // Las llamadas API del barbero usan la cookie HttpOnly (withCredentials)
+      localStorage.setItem('barbero_token', res.data.access_token);
+      localStorage.setItem('barbero_usuario', JSON.stringify({ email: res.data.barbero.email, rol: 'barbero', nombre: res.data.barbero.nombre }));
       navigate('/barbero/agenda');
     } catch (err) {
       const det = err.response?.data?.detail;

@@ -1021,7 +1021,12 @@ function AgendarCita() {
                       background: 'rgba(230,57,70,0.06)', border: '1px solid rgba(230,57,70,0.2)',
                       borderRadius: 12, padding: '20px 16px', textAlign: 'center',
                     }}>
-                      <div style={{ fontSize: 22, marginBottom: 8 }}>🚫</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E63946" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10" fill="rgba(230,57,70,0.1)"/>
+                          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                        </svg>
+                      </div>
                       <p style={{ color: '#E63946', fontWeight: 700, fontSize: 14, margin: '0 0 4px' }}>
                         Día no disponible
                       </p>
@@ -1707,7 +1712,8 @@ function AgendarCita() {
                     const fechaStr = d.toLocaleDateString('es-CR', { weekday: 'long', day: '2-digit', month: 'long' });
                     const horaStr = d.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
                     const tieneDeposito = c.estado_pago === 'confirmado';
-                    const esEfectivo = c.estado_pago === 'por_cobrar';
+                    const esEfectivo = c.metodo_pago === 'efectivo' || c.estado_pago === 'por_cobrar';
+                    const esSinpePendiente = c.metodo_pago === 'sinpe' && c.estado_pago === 'pendiente';
                     const horasLimite = configPagos?.cancelacion_horas_minimo ?? 24;
                     const pctDeposito = configPagos?.deposito_porcentaje ?? 50;
                     const pctRetencion = configPagos?.cancelacion_porcentaje ?? 0;
@@ -1742,7 +1748,7 @@ function AgendarCita() {
                             border: `1px solid ${tieneDeposito ? 'rgba(74,222,128,0.25)' : 'rgba(255,255,255,0.1)'}`,
                             color: tieneDeposito ? '#4ade80' : 'var(--text-muted)',
                           }}>
-                            {tieneDeposito ? 'Depósito pagado' : esEfectivo ? 'Efectivo' : 'Sin depósito'}
+                            {tieneDeposito ? 'Depósito pagado' : esSinpePendiente ? 'SINPE pendiente' : esEfectivo ? 'Efectivo' : 'Sin depósito'}
                           </span>
                         </div>
 
@@ -1785,13 +1791,23 @@ function AgendarCita() {
                               </a>
                             )}
                           </>
+                        ) : esSinpePendiente ? (
+                          <p style={{
+                            fontSize: 12, color: '#C9A84C', margin: 0,
+                            background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)',
+                            borderRadius: 8, padding: '10px 12px',
+                          }}>
+                            Tu depósito por SINPE está pendiente de confirmación por la barbería. Una vez confirmado, podés solicitar el reembolso desde aquí.
+                          </p>
                         ) : (
                           <p style={{
                             fontSize: 12, color: 'var(--text-muted)', margin: 0,
                             background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
                             borderRadius: 8, padding: '10px 12px',
                           }}>
-                            Esta cita es en efectivo — no hay depósito previo que reembolsar. Podés cancelarla desde el panel de cancelación.
+                            {esEfectivo
+                              ? 'Esta cita es en efectivo — no hay depósito previo que reembolsar. Podés cancelarla desde el panel de cancelación.'
+                              : 'Esta cita no tiene depósito previo registrado. Contactá directamente a la barbería si necesitás coordinar un reembolso.'}
                           </p>
                         )}
                       </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAgendaBarbero, getHistorialBarbero, actualizarPerfilBarbero, completarCitaBarbero, cancelarCitaBarbero, logoutBarbero, getMisBloqueos, crearBloqueo, eliminarBloqueo } from '../services/api';
+import { getAgendaBarbero, getHistorialBarbero, actualizarPerfilBarbero, completarCitaBarbero, cancelarCitaBarbero, logoutBarbero, getMisBloqueos, crearBloqueo, eliminarBloqueo, getBarberoEstado } from '../services/api';
 import { formatearInput } from '../utils/phone';
 
 const ESTADO = {
@@ -217,6 +217,8 @@ function DashboardBarbero() {
 
   const [toastMsg, setToastMsg] = useState('');
 
+  const [planBarberia, setPlanBarberia] = useState('basico');
+
   const [bloqueos, setBloqueos] = useState([]);
   const [bloqueosCargados, setBloqueosCargados] = useState(false);
   const [nuevaFecha, setNuevaFecha] = useState('');
@@ -226,15 +228,14 @@ function DashboardBarbero() {
   const toast = (msg) => { setToastMsg(msg); setTimeout(() => setToastMsg(''), 3000); };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('barbero_token');
     if (!token) { navigate('/barbero/login'); return; }
     try {
       const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
       const payload = JSON.parse(atob(b64));
-      if (payload.rol !== 'barbero') { navigate('/login'); return; }
-      // Fallback: tokens viejos sin nombre usan localStorage
+      if (payload.rol !== 'barbero') { navigate('/barbero/login'); return; }
       if (!payload.nombre) {
-        const ls = JSON.parse(localStorage.getItem('usuario') || '{}');
+        const ls = JSON.parse(localStorage.getItem('barbero_usuario') || '{}');
         payload.nombre = ls.nombre || '';
       }
       setBarberoInfo(payload);
@@ -247,6 +248,9 @@ function DashboardBarbero() {
       .then(r => setCitas(r.data))
       .catch(() => {})
       .finally(() => setCargandoAgenda(false));
+    getBarberoEstado()
+      .then(r => setPlanBarberia(r.data.plan || 'basico'))
+      .catch(() => {});
   }, [navigate]);
 
   const handleCompletar = async (id) => {
@@ -339,8 +343,8 @@ function DashboardBarbero() {
 
   const cerrarSesion = async () => {
     try { await logoutBarbero(); } catch {}
-    localStorage.removeItem('token');
-    localStorage.removeItem('usuario');
+    localStorage.removeItem('barbero_token');
+    localStorage.removeItem('barbero_usuario');
     navigate('/barbero/login');
   };
 
@@ -519,27 +523,29 @@ function DashboardBarbero() {
               </>
             )}
 
-            <div style={{ marginTop: 28 }}>
-              <div style={{
-                background: 'rgba(201,168,76,0.04)', border: '1px solid rgba(201,168,76,0.12)',
-                borderRadius: 14, padding: '16px 18px', marginBottom: 10,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                    <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" stroke="#C9A84C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#C9A84C', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Disponible en plan Premium</span>
+            {(planBarberia === 'basico' || planBarberia === 'pro') && (
+              <div style={{ marginTop: 28 }}>
+                <div style={{
+                  background: 'rgba(201,168,76,0.04)', border: '1px solid rgba(201,168,76,0.12)',
+                  borderRadius: 14, padding: '16px 18px', marginBottom: 10,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" stroke="#C9A84C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: '#C9A84C', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Disponible en plan Premium</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                    Pedile a tu dueño que active el plan Premium para acceder a estadísticas avanzadas, exportar historial y más.
+                  </p>
                 </div>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
-                  Pedile a tu dueño que active el plan Premium para acceder a estadísticas avanzadas, exportar historial y más.
-                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                  <FeatureLocked titulo="Estadísticas mensuales" descripcion="Total de citas, ingresos generados, tasa de cancelación." />
+                  <FeatureLocked titulo="Exportar historial" descripcion="Descargá tu historial completo en Excel o PDF." />
+                  <FeatureLocked titulo="Ranking de clientes frecuentes" descripcion="Identificá a tus mejores clientes automáticamente." />
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                <FeatureLocked titulo="Estadísticas mensuales" descripcion="Total de citas, ingresos generados, tasa de cancelación." />
-                <FeatureLocked titulo="Exportar historial" descripcion="Descargá tu historial completo en Excel o PDF." />
-                <FeatureLocked titulo="Ranking de clientes frecuentes" descripcion="Identificá a tus mejores clientes automáticamente." />
-              </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -712,20 +718,22 @@ function DashboardBarbero() {
               </div>
             </div>
 
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '22px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 18, letterSpacing: '0.06em', margin: 0 }}>Perfil público</h2>
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#C9A84C', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 100, padding: '2px 8px' }}>PREMIUM</span>
+            {planBarberia !== 'premium' && (
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '22px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                  <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: 18, letterSpacing: '0.06em', margin: 0 }}>Perfil público</h2>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#C9A84C', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 100, padding: '2px 8px' }}>PREMIUM</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7, opacity: 0.6 }}>
+                  <FeatureLocked titulo="Foto de perfil" descripcion="Subí tu foto para aparecer en la página de reservas." />
+                  <FeatureLocked titulo="Bio / presentación" descripcion="Una descripción breve sobre vos que ven los clientes." />
+                  <FeatureLocked titulo="Link de reserva personal" descripcion="Los clientes pueden agendar directamente con vos." />
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '12px 0 0 0' }}>
+                  Pedile a tu dueño que active el plan Premium para desbloquear estas funciones.
+                </p>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7, opacity: 0.6 }}>
-                <FeatureLocked titulo="Foto de perfil" descripcion="Subí tu foto para aparecer en la página de reservas." />
-                <FeatureLocked titulo="Bio / presentación" descripcion="Una descripción breve sobre vos que ven los clientes." />
-                <FeatureLocked titulo="Link de reserva personal" descripcion="Los clientes pueden agendar directamente con vos." />
-              </div>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '12px 0 0 0' }}>
-                Pedile a tu dueño que active el plan Premium para desbloquear estas funciones.
-              </p>
-            </div>
+            )}
 
             <button onClick={cerrarSesion} style={{
               background: 'none', border: '1px solid rgba(230,57,70,0.2)',

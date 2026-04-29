@@ -37,8 +37,10 @@ def crear_cita(request: Request, cita: CitaCreate, db: Session = Depends(get_db)
     if not barbero.activo:
         raise HTTPException(status_code=400, detail="El barbero no esta disponible")
 
-    # Validar horario de la barbería
+    # Validar que la barbería esté activa (suscripción vigente)
     barberia_v = db.query(Barberia).filter(Barberia.id == barbero.barberia_id).first()
+    if barberia_v and not barberia_v.activa:
+        raise HTTPException(status_code=400, detail="Esta barbería no está disponible para reservas en este momento.")
     if barberia_v:
         hora_ap_str = barberia_v.hora_apertura or "08:00"
         hora_ci_str = barberia_v.hora_cierre or "20:00"
@@ -200,6 +202,15 @@ def ver_disponibilidad(request: Request, barbero_id: int, fecha: str, db: Sessio
         BloqueoDisponibilidad.barbero_id == barbero_id,
         BloqueoDisponibilidad.fecha == dia.date(),
     ).first()
+    if not barberia or not barberia.activa:
+        slots = []
+        hora_actual = dia.replace(hour=h_ap, minute=m_ap)
+        hora_fin    = dia.replace(hour=h_ci, minute=m_ci)
+        while hora_actual < hora_fin:
+            slots.append({"hora": hora_actual.strftime("%H:%M"), "disponible": False})
+            hora_actual += timedelta(minutes=30)
+        return {"barbero_id": barbero_id, "fecha": fecha, "slots": slots, "bloqueado": True, "cerrado": True}
+
     if bloqueado or dia_cerrado:
         slots = []
         hora_actual = dia.replace(hour=h_ap, minute=m_ap)

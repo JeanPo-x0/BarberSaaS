@@ -373,7 +373,7 @@ export default function Soporte() {
                     'Aviso al cliente si hay un lugar disponible en lista de espera',
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 8 }}>
-                      <span style={{ color: '#4ade80', flexShrink: 0, marginTop: 1 }}>✓</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><polyline points="20 6 9 17 4 12"/></svg>
                       <span>{item}</span>
                     </div>
                   ))}

@@ -186,7 +186,7 @@ function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPa
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.2)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.1)'}
                 >
-                  ✓ Comprobante OK
+                  Comprobante OK
                 </button>
                 <button
                   onClick={() => onRechazarPago(cita.id)}
@@ -318,7 +318,7 @@ function CitaCard({ cita, onCancelar, onCompletar, onConfirmarPago, onRechazarPa
                   color: '#4ade80', transition: 'background 0.15s',
                 }}
               >
-                ✓ Completar
+                Completar
               </button>
               <button
                 onClick={() => onCancelar(cita.id)}

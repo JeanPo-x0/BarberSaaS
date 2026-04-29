@@ -425,13 +425,34 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     elif tipo == "invoice.payment_succeeded":
         customer_id = _g("customer")
         monto = (_g("amount_paid", 0) or 0) / 100
+        subscription_id = _g("subscription")
         sus = db.query(Suscripcion).filter(Suscripcion.stripe_customer_id == customer_id).first()
         if sus:
+            plan_recibo = sus.plan
+            periodo_recibo = sus.periodo or "mensual"
+            # Si el plan en BD es "basico", intentar leerlo desde Stripe para correos precisos
+            if plan_recibo in ("basico", None) and subscription_id:
+                try:
+                    sub_stripe = stripe_lib.Subscription.retrieve(subscription_id, expand=["items.data.price"])
+                    sub_meta = getattr(sub_stripe, "metadata", None)
+                    plan_stripe = (getattr(sub_meta, "plan", None) or "") if sub_meta else ""
+                    if plan_stripe in ("pro", "premium"):
+                        plan_recibo = plan_stripe
+                        items = list(sub_stripe.items.data)
+                        if items:
+                            interval = items[0].price.recurring.interval if items[0].price.recurring else "month"
+                            periodo_recibo = "anual" if interval == "year" else "mensual"
+                        # Actualizar BD con el plan correcto
+                        sus.plan = plan_recibo
+                        sus.periodo = periodo_recibo
+                        db.commit()
+                except Exception:
+                    pass
             barberia = db.query(Barberia).filter(Barberia.id == sus.barberia_id).first()
             if barberia and barberia.email and monto > 0:
                 try:
                     fecha = datetime.utcnow().strftime("%d/%m/%Y")
-                    enviar_recibo_pago(barberia.email, barberia.nombre, sus.plan, monto, sus.periodo, fecha)
+                    enviar_recibo_pago(barberia.email, barberia.nombre, plan_recibo, monto, periodo_recibo, fecha)
                 except Exception:
                     pass
 

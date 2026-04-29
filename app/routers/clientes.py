@@ -33,6 +33,7 @@ class CitaPublicaResponse(BaseModel):
     servicio_nombre: str
     estado: str
     estado_pago: str
+    metodo_pago: str = "efectivo"
 
     class Config:
         from_attributes = True
@@ -91,6 +92,7 @@ def consultar_citas_cliente(request: Request, data: ConsultaCitasRequest, db: Se
             servicio_nombre=servicio.nombre if servicio else "Servicio",
             estado=cita.estado,
             estado_pago=cita.estado_pago,
+            metodo_pago=cita.metodo_pago or "efectivo",
         )
         for cita, barbero, servicio in rows
     ]

@@ -39,9 +39,9 @@ function AppRoutes() {
   const [bloqueado, setBloqueado] = useState(false);
 
   const checkGeo = () => {
-    fetch('https://api.country.is/', { signal: AbortSignal.timeout(5000) })
-      .then(r => r.json())
-      .then(d => { if (d.country && d.country !== 'CR') setBloqueado(true); })
+    const base = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+    fetch(`${base}/health`, { signal: AbortSignal.timeout(5000) })
+      .then(r => { if (r.status === 403) setBloqueado(true); })
       .catch(() => {});
   };
 
@@ -49,7 +49,6 @@ function AppRoutes() {
     wakeUpServer();
     checkGeo();
 
-    // Re-evaluar cuando el usuario vuelve al tab (ej: activó VPN y regresó)
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') checkGeo();
     };
