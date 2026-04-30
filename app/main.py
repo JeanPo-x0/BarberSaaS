@@ -233,10 +233,17 @@ scheduler.add_job(verificar_trials_vencidos, "interval", hours=6)
 async def lifespan(app):
     Base.metadata.create_all(bind=engine)
     # Migraciones manuales idempotentes
-    with engine.connect() as conn:
-        conn.execute(text("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email_verificado BOOLEAN NOT NULL DEFAULT false"))
-        conn.execute(text("ALTER TABLE suscripciones ADD COLUMN IF NOT EXISTS stripe_session_id VARCHAR"))
-        conn.commit()
+    migraciones = [
+        "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email_verificado BOOLEAN NOT NULL DEFAULT false",
+        "ALTER TABLE suscripciones ADD COLUMN IF NOT EXISTS stripe_session_id VARCHAR",
+    ]
+    for sql in migraciones:
+        try:
+            with engine.connect() as conn:
+                conn.execute(text(sql))
+                conn.commit()
+        except Exception as e:
+            print(f"[migration] ignorado (probable deadlock concurrente): {e}")
     scheduler.start()
     yield
     scheduler.shutdown()
