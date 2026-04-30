@@ -46,7 +46,7 @@ def crear_checkout_session(
     if coupon:
         params["discounts"] = [{"coupon": coupon}]
     session = stripe.checkout.Session.create(**params)
-    return session.url
+    return session.url, session.id
 
 
 def crear_portal_session(customer_id: str, barberia_id: int) -> str:

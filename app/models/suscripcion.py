@@ -17,5 +17,6 @@ class Suscripcion(Base):
     stripe_customer_id = Column(String, nullable=True)
     stripe_subscription_id = Column(String, nullable=True)
     stripe_price_id = Column(String, nullable=True)
+    stripe_session_id = Column(String, nullable=True)
 
     barberia = relationship("Barberia", back_populates="suscripcion")

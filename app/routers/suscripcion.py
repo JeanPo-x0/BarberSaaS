@@ -88,7 +88,7 @@ def crear_checkout(
     elif sus.estado in ("trial", "pendiente_pago"):
         es_nuevo = True
 
-    url = stripe_service.crear_checkout_session(
+    url, session_id = stripe_service.crear_checkout_session(
         customer_id=sus.stripe_customer_id,
         plan=datos.plan,
         periodo=datos.periodo,
@@ -96,6 +96,8 @@ def crear_checkout(
         coupon=datos.coupon,
         es_nuevo=es_nuevo,
     )
+    sus.stripe_session_id = session_id
+    db.commit()
     return {"checkout_url": url}
 
 
@@ -226,17 +228,25 @@ def sincronizar_desde_checkout(
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id requerido")
 
-    # Atajo: si el webhook ya procesó el pago, devolver estado actual sin llamar Stripe
-    # Esto evita que el endpoint cuelgue esperando la API de Stripe innecesariamente
-    try:
-        ses_meta_rapida = stripe_lib.checkout.Session.retrieve(session_id, expand=[])
-        barberia_id_rapido = int(getattr(getattr(ses_meta_rapida, "metadata", None), "barberia_id", 0) or 0)
-        if barberia_id_rapido:
-            sus_rapida = db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia_id_rapido).first()
-            if sus_rapida and sus_rapida.estado in ("trial", "activa"):
-                return {"ok": True, "plan": sus_rapida.plan, "estado": sus_rapida.estado, "periodo": sus_rapida.periodo or "mensual"}
-    except Exception:
-        pass
+    # Atajo: buscar en BD por session_id sin llamar a Stripe
+    # El session_id se guarda al crear el checkout — si el webhook ya procesó el pago devolvemos de inmediato
+    sus_rapida = db.query(Suscripcion).filter(Suscripcion.stripe_session_id == session_id).first()
+    if sus_rapida and sus_rapida.estado in ("trial", "activa"):
+        try:
+            usuario_db = db.query(Usuario).filter(Usuario.barberia_id == sus_rapida.barberia_id).first()
+            if usuario_db and not usuario_db.email_verificado:
+                token_plano = secrets.token_urlsafe(32)
+                token_hash = hashlib.sha256(token_plano.encode()).hexdigest()
+                db.add(EmailVerificationToken(
+                    email=usuario_db.email,
+                    token_hash=token_hash,
+                    expires_at=datetime.utcnow() + timedelta(hours=24),
+                ))
+                db.commit()
+                enviar_verificacion_email(usuario_db.email, token_plano, settings.FRONTEND_URL)
+        except Exception:
+            pass
+        return {"ok": True, "plan": sus_rapida.plan, "estado": sus_rapida.estado, "periodo": sus_rapida.periodo or "mensual"}
 
     try:
         session = stripe_lib.checkout.Session.retrieve(
