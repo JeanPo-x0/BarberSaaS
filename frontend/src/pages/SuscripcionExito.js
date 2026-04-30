@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { sincronizarSuscripcion } from '../services/api';
+import axios from 'axios';
 
 const CHECK_ANIM = `
 @keyframes draw-circle {
@@ -56,18 +56,25 @@ export default function SuscripcionExito() {
     const session_id = params.get('session_id');
     const sync = async () => {
       let activado = false;
-      // Reintentar hasta 8 veces con 8s de espera — cubre cold start de Render (~60s)
-      for (let i = 0; i < 8; i++) {
+      // Reintentar hasta 12 veces con 5s de espera — timeout corto por intento (12s)
+      for (let i = 0; i < 12; i++) {
         try {
           if (session_id) {
-            const res = await sincronizarSuscripcion(session_id);
+            const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+            const token = localStorage.getItem('token');
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const res = await axios.post(
+              `${BASE_URL}/suscripcion/sincronizar`,
+              { session_id },
+              { timeout: 12000, withCredentials: true, headers },
+            );
             if (res.data?.ok && ['activa', 'trial'].includes(res.data?.estado)) {
               activado = true;
               break;
             }
           }
         } catch { /* continuar reintentando */ }
-        if (i < 7) await new Promise(r => setTimeout(r, 8000));
+        if (i < 11) await new Promise(r => setTimeout(r, 5000));
       }
       setSincronizadoOk(activado);
       setSincronizando(false);
@@ -96,7 +103,7 @@ export default function SuscripcionExito() {
               <div style={{ width: 56, height: 56, margin: '0 auto 20px', borderRadius: '50%', border: '3px solid rgba(201,168,76,0.2)', borderTop: '3px solid #C9A84C', animation: 'spin 0.8s linear infinite' }} />
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
               <p style={{ color: '#aaa', fontSize: 15, margin: '0 0 6px' }}>Activando tu plan...</p>
-              <p style={{ color: '#555', fontSize: 12, margin: 0 }}>Esto puede tardar hasta un minuto si el servidor está iniciando.</p>
+              <p style={{ color: '#555', fontSize: 12, margin: 0 }}>Esto puede tardar unos segundos. No cierres esta ventana.</p>
             </>
           ) : (
             <>

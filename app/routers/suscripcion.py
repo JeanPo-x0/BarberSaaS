@@ -268,82 +268,81 @@ def sincronizar_desde_checkout(
         _enviar_verificacion_si_pendiente(sus_rapida.barberia_id, db)
         return {"ok": True, "plan": sus_rapida.plan, "estado": sus_rapida.estado, "periodo": sus_rapida.periodo or "mensual"}
 
+    # Full path: usar customer_id del registro ya encontrado para listar suscripciones
+    sus_full = sus_rapida
+    if not sus_full or not sus_full.stripe_customer_id:
+        # Último recurso: obtener customer_id desde Stripe usando la sesión
+        try:
+            ses = stripe_lib.checkout.Session.retrieve(session_id)
+            customer_id_raw = getattr(ses, "customer", None)
+            if customer_id_raw and isinstance(customer_id_raw, str) and sus_full:
+                sus_full.stripe_customer_id = customer_id_raw
+                db.commit()
+        except Exception as e:
+            print(f"[sinc] session retrieve error: {e}")
+            raise HTTPException(status_code=400, detail="No se puede sincronizar")
+
+    if not sus_full or not sus_full.stripe_customer_id:
+        raise HTTPException(status_code=400, detail="Sin customer_id de Stripe")
+
     try:
-        session = stripe_lib.checkout.Session.retrieve(
-            session_id,
-            expand=["subscription", "subscription.items.data.price"],
-        )
-    except Exception:
-        raise HTTPException(status_code=400, detail="Session invalida")
+        result = stripe_lib.Subscription.list(customer=sus_full.stripe_customer_id, limit=5)
+        sub = next((s for s in result.data if getattr(s, "status", "") in ("active", "trialing")), None)
+    except Exception as e:
+        print(f"[sinc] subscription list error: {e}")
+        raise HTTPException(status_code=400, detail="Error consultando Stripe")
 
-    sub = getattr(session, "subscription", None)
-    if not sub or isinstance(sub, str):
-        raise HTTPException(status_code=400, detail="No hay suscripcion en este session")
-
-    # Obtener barberia_id desde el metadata de la sesión de Stripe
-    # El SDK nuevo retorna StripeObject (no dict) — usar getattr en lugar de .get()
-    ses_meta = getattr(session, "metadata", None)
-    barberia_id_str = str(getattr(ses_meta, "barberia_id", "") or "")
-    if not barberia_id_str:
-        raise HTTPException(status_code=400, detail="Session sin barberia_id en metadata")
-    barberia_id = int(barberia_id_str)
-
-    sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia_id).first()
-    if not sus:
-        raise HTTPException(status_code=404, detail="Suscripcion no encontrada")
+    if not sub:
+        raise HTTPException(status_code=400, detail="No hay suscripcion activa en Stripe")
 
     sub_meta = getattr(sub, "metadata", None)
-    ses_meta = getattr(session, "metadata", None)
-    plan = getattr(sub_meta, "plan", None) or getattr(ses_meta, "plan", None) or "pro"
+    plan = (getattr(sub_meta, "plan", None) or "") if sub_meta else ""
     if plan not in ("pro", "premium"):
-        plan = "pro"
+        plan = sus_full.plan if sus_full.plan in ("pro", "premium") else "pro"
 
     status = getattr(sub, "status", None)
+
     try:
         items = list(sub.items.data)
         price = items[0].price if items else None
-        interval = price.recurring.interval if price and price.recurring else "month"
+        interval = getattr(getattr(price, "recurring", None), "interval", "month") if price else "month"
         price_id = price.id if price else None
     except Exception:
-        items, interval, price_id = [], "month", None
+        interval, price_id = "month", None
 
-    sus.stripe_subscription_id = sub.id
-    customer_id = getattr(session, "customer", None)
-    if customer_id and isinstance(customer_id, str):
-        sus.stripe_customer_id = customer_id
+    sus_full.stripe_subscription_id = sub.id
     if price_id:
-        sus.stripe_price_id = price_id
-    sus.plan = plan
-    sus.periodo = "anual" if interval == "year" else "mensual"
+        sus_full.stripe_price_id = price_id
+    sus_full.plan = plan
+    sus_full.periodo = "anual" if interval == "year" else "mensual"
 
-    barberia = db.query(Barberia).filter(Barberia.id == barberia_id).first()
+    barberia = db.query(Barberia).filter(Barberia.id == sus_full.barberia_id).first()
 
     if status == "trialing":
-        sus.estado = "trial"
+        sus_full.estado = "trial"
         trial_end = getattr(sub, "trial_end", None)
         if trial_end:
-            sus.fecha_trial_fin = datetime.utcfromtimestamp(trial_end)
+            sus_full.fecha_trial_fin = datetime.utcfromtimestamp(trial_end)
         if barberia:
             barberia.plan = plan
             barberia.activa = True
     elif status == "active":
-        sus.estado = "activa"
+        sus_full.estado = "activa"
         if barberia:
             barberia.plan = plan
             barberia.activa = True
 
     period_end = getattr(sub, "current_period_end", None)
     if period_end:
-        sus.fecha_renovacion = datetime.utcfromtimestamp(period_end)
+        sus_full.fecha_renovacion = datetime.utcfromtimestamp(period_end)
 
     db.commit()
 
-    estado_final = sus.estado
+    estado_final = sus_full.estado
 
-    # Enviar emails ahora que el pago está confirmado
     if estado_final in ("activa", "trial"):
         try:
-            usuario_db = db.query(Usuario).filter(Usuario.barberia_id == barberia_id).first()
+            usuario_db = db.query(Usuario).filter(Usuario.barberia_id == sus_full.barberia_id).first()
             if usuario_db and not usuario_db.email_verificado:
                 token_plano = secrets.token_urlsafe(32)
                 token_hash = hashlib.sha256(token_plano.encode()).hexdigest()
@@ -356,14 +355,14 @@ def sincronizar_desde_checkout(
                 enviar_verificacion_email(usuario_db.email, token_plano, settings.FRONTEND_URL)
             if usuario_db and status == "trialing" and barberia:
                 try:
-                    fecha_fin_str = sus.fecha_trial_fin.strftime("%d/%m/%Y") if sus.fecha_trial_fin else "14 días desde hoy"
+                    fecha_fin_str = sus_full.fecha_trial_fin.strftime("%d/%m/%Y") if sus_full.fecha_trial_fin else "14 días desde hoy"
                     enviar_confirmacion_trial(usuario_db.email, barberia.nombre, fecha_fin_str)
                 except Exception:
                     pass
         except Exception:
             pass
 
-    return {"ok": True, "plan": plan, "estado": estado_final, "periodo": sus.periodo}
+    return {"ok": True, "plan": plan, "estado": estado_final, "periodo": sus_full.periodo}
 
 
 @router.get("/portal")
@@ -408,6 +407,67 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             return v if v is not None else default
         except (KeyError, TypeError, AttributeError):
             return getattr(meta, key, default) or default
+
+    # Checkout completado — activar suscripción desde la sesión directamente
+    if tipo == "checkout.session.completed":
+        barberia_id = int(_meta("barberia_id", 0) or 0)
+        sub_id = _g("subscription")
+        customer_id = _g("customer")
+        if barberia_id > 0 and sub_id and isinstance(sub_id, str):
+            sus = db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia_id).first()
+            if sus:
+                if customer_id and isinstance(customer_id, str):
+                    sus.stripe_customer_id = customer_id
+                sus.stripe_subscription_id = sub_id
+                plan = _meta("plan") or "pro"
+                if plan not in ("pro", "premium"):
+                    plan = "pro"
+                sus.plan = plan
+                barberia = db.query(Barberia).filter(Barberia.id == barberia_id).first()
+                # Activar por defecto — customer.subscription.created corregirá a trial si aplica
+                sus.estado = "activa"
+                if barberia:
+                    barberia.plan = plan
+                    barberia.activa = True
+                # Intentar leer estado real de Stripe para diferenciar trial vs activa
+                try:
+                    sub = stripe_lib.Subscription.retrieve(sub_id)
+                    status = getattr(sub, "status", None)
+                    if status == "trialing":
+                        sus.estado = "trial"
+                        trial_end = getattr(sub, "trial_end", None)
+                        if trial_end:
+                            sus.fecha_trial_fin = datetime.utcfromtimestamp(trial_end)
+                    period_end = getattr(sub, "current_period_end", None)
+                    if period_end:
+                        sus.fecha_renovacion = datetime.utcfromtimestamp(period_end)
+                except Exception as e:
+                    print(f"[webhook] checkout.session.completed sub retrieve error: {e}")
+                db.commit()
+                print(f"[webhook] checkout.session.completed barberia_id={barberia_id} estado={sus.estado}")
+                # Enviar email de verificación directamente desde el webhook (no depender de /sincronizar)
+                try:
+                    usuario_db = db.query(Usuario).filter(Usuario.barberia_id == barberia_id).first()
+                    if usuario_db and not usuario_db.email_verificado:
+                        token_plano = secrets.token_urlsafe(32)
+                        token_hash = hashlib.sha256(token_plano.encode()).hexdigest()
+                        db.add(EmailVerificationToken(
+                            email=usuario_db.email,
+                            token_hash=token_hash,
+                            expires_at=datetime.utcnow() + timedelta(hours=24),
+                        ))
+                        db.commit()
+                        enviar_verificacion_email(usuario_db.email, token_plano, settings.FRONTEND_URL)
+                        print(f"[webhook] verificacion email enviado a {usuario_db.email}")
+                    if usuario_db and sus.estado == "trial" and barberia:
+                        try:
+                            fecha_fin_str = sus.fecha_trial_fin.strftime("%d/%m/%Y") if sus.fecha_trial_fin else "14 días desde hoy"
+                            enviar_confirmacion_trial(usuario_db.email, barberia.nombre, fecha_fin_str)
+                        except Exception:
+                            pass
+                except Exception as e:
+                    print(f"[webhook] error enviando email verificacion: {e}")
+        return {"ok": True}
 
     # Suscripción activada (trial o pago exitoso)
     if tipo in ("customer.subscription.created", "customer.subscription.updated"):
