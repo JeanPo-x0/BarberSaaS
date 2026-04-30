@@ -4,7 +4,6 @@ Detecta VPNs conocidas por nombre de organización.
 Usa ip-api.com (gratuito, 45 req/min) con cache en memoria de 1 hora.
 """
 import time
-import ipaddress
 import httpx
 
 # ── Cache en memoria ──────────────────────────────────────────
@@ -20,16 +19,6 @@ VPN_KEYWORDS = [
     "tor project", "tor exit", "tor relay", "torguard",
     "hide.me", "ivpn", "perfect privacy", "anonine",
 ]
-
-
-def _es_ip_publica(ip: str) -> bool:
-    """True si la IP es una dirección pública enrutable (no privada/loopback/reservada)."""
-    try:
-        addr = ipaddress.ip_address(ip)
-        return not (addr.is_private or addr.is_loopback or addr.is_reserved
-                    or addr.is_link_local or addr.is_multicast or addr.is_unspecified)
-    except ValueError:
-        return False
 
 
 async def obtener_geo(ip: str) -> dict:
@@ -71,18 +60,18 @@ def es_vpn(org: str) -> bool:
 
 
 def get_real_ip(request) -> str:
-    """IP pública real del cliente desde X-Forwarded-For.
+    """IP real del cliente desde X-Forwarded-For.
 
-    Recorre la cadena de derecha a izquierda (Render agrega la IP del cliente
-    al final) y devuelve la primera IP pública encontrada, saltando IPs privadas
-    del load balancer interno de Render (ej: 10.x.x.x).
+    Render agrega la IP real del cliente al final de la cadena.
+    Se extrae y se limpia (elimina puerto si viene adjunto).
     """
     forwarded = request.headers.get("X-Forwarded-For", "")
     if forwarded:
         ips = [ip.strip() for ip in forwarded.split(",") if ip.strip()]
-        # De derecha a izquierda: saltar IPs privadas del proxy de Render
-        for ip in reversed(ips):
-            if _es_ip_publica(ip):
-                return ip
-    host = getattr(request.client, "host", "127.0.0.1") or "127.0.0.1"
-    return host
+        if ips:
+            last = ips[-1]
+            # Limpiar puerto si viene adjunto (ej: "1.2.3.4:5678" → "1.2.3.4")
+            if "." in last and ":" in last:
+                last = last.rsplit(":", 1)[0]
+            return last
+    return getattr(request.client, "host", "127.0.0.1") or "127.0.0.1"
