@@ -32,7 +32,7 @@ async def obtener_geo(ip: str) -> dict:
         async with httpx.AsyncClient(timeout=3.0) as client:
             r = await client.get(
                 f"http://ip-api.com/json/{ip}",
-                params={"fields": "status,countryCode,org,isp,proxy,hosting"},
+                params={"fields": "status,countryCode,org,isp"},
             )
             data = r.json() if r.status_code == 200 else None
     except Exception:
@@ -41,13 +41,11 @@ async def obtener_geo(ip: str) -> dict:
     if data is None or data.get("status") == "fail":
         if cached:
             return cached
-        return {"country": "CR", "org": "", "proxy": False, "hosting": False, "ts": ahora}
+        return {"country": "CR", "org": "", "ts": ahora}
 
     resultado = {
         "country": data.get("countryCode", "CR"),
         "org": (data.get("org", "") + " " + data.get("isp", "")).lower(),
-        "proxy": bool(data.get("proxy", False)),
-        "hosting": bool(data.get("hosting", False)),
         "ts": ahora,
     }
     _geo_cache[ip] = resultado
