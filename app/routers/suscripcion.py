@@ -250,7 +250,9 @@ def sincronizar_desde_checkout(
 
     try:
         session = stripe_lib.checkout.Session.retrieve(
-            session_id, expand=["subscription", "subscription.items.data.price"]
+            session_id,
+            expand=["subscription", "subscription.items.data.price"],
+            stripe_options={"timeout": 20},
         )
     except Exception:
         raise HTTPException(status_code=400, detail="Session invalida")

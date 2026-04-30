@@ -255,7 +255,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── Rutas excluidas del geo-bloqueo ───────────────────────────
 # Los webhooks de Twilio y Stripe vienen de IPs de EEUU — no bloquear
-GEO_BYPASS_PREFIXES = ("/webhook", "/health")
+GEO_BYPASS_PREFIXES = ("/webhook", "/health", "/suscripcion/webhook")
 
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
