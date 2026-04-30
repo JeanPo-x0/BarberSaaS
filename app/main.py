@@ -235,7 +235,6 @@ async def lifespan(app):
     # Migraciones manuales idempotentes
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email_verificado BOOLEAN NOT NULL DEFAULT false"))
-        conn.execute(text("UPDATE usuarios SET email_verificado = true WHERE email_verificado = false"))
         conn.execute(text("ALTER TABLE suscripciones ADD COLUMN IF NOT EXISTS stripe_session_id VARCHAR"))
         conn.commit()
     scheduler.start()
