@@ -217,35 +217,54 @@ def forzar_sincronizacion(
         raise HTTPException(status_code=400, detail=f"Error Stripe: {str(e)}")
 
 
+def _enviar_verificacion_si_pendiente(barberia_id: int, db):
+    """Manda el correo de verificación si el usuario aún no está verificado."""
+    try:
+        usuario_db = db.query(Usuario).filter(Usuario.barberia_id == barberia_id).first()
+        if usuario_db and not usuario_db.email_verificado:
+            token_plano = secrets.token_urlsafe(32)
+            token_hash = hashlib.sha256(token_plano.encode()).hexdigest()
+            db.add(EmailVerificationToken(
+                email=usuario_db.email,
+                token_hash=token_hash,
+                expires_at=datetime.utcnow() + timedelta(hours=24),
+            ))
+            db.commit()
+            enviar_verificacion_email(usuario_db.email, token_plano, settings.FRONTEND_URL)
+    except Exception:
+        pass
+
+
 @router.post("/sincronizar")
 def sincronizar_desde_checkout(
     datos: dict,
+    request: Request,
     db: Session = Depends(get_db),
-    # Sin auth — el session_id de Stripe es suficiente validación
 ):
     """Sincroniza la suscripción local con Stripe usando el session_id del checkout."""
     session_id = datos.get("session_id", "")
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id requerido")
 
-    # Atajo: buscar en BD por session_id sin llamar a Stripe
-    # El session_id se guarda al crear el checkout — si el webhook ya procesó el pago devolvemos de inmediato
-    sus_rapida = db.query(Suscripcion).filter(Suscripcion.stripe_session_id == session_id).first()
-    if sus_rapida and sus_rapida.estado in ("trial", "activa"):
+    # Fast-path 1: token JWT presente → obtener barberia_id sin llamar a Stripe
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
         try:
-            usuario_db = db.query(Usuario).filter(Usuario.barberia_id == sus_rapida.barberia_id).first()
-            if usuario_db and not usuario_db.email_verificado:
-                token_plano = secrets.token_urlsafe(32)
-                token_hash = hashlib.sha256(token_plano.encode()).hexdigest()
-                db.add(EmailVerificationToken(
-                    email=usuario_db.email,
-                    token_hash=token_hash,
-                    expires_at=datetime.utcnow() + timedelta(hours=24),
-                ))
-                db.commit()
-                enviar_verificacion_email(usuario_db.email, token_plano, settings.FRONTEND_URL)
+            from app.core.security import verificar_token
+            payload = verificar_token(auth_header.split(" ", 1)[1])
+            barberia_id_token = payload.get("barberia_id")
+            if barberia_id_token:
+                sus_token = db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia_id_token).first()
+                if sus_token and sus_token.estado in ("trial", "activa"):
+                    _enviar_verificacion_si_pendiente(barberia_id_token, db)
+                    return {"ok": True, "plan": sus_token.plan, "estado": sus_token.estado, "periodo": sus_token.periodo or "mensual"}
         except Exception:
             pass
+
+    # Fast-path 2: session_id guardado en BD (checkouts nuevos)
+    sus_rapida = db.query(Suscripcion).filter(Suscripcion.stripe_session_id == session_id).first()
+    if sus_rapida and sus_rapida.estado in ("trial", "activa"):
+        _enviar_verificacion_si_pendiente(sus_rapida.barberia_id, db)
         return {"ok": True, "plan": sus_rapida.plan, "estado": sus_rapida.estado, "periodo": sus_rapida.periodo or "mensual"}
 
     try:
