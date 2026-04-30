@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.core.limiter import limiter
+from app.core.geo import obtener_geo, es_vpn, get_real_ip
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -251,6 +252,41 @@ app = FastAPI(
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Webhooks externos (Twilio, Stripe) vienen de IPs de EEUU — no bloquear
+GEO_BYPASS_PREFIXES = ("/webhook", "/health", "/suscripcion/webhook")
+
+@app.middleware("http")
+async def geo_block_middleware(request: Request, call_next):
+    if request.method == "OPTIONS" or any(request.url.path.startswith(p) for p in GEO_BYPASS_PREFIXES):
+        return await call_next(request)
+
+    ip = get_real_ip(request)
+    if ip in ("127.0.0.1", "::1"):
+        return await call_next(request)
+
+    try:
+        geo = await obtener_geo(ip)
+        country = geo.get("country", "CR")
+        org = geo.get("org", "")
+    except Exception:
+        return await call_next(request)
+
+    origin = request.headers.get("origin", "")
+    cors_headers = {}
+    if origin:
+        allowed = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
+        if origin in allowed:
+            cors_headers = {"Access-Control-Allow-Origin": origin, "Access-Control-Allow-Credentials": "true"}
+
+    if country != "CR":
+        return JSONResponse(status_code=403, content={"detail": "Servicio disponible unicamente en Costa Rica"}, headers=cors_headers)
+
+    if es_vpn(org):
+        return JSONResponse(status_code=403, content={"detail": "El uso de VPN no esta permitido"}, headers=cors_headers)
+
+    return await call_next(request)
+
 
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):

@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { wakeUpServer } from './services/api';
+import GeoBlock from './components/GeoBlock';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Barberias from './pages/Barberias';
@@ -35,9 +36,24 @@ function ProtectedRoute({ children }) {
 }
 
 function AppRoutes() {
+  const [bloqueado, setBloqueado] = useState(false);
+
+  const checkGeo = () => {
+    const base = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+    fetch(`${base}/`, { signal: AbortSignal.timeout(5000) })
+      .then(r => { if (r.status === 403) setBloqueado(true); })
+      .catch(() => {});
+  };
+
   useEffect(() => {
     wakeUpServer();
-  }, []);
+    checkGeo();
+    const handleVisibility = () => { if (document.visibilityState === 'visible') checkGeo(); };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (bloqueado) return <GeoBlock />;
 
 
   return (
