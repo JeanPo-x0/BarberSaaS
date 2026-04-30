@@ -32,22 +32,22 @@ async def obtener_geo(ip: str) -> dict:
         async with httpx.AsyncClient(timeout=3.0) as client:
             r = await client.get(
                 f"http://ip-api.com/json/{ip}",
-                params={"fields": "status,countryCode,org,isp"},
+                params={"fields": "status,countryCode,org,isp,proxy,hosting"},
             )
             data = r.json() if r.status_code == 200 else None
     except Exception:
         data = None
 
     if data is None or data.get("status") == "fail":
-        # API falló, rate-limited, o IP no reconocida: usar caché vieja si existe
         if cached:
             return cached
-        # fail-open solo si no hay caché — en producción esto es raro
-        return {"country": "CR", "org": "", "ts": ahora}
+        return {"country": "CR", "org": "", "proxy": False, "hosting": False, "ts": ahora}
 
     resultado = {
         "country": data.get("countryCode", "CR"),
         "org": (data.get("org", "") + " " + data.get("isp", "")).lower(),
+        "proxy": bool(data.get("proxy", False)),
+        "hosting": bool(data.get("hosting", False)),
         "ts": ahora,
     }
     _geo_cache[ip] = resultado

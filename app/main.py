@@ -282,8 +282,12 @@ async def geo_block_middleware(request: Request, call_next):
         geo = await obtener_geo(ip)
         country = geo.get("country", "CR")
         org = geo.get("org", "")
+        proxy = geo.get("proxy", False)
+        hosting = geo.get("hosting", False)
     except Exception:
         return await call_next(request)
+
+    print(f"[geo] ip={ip} country={country} proxy={proxy} hosting={hosting} org={org[:60]!r}")
 
     # Incluir CORS headers en la respuesta 403 para que el browser pueda leerla
     origin = request.headers.get("origin", "")
@@ -303,7 +307,7 @@ async def geo_block_middleware(request: Request, call_next):
             headers=cors_headers,
         )
 
-    if es_vpn(org):
+    if proxy or hosting or es_vpn(org):
         return JSONResponse(
             status_code=403,
             content={"detail": "El uso de VPN no esta permitido"},
