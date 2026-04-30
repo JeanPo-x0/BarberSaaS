@@ -40,7 +40,7 @@ function AppRoutes() {
 
   const checkGeo = () => {
     const base = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-    fetch(`${base}/health`, { signal: AbortSignal.timeout(5000) })
+    fetch(`${base}/`, { signal: AbortSignal.timeout(5000) })
       .then(r => { if (r.status === 403) setBloqueado(true); })
       .catch(() => {});
   };
