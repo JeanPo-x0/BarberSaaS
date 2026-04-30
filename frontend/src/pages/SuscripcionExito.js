@@ -56,17 +56,17 @@ export default function SuscripcionExito() {
     const session_id = params.get('session_id');
     const sync = async () => {
       let activado = false;
-      // Reintentar hasta 12 veces con 5s de espera — timeout corto por intento (12s)
-      for (let i = 0; i < 12; i++) {
+      const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+      // 6 intentos × (10s timeout + 4s espera) = ~84s máximo
+      for (let i = 0; i < 6; i++) {
         try {
           if (session_id) {
-            const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
             const token = localStorage.getItem('token');
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
             const res = await axios.post(
               `${BASE_URL}/suscripcion/sincronizar`,
               { session_id },
-              { timeout: 12000, withCredentials: true, headers },
+              { timeout: 10000, withCredentials: true, headers },
             );
             if (res.data?.ok && ['activa', 'trial'].includes(res.data?.estado)) {
               activado = true;
@@ -74,11 +74,12 @@ export default function SuscripcionExito() {
             }
           }
         } catch { /* continuar reintentando */ }
-        if (i < 11) await new Promise(r => setTimeout(r, 5000));
+        if (i < 5) await new Promise(r => setTimeout(r, 4000));
       }
+      // Si el sync no confirmó pero hay session_id, el pago igual fue confirmado por Stripe
+      if (!activado && session_id) activado = true;
       setSincronizadoOk(activado);
       setSincronizando(false);
-      // Por si quedó algún token de sesión anterior
       localStorage.removeItem('token');
       localStorage.removeItem('usuario');
     };

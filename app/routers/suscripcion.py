@@ -525,6 +525,30 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             if ts:
                 sus.fecha_renovacion = datetime.utcfromtimestamp(ts)
             db.commit()
+            print(f"[webhook] {tipo} barberia_id={barberia_id} estado={sus.estado}")
+            # Enviar email de verificación si aún no está verificado
+            if sus.estado in ("trial", "activa"):
+                try:
+                    usuario_db = db.query(Usuario).filter(Usuario.barberia_id == barberia_id).first()
+                    if usuario_db and not usuario_db.email_verificado:
+                        token_plano = secrets.token_urlsafe(32)
+                        token_hash = hashlib.sha256(token_plano.encode()).hexdigest()
+                        db.add(EmailVerificationToken(
+                            email=usuario_db.email,
+                            token_hash=token_hash,
+                            expires_at=datetime.utcnow() + timedelta(hours=24),
+                        ))
+                        db.commit()
+                        enviar_verificacion_email(usuario_db.email, token_plano, settings.FRONTEND_URL)
+                        print(f"[webhook] verificacion email enviado a {usuario_db.email}")
+                    if usuario_db and sus.estado == "trial" and barberia:
+                        try:
+                            fecha_fin_str = sus.fecha_trial_fin.strftime("%d/%m/%Y") if sus.fecha_trial_fin else "14 días desde hoy"
+                            enviar_confirmacion_trial(usuario_db.email, barberia.nombre, fecha_fin_str)
+                        except Exception:
+                            pass
+                except Exception as e:
+                    print(f"[webhook] error email verificacion: {e}")
 
     # Pago exitoso → recibo por email
     elif tipo == "invoice.payment_succeeded":

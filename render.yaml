@@ -18,9 +18,9 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "10080"
       - key: FRONTEND_URL
-        value: https://barber-saa-s-phi.vercel.app
+        value: https://barbersas.com
       - key: SAAS_DOMAIN
-        value: barber-saa-s-phi.vercel.app
+        value: barbersas.com
       - key: SUPERADMIN_EMAIL
         value: admin@barbersaas.com
       # Stripe — completar con tus keys reales
