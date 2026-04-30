@@ -40,9 +40,12 @@ function AppRoutes() {
 
   const checkGeo = () => {
     const base = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-    fetch(`${base}/`, { signal: AbortSignal.timeout(5000) })
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    fetch(`${base}/`, { signal: ctrl.signal })
       .then(r => { if (r.status === 403) setBloqueado(true); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => clearTimeout(t));
   };
 
   useEffect(() => {

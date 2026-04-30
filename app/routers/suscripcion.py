@@ -252,17 +252,18 @@ def sincronizar_desde_checkout(
         try:
             from app.core.security import verificar_token
             payload = verificar_token(auth_header.split(" ", 1)[1])
-            barberia_id_token = payload.get("barberia_id")
-            if barberia_id_token:
-                sus_token = db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia_id_token).first()
-                if sus_token and sus_token.estado in ("trial", "activa"):
-                    _enviar_verificacion_si_pendiente(barberia_id_token, db)
-                    return {"ok": True, "plan": sus_token.plan, "estado": sus_token.estado, "periodo": sus_token.periodo or "mensual"}
-        except Exception:
-            pass
+            barberia_id_token = payload.get("barberia_id") if payload else None
+            sus_token = db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia_id_token).first() if barberia_id_token else None
+            print(f"[sinc] jwt bid={barberia_id_token} estado={sus_token.estado if sus_token else 'none'}")
+            if sus_token and sus_token.estado in ("trial", "activa"):
+                _enviar_verificacion_si_pendiente(barberia_id_token, db)
+                return {"ok": True, "plan": sus_token.plan, "estado": sus_token.estado, "periodo": sus_token.periodo or "mensual"}
+        except Exception as e:
+            print(f"[sinc] jwt error: {e}")
 
     # Fast-path 2: session_id guardado en BD (checkouts nuevos)
     sus_rapida = db.query(Suscripcion).filter(Suscripcion.stripe_session_id == session_id).first()
+    print(f"[sinc] session_id path: found={sus_rapida is not None} estado={sus_rapida.estado if sus_rapida else 'none'}")
     if sus_rapida and sus_rapida.estado in ("trial", "activa"):
         _enviar_verificacion_si_pendiente(sus_rapida.barberia_id, db)
         return {"ok": True, "plan": sus_rapida.plan, "estado": sus_rapida.estado, "periodo": sus_rapida.periodo or "mensual"}
