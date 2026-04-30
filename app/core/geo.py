@@ -58,18 +58,10 @@ def es_vpn(org: str) -> bool:
 
 
 def get_real_ip(request) -> str:
-    """IP real del cliente desde X-Forwarded-For.
+    """IP real del cliente.
 
-    Render agrega la IP real del cliente al final de la cadena.
-    Se extrae y se limpia (elimina puerto si viene adjunto).
+    Uvicorn corre con --proxy-headers en Render y ya resuelve X-Forwarded-For
+    correctamente: request.client.host contiene la IP real del cliente,
+    no la IP interna del load balancer.
     """
-    forwarded = request.headers.get("X-Forwarded-For", "")
-    if forwarded:
-        ips = [ip.strip() for ip in forwarded.split(",") if ip.strip()]
-        if ips:
-            last = ips[-1]
-            # Limpiar puerto si viene adjunto (ej: "1.2.3.4:5678" → "1.2.3.4")
-            if "." in last and ":" in last:
-                last = last.rsplit(":", 1)[0]
-            return last
     return getattr(request.client, "host", "127.0.0.1") or "127.0.0.1"
