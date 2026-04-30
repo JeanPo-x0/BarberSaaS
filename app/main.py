@@ -6,7 +6,6 @@ from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.core.limiter import limiter
-from app.core.geo import obtener_geo, es_vpn, get_real_ip
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -253,10 +252,6 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# ── Rutas excluidas del geo-bloqueo ───────────────────────────
-# Los webhooks de Twilio y Stripe vienen de IPs de EEUU — no bloquear
-GEO_BYPASS_PREFIXES = ("/webhook", "/health", "/suscripcion/webhook")
-
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
     response = await call_next(request)
@@ -265,56 +260,6 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     return response
-
-
-@app.middleware("http")
-async def geo_block_middleware(request: Request, call_next):
-    # Dejar pasar preflight CORS y rutas excluidas sin verificar geo
-    if request.method == "OPTIONS" or any(request.url.path.startswith(p) for p in GEO_BYPASS_PREFIXES):
-        return await call_next(request)
-
-    ip = get_real_ip(request)
-
-    if ip in ("127.0.0.1", "::1"):
-        return await call_next(request)
-
-    try:
-        geo = await obtener_geo(ip)
-        country = geo.get("country", "CR")
-        org = geo.get("org", "")
-        proxy = geo.get("proxy", False)
-        hosting = geo.get("hosting", False)
-    except Exception:
-        return await call_next(request)
-
-    print(f"[geo] ip={ip} country={country} proxy={proxy} hosting={hosting} org={org[:60]!r}")
-
-    # Incluir CORS headers en la respuesta 403 para que el browser pueda leerla
-    origin = request.headers.get("origin", "")
-    cors_headers = {}
-    if origin:
-        allowed = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
-        if origin in allowed:
-            cors_headers = {
-                "Access-Control-Allow-Origin": origin,
-                "Access-Control-Allow-Credentials": "true",
-            }
-
-    if country != "CR":
-        return JSONResponse(
-            status_code=403,
-            content={"detail": "Servicio disponible unicamente en Costa Rica"},
-            headers=cors_headers,
-        )
-
-    if proxy or hosting or es_vpn(org):
-        return JSONResponse(
-            status_code=403,
-            content={"detail": "El uso de VPN no esta permitido"},
-            headers=cors_headers,
-        )
-
-    return await call_next(request)
 
 _cors_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
 if settings.ENV == "production":
