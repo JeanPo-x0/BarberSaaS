@@ -226,6 +226,18 @@ def sincronizar_desde_checkout(
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id requerido")
 
+    # Atajo: si el webhook ya procesó el pago, devolver estado actual sin llamar Stripe
+    # Esto evita que el endpoint cuelgue esperando la API de Stripe innecesariamente
+    try:
+        ses_meta_rapida = stripe_lib.checkout.Session.retrieve(session_id, expand=[])
+        barberia_id_rapido = int(getattr(getattr(ses_meta_rapida, "metadata", None), "barberia_id", 0) or 0)
+        if barberia_id_rapido:
+            sus_rapida = db.query(Suscripcion).filter(Suscripcion.barberia_id == barberia_id_rapido).first()
+            if sus_rapida and sus_rapida.estado in ("trial", "activa"):
+                return {"ok": True, "plan": sus_rapida.plan, "estado": sus_rapida.estado, "periodo": sus_rapida.periodo or "mensual"}
+    except Exception:
+        pass
+
     try:
         session = stripe_lib.checkout.Session.retrieve(
             session_id, expand=["subscription", "subscription.items.data.price"]
