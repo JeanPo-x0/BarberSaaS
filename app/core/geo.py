@@ -4,6 +4,7 @@ Detecta VPNs conocidas por nombre de organización.
 Usa ip-api.com (gratuito, 45 req/min) con cache en memoria de 1 hora.
 """
 import time
+import ipaddress
 import httpx
 
 # ── Cache en memoria ──────────────────────────────────────────
@@ -21,6 +22,16 @@ VPN_KEYWORDS = [
 ]
 
 
+def _es_ip_publica(ip: str) -> bool:
+    """True si la IP es una dirección pública enrutable (no privada/loopback/reservada)."""
+    try:
+        addr = ipaddress.ip_address(ip)
+        return not (addr.is_private or addr.is_loopback or addr.is_reserved
+                    or addr.is_link_local or addr.is_multicast or addr.is_unspecified)
+    except ValueError:
+        return False
+
+
 async def obtener_geo(ip: str) -> dict:
     """Consulta ip-api.com y devuelve {'country': 'CR', 'org': '...'}. Cachea 1h."""
     ahora = time.time()
@@ -32,16 +43,17 @@ async def obtener_geo(ip: str) -> dict:
         async with httpx.AsyncClient(timeout=3.0) as client:
             r = await client.get(
                 f"http://ip-api.com/json/{ip}",
-                params={"fields": "countryCode,org,isp"},
+                params={"fields": "status,countryCode,org,isp"},
             )
             data = r.json() if r.status_code == 200 else None
     except Exception:
         data = None
 
-    if data is None:
-        # API falló o rate-limited: usar caché vieja si existe, si no fail-open
+    if data is None or data.get("status") == "fail":
+        # API falló, rate-limited, o IP no reconocida: usar caché vieja si existe
         if cached:
             return cached
+        # fail-open solo si no hay caché — en producción esto es raro
         return {"country": "CR", "org": "", "ts": ahora}
 
     resultado = {
@@ -59,15 +71,18 @@ def es_vpn(org: str) -> bool:
 
 
 def get_real_ip(request) -> str:
-    """IP real del cliente — usa el ÚLTIMO valor de X-Forwarded-For.
+    """IP pública real del cliente desde X-Forwarded-For.
 
-    Render agrega la IP real del cliente al FINAL de la cadena, lo que hace
-    que sea imposible de falsificar con un header X-Forwarded-For manipulado.
-    Tomar el primero permite bypass del geobloqueo enviando una IP falsa.
+    Recorre la cadena de derecha a izquierda (Render agrega la IP del cliente
+    al final) y devuelve la primera IP pública encontrada, saltando IPs privadas
+    del load balancer interno de Render (ej: 10.x.x.x).
     """
     forwarded = request.headers.get("X-Forwarded-For", "")
     if forwarded:
         ips = [ip.strip() for ip in forwarded.split(",") if ip.strip()]
-        if ips:
-            return ips[-1]  # La IP que agregó Render — no manipulable por el cliente
-    return getattr(request.client, "host", "127.0.0.1") or "127.0.0.1"
+        # De derecha a izquierda: saltar IPs privadas del proxy de Render
+        for ip in reversed(ips):
+            if _es_ip_publica(ip):
+                return ip
+    host = getattr(request.client, "host", "127.0.0.1") or "127.0.0.1"
+    return host
