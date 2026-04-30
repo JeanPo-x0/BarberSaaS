@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { NavLogo, FullLogo } from '../components/LogoLink';
-import { getCouponActivo, enviarContactoSoporte } from '../services/api';
+import { enviarContactoSoporte } from '../services/api';
 
 /* ── Data ───────────────────────────────────────────── */
 const PLANES = [
@@ -332,13 +332,11 @@ function DashboardCard() {
 /* ── Component ───────────────────────────────────────── */
 export default function Home() {
   const [anual, setAnual] = useState(false);
-  const [couponActivo, setCouponActivo] = useState(false);
   const [showEnterprise, setShowEnterprise] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    getCouponActivo().then(r => setCouponActivo(r.data.activo)).catch(() => {});
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', onScroll);
     if (window.location.hash === '#planes') {
@@ -722,32 +720,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Early access */}
-          {couponActivo && (
-            <div style={{
-              marginTop: 40,
-              background: 'rgba(201,168,76,0.06)',
-              border: '1px solid rgba(201,168,76,0.25)',
-              borderRadius: 16, padding: '28px 32px', textAlign: 'center',
-            }}>
-              <p style={{ fontWeight: 700, fontSize: 17, color: '#C9A84C', margin: '0 0 6px 0' }}>
-                Oferta Early Access
-              </p>
-              <p style={{ color: 'var(--text-muted)', margin: '0 0 10px 0', fontSize: 15 }}>
-                Los primeros 20 clientes obtienen el plan Pro por{' '}
-                <strong style={{ color: '#C9A84C' }}>$15/mes para siempre</strong>
-              </p>
-              <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>
-                Usa el codigo{' '}
-                <code style={{
-                  background: 'var(--bg-secondary)', color: '#F5F5F5',
-                  padding: '2px 8px', borderRadius: 6, fontFamily: 'monospace',
-                  border: '1px solid var(--border)',
-                }}>EARLYACCESS</code>
-                {' '}al registrarte
-              </p>
-            </div>
-          )}
         </div>
       </section>
 

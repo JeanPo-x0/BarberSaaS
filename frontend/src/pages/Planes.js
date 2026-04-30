@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getCouponActivo, crearCheckout, enviarContactoSoporte } from '../services/api';
+import { crearCheckout, enviarContactoSoporte } from '../services/api';
 import { NavLogo } from '../components/LogoLink';
 
 /* ── Data ───────────────────────────────────────────── */
@@ -229,14 +229,12 @@ function ModalEnterprise({ onClose }) {
 /* ── Component ───────────────────────────────────────── */
 export default function Planes() {
   const [anual, setAnual] = useState(false);
-  const [couponActivo, setCouponActivo] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(null);
   const [showEnterprise, setShowEnterprise] = useState(false);
   const navigate = useNavigate();
   const { usuario } = useAuth();
 
   useEffect(() => {
-    getCouponActivo().then(r => setCouponActivo(r.data.activo)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -538,31 +536,6 @@ export default function Planes() {
           </div>
         )}
 
-        {/* Banner Early Access */}
-        {couponActivo && (
-          <div style={{
-            marginTop: 32, background: 'rgba(201,168,76,0.06)',
-            border: '1px solid rgba(201,168,76,0.25)',
-            borderRadius: 16, padding: '28px 32px', textAlign: 'center',
-          }}>
-            <p style={{ fontWeight: 700, fontSize: 17, color: '#C9A84C', margin: '0 0 6px 0' }}>
-              Oferta Early Access
-            </p>
-            <p style={{ color: 'var(--text-muted)', margin: '0 0 10px 0', fontSize: 15 }}>
-              Los primeros 20 clientes obtienen el plan Pro por{' '}
-              <strong style={{ color: '#C9A84C' }}>$15/mes para siempre</strong>
-            </p>
-            <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>
-              Usa el codigo{' '}
-              <code style={{
-                background: 'var(--bg-secondary)', color: '#F5F5F5',
-                padding: '2px 8px', borderRadius: 6, fontFamily: 'monospace',
-                border: '1px solid var(--border)',
-              }}>EARLYACCESS</code>
-              {' '}al registrarte
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

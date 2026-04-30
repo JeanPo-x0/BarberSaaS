@@ -284,16 +284,29 @@ async def geo_block_middleware(request: Request, call_next):
     except Exception:
         return await call_next(request)
 
+    # Incluir CORS headers en la respuesta 403 para que el browser pueda leerla
+    origin = request.headers.get("origin", "")
+    cors_headers = {}
+    if origin:
+        allowed = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
+        if origin in allowed:
+            cors_headers = {
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Credentials": "true",
+            }
+
     if country != "CR":
         return JSONResponse(
             status_code=403,
             content={"detail": "Servicio disponible unicamente en Costa Rica"},
+            headers=cors_headers,
         )
 
     if es_vpn(org):
         return JSONResponse(
             status_code=403,
             content={"detail": "El uso de VPN no esta permitido"},
+            headers=cors_headers,
         )
 
     return await call_next(request)
