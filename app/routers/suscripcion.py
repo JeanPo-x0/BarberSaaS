@@ -424,12 +424,14 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
                     plan = "pro"
                 sus.plan = plan
                 barberia = db.query(Barberia).filter(Barberia.id == barberia_id).first()
-                # Activar por defecto — customer.subscription.created corregirá a trial si aplica
+                # Commit inmediato con estado=activa — elimina race condition con /sincronizar
                 sus.estado = "activa"
                 if barberia:
                     barberia.plan = plan
                     barberia.activa = True
-                # Intentar leer estado real de Stripe para diferenciar trial vs activa
+                db.commit()
+                print(f"[webhook] checkout.session.completed barberia_id={barberia_id} estado=activa (commit inmediato)")
+                # Refinar con detalles de Stripe (trial, fecha renovación) — en segundo plano
                 try:
                     sub = stripe_lib.Subscription.retrieve(sub_id)
                     status = getattr(sub, "status", None)
@@ -441,10 +443,10 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
                     period_end = getattr(sub, "current_period_end", None)
                     if period_end:
                         sus.fecha_renovacion = datetime.utcfromtimestamp(period_end)
+                    db.commit()
+                    print(f"[webhook] checkout.session.completed estado refinado={sus.estado}")
                 except Exception as e:
-                    print(f"[webhook] checkout.session.completed sub retrieve error: {e}")
-                db.commit()
-                print(f"[webhook] checkout.session.completed barberia_id={barberia_id} estado={sus.estado}")
+                    print(f"[webhook] checkout.session.completed sub retrieve error (no crítico): {e}")
                 # Enviar email de verificación directamente desde el webhook (no depender de /sincronizar)
                 try:
                     usuario_db = db.query(Usuario).filter(Usuario.barberia_id == barberia_id).first()
