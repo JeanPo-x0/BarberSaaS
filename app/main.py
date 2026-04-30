@@ -261,6 +261,7 @@ async def geo_block_middleware(request: Request, call_next):
         return await call_next(request)
 
     ip = get_real_ip(request)
+    fwd = request.headers.get("X-Forwarded-For", "sin-header")
     if ip in ("127.0.0.1", "::1"):
         return await call_next(request)
 
@@ -269,7 +270,10 @@ async def geo_block_middleware(request: Request, call_next):
         country = geo.get("country", "CR")
         org = geo.get("org", "")
     except Exception:
+        print(f"[geo-ERROR] XFF={fwd!r} ip={ip}")
         return await call_next(request)
+
+    print(f"[geo] XFF={fwd!r} ip={ip} country={country} org={org[:60]!r}")
 
     origin = request.headers.get("origin", "")
     cors_headers = {}
